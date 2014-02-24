@@ -1,0 +1,7 @@
+syntax: regexp
+
+?\.class
+?\.DS_Store
+bin\\*
+resource\\*
+package-list\\*
