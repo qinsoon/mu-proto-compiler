@@ -5,8 +5,7 @@
 grammar uIR;
 
 ir
-    :   metaData
-    |   inst
+    :   metaData*
     ;
 
 metaData
@@ -25,11 +24,13 @@ funcDef
     ;
 
 funcBody
-    :   '{' funcBodyInst '}'
+    :   '{' funcBodyInst+ '}'
     ;
 
 funcBodyInst
-    :   (constDef | label | inst)*
+    :   constDef
+    |   label
+    |   inst
     ;
 
 label
@@ -55,28 +56,28 @@ funcSig
     ;
 
 typeDescriptor
-    :   'int' '<' intImmediate '>'
-    |   'float'
-    |   'double'
-    |   'struct' '<' type+ '>'
-    |   'array' '<' type intImmediate '>'
-    |   'ref' '<' type '>'
-    |   'iref' '<' type '>'
-    |   'void'
+    :   'int' '<' intImmediate '>'          # IntType
+    |   'float'                             # FloatType
+    |   'double'                            # DoubleType
+    |   'struct' '<' type+ '>'              # StructType
+    |   'array' '<' type intImmediate '>'   # ArrayType
+    |   'ref' '<' type '>'                  # RefType
+    |   'iref' '<' type '>'                 # IRefType
+    |   'void'                              # VoidType
     ;
 
 inst
-    :   IDENTIFIER '=' 'PARAM' intImmediate     
-    |   IDENTIFIER '=' 'SGT' '<' type '>' value value
-    |   'BRANCH2' value IDENTIFIER IDENTIFIER
-    |   IDENTIFIER '=' 'SHL' '<' type '>' value value
-    |   IDENTIFIER '=' 'ADD' '<' type '>' value value
-    |   'BRANCH' IDENTIFIER
-    |   IDENTIFIER '=' 'PHI' '<' type '>' value IDENTIFIER value IDENTIFIER
-    |   'RET2' value
-    |   IDENTIFIER '=' 'ALLOCA' '<' type '>'
-    |   'STORE' '<' type '>' IDENTIFIER value
-    |   IDENTIFIER '=' 'LOAD' '<' type '>' IDENTIFIER
+    :   IDENTIFIER '=' 'PARAM' intImmediate                 # InstParam
+    |   IDENTIFIER '=' 'SGT' '<' type '>' value value       # InstSgt
+    |   'BRANCH2' value IDENTIFIER IDENTIFIER               # InstBranch2
+    |   IDENTIFIER '=' 'SHL' '<' type '>' value value       # InstShl
+    |   IDENTIFIER '=' 'ADD' '<' type '>' value value       # InstAdd
+    |   'BRANCH' IDENTIFIER                                 # InstBranch
+    |   IDENTIFIER '=' 'PHI' '<' type '>' value IDENTIFIER value IDENTIFIER # InstPhi
+    |   'RET2' value                                        # InstRet2
+    |   IDENTIFIER '=' 'ALLOCA' '<' type '>'                # InstAlloca
+    |   'STORE' '<' type '>' IDENTIFIER value               # InstStore
+    |   IDENTIFIER '=' 'LOAD' '<' type '>' IDENTIFIER       # InstLoad
     ;
 
 value
