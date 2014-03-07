@@ -1,0 +1,56 @@
+// expect to find 'getArity()', 'getChild(int)', 'getOpcode()' in the node
+.source IRTreeNode
+
+// as prefix of generated MC nodes
+.target IA64
+
+#1
+stmt : InstPhi(value, label, value, label)
+//=> MCPHI(this[0], this[1], this[2], this[3])
+0
+
+#2
+stmt : InstBranch2(cmpSltRes, label, label)
+//=> JLT(cmpSltRes[0], cmpSltRes[1], this[1], this[2])
+0
+
+#3
+stmt : cmpSltRes
+0
+
+#4
+cmpSltRes : InstSlt(value, value)
+0
+
+#5
+stmt : InstSrem64(value, value)
+//=> MOV(this[0], %RAX); CQTO; IDIVQ(this[1])
+0
+
+#6
+stmt : InstBranch2(cmpEqRes, label, label)
+0
+
+#7
+stmt : cmpEqRes
+0
+
+#8
+cmpEqRes : InstEq(value, value)
+0
+
+#9
+stmt : label
+0
+
+#10
+stmt : value
+0
+
+#11
+stmt : InstAdd64(value, value)
+0
+
+#12
+stmt : InstRet2(value)
+0

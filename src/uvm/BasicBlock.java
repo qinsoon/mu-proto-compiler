@@ -15,4 +15,12 @@ public class BasicBlock {
     public void addInstruction(Instruction i) {
         this.insts.add(i);
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Instruction> getInsts() {
+        return insts;
+    }
 }

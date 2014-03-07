@@ -1,0 +1,23 @@
+<project name="uvm-compiler" default="build" basedir=".">
+
+	<property name="antlr-jar" value="antlr-4.2-complete.jar"/>
+	<property name="uir-rule"  value="uIR.g4"/>
+	<property name="uir-parser-package"   value="parser"/>
+	<property name="uir-parser-generated" value="parser-generated"/>
+	
+	<target name="build-uir-parser">
+		<echo message="Generating uIR parser from ${uir-rule} to ${uir-parser-generated}"/> 
+		<java jar="${antlr-jar}" fork="true" failonerror="true">
+			<arg value="${uir-rule}"/>
+			<arg line="-package ${uir-parser-package}"/>
+			<arg line="-o ${uir-parser-generated}/${uir-parser-package}/"/>
+		</java>
+	</target>
+	
+	<target name="build" depends="build-uir-parser">
+	</target>
+	
+	<target name="build-eclipse" depends="build-uir-parser">
+	</target>
+
+</project>

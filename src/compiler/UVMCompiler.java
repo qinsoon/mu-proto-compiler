@@ -12,10 +12,14 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
+import uvm.BasicBlock;
+import uvm.Function;
+import uvm.Instruction;
+import uvm.MicroVM;
 
 public class UVMCompiler {
     
-    public static final String file = "/Users/apple/uvm-bench/micro-bm/int-add-loop/add-loop.uir";
+    public static final String file = "/Users/apple/uvm-bench/micro-bm/int-prime-number/prime-number.uir";
     
     public static void main(String[] args) {
 
@@ -39,6 +43,22 @@ public class UVMCompiler {
             // Walk the tree created during the parse, trigger callbacks
             walker.walk(new uIRListenerImpl(), tree);
             System.out.println(); // print a \n after translation
+            
+            // see the tree
+            for (Function f : MicroVM.v.funcs.values()) {
+                System.out.println("function " + f.getName() + " of " + f.getSig());
+                for (BasicBlock bb : f.getBBs()) {
+                    System.out.println("BB[" + bb.getName() + "]:");
+                    for (Instruction inst : bb.getInsts()) {
+                        System.out.println(inst.prettyPrint());
+                    }
+                    System.out.println();
+                }
+                System.out.println();
+            }
+            
+            // get uses
+            DefUseGeneration.execute();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -42,6 +42,10 @@ public class uIRListenerImpl extends uIRBaseListener {
     
     @Override
     public void exitFuncDef(@NotNull uIRParser.FuncDefContext ctx) {
+        // label - end of last BB
+        if (curBB != null)
+            BBs.add(curBB);
+        
         currentFunc.defineFunction(localConstPool, BBs);
         
         // reset
@@ -67,7 +71,7 @@ public class uIRListenerImpl extends uIRBaseListener {
                 curBB = new BasicBlock(labelName);
             } else if (ctx.inst() != null) {
                 // inst
-                Instruction i = ASTHelper.getInstruction(ctx.inst());
+                Instruction i = ASTHelper.getInstruction(currentFunc, ctx.inst());
                 curBB.addInstruction(i);
             }
         } catch (ASTParsingException e) {

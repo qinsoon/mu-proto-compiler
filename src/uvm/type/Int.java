@@ -40,4 +40,9 @@ public class Int extends Type {
     public String toString() {
         return "int<" + size + ">";
     }
+
+    @Override
+    public String prettyPrint() {
+        return toString();
+    }
 }

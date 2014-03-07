@@ -9,4 +9,9 @@ public class Void extends Type {
         return 0;
     }
 
+    @Override
+    public String prettyPrint() {
+        return "";
+    }
+
 }

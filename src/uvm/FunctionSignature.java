@@ -25,4 +25,8 @@ public class FunctionSignature {
             
         return str.toString();
     }
+    
+    public String prettyPrint() {
+        return toString();
+    }
 }

@@ -17,4 +17,9 @@ public class IRef extends Type {
         return MicroVM.POINTER_SIZE * 2;
     }
 
+    @Override
+    public String prettyPrint() {
+        return "iref<" + referenced.prettyPrint() + ">";
+    }
+
 }

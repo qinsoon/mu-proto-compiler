@@ -17,6 +17,32 @@ public class uIRBaseListener implements uIRListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterInstEq(@NotNull uIRParser.InstEqContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitInstEq(@NotNull uIRParser.InstEqContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterInstSrem(@NotNull uIRParser.InstSremContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitInstSrem(@NotNull uIRParser.InstSremContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterFuncSig(@NotNull uIRParser.FuncSigContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -56,19 +82,6 @@ public class uIRBaseListener implements uIRListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterFloatType(@NotNull uIRParser.FloatTypeContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitFloatType(@NotNull uIRParser.FloatTypeContext ctx) { }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterInstSgt(@NotNull uIRParser.InstSgtContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -76,6 +89,19 @@ public class uIRBaseListener implements uIRListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitInstSgt(@NotNull uIRParser.InstSgtContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFloatType(@NotNull uIRParser.FloatTypeContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFloatType(@NotNull uIRParser.FloatTypeContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -277,6 +303,19 @@ public class uIRBaseListener implements uIRListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterInstSlt(@NotNull uIRParser.InstSltContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitInstSlt(@NotNull uIRParser.InstSltContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterInstStore(@NotNull uIRParser.InstStoreContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -355,19 +394,6 @@ public class uIRBaseListener implements uIRListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterInstBranch(@NotNull uIRParser.InstBranchContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitInstBranch(@NotNull uIRParser.InstBranchContext ctx) { }
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterImmediate(@NotNull uIRParser.ImmediateContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -375,6 +401,19 @@ public class uIRBaseListener implements uIRListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitImmediate(@NotNull uIRParser.ImmediateContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterInstBranch(@NotNull uIRParser.InstBranchContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitInstBranch(@NotNull uIRParser.InstBranchContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

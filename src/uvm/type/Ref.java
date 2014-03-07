@@ -15,4 +15,9 @@ public class Ref extends Type {
     public int size() {
         return MicroVM.POINTER_SIZE;
     }
+
+    @Override
+    public String prettyPrint() {
+        return "ref<" + referenced.prettyPrint() + ">";
+    }
 }

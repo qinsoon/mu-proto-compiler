@@ -17,4 +17,6 @@ public abstract class Type {
     public int getID() {
         return ID;
     }
+    
+    public abstract String prettyPrint();
 }

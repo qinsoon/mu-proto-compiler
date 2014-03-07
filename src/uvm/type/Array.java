@@ -17,4 +17,9 @@ public class Array extends Type {
         return eleType.size() * length;
     }
 
+    @Override
+    public String prettyPrint() {
+        return "array<" + eleType.prettyPrint() + " " + length + ">";
+    }
+
 }

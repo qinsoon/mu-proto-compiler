@@ -21,4 +21,17 @@ public class Struct extends Type {
         return size;
     }
 
+    @Override
+    public String prettyPrint() {
+        StringBuilder ret = new StringBuilder();
+        ret.append("struct<");
+        for (int i = 0; i < types.size(); i++) {
+            ret.append(types.get(i).prettyPrint());
+            if (i != types.size() - 1)
+                ret.append(" ");
+        }
+        ret.append(">");
+        return ret.toString();
+    }
+
 }

@@ -9,6 +9,28 @@ import org.antlr.v4.runtime.tree.ParseTreeListener;
  */
 public interface uIRListener extends ParseTreeListener {
 	/**
+	 * Enter a parse tree produced by {@link uIRParser#InstEq}.
+	 * @param ctx the parse tree
+	 */
+	void enterInstEq(@NotNull uIRParser.InstEqContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link uIRParser#InstEq}.
+	 * @param ctx the parse tree
+	 */
+	void exitInstEq(@NotNull uIRParser.InstEqContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link uIRParser#InstSrem}.
+	 * @param ctx the parse tree
+	 */
+	void enterInstSrem(@NotNull uIRParser.InstSremContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link uIRParser#InstSrem}.
+	 * @param ctx the parse tree
+	 */
+	void exitInstSrem(@NotNull uIRParser.InstSremContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link uIRParser#funcSig}.
 	 * @param ctx the parse tree
 	 */
@@ -42,17 +64,6 @@ public interface uIRListener extends ParseTreeListener {
 	void exitInstPhi(@NotNull uIRParser.InstPhiContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link uIRParser#FloatType}.
-	 * @param ctx the parse tree
-	 */
-	void enterFloatType(@NotNull uIRParser.FloatTypeContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link uIRParser#FloatType}.
-	 * @param ctx the parse tree
-	 */
-	void exitFloatType(@NotNull uIRParser.FloatTypeContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link uIRParser#InstSgt}.
 	 * @param ctx the parse tree
 	 */
@@ -62,6 +73,17 @@ public interface uIRListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitInstSgt(@NotNull uIRParser.InstSgtContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link uIRParser#FloatType}.
+	 * @param ctx the parse tree
+	 */
+	void enterFloatType(@NotNull uIRParser.FloatTypeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link uIRParser#FloatType}.
+	 * @param ctx the parse tree
+	 */
+	void exitFloatType(@NotNull uIRParser.FloatTypeContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link uIRParser#InstAlloca}.
@@ -229,6 +251,17 @@ public interface uIRListener extends ParseTreeListener {
 	void exitFpImmediate(@NotNull uIRParser.FpImmediateContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link uIRParser#InstSlt}.
+	 * @param ctx the parse tree
+	 */
+	void enterInstSlt(@NotNull uIRParser.InstSltContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link uIRParser#InstSlt}.
+	 * @param ctx the parse tree
+	 */
+	void exitInstSlt(@NotNull uIRParser.InstSltContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link uIRParser#InstStore}.
 	 * @param ctx the parse tree
 	 */
@@ -295,17 +328,6 @@ public interface uIRListener extends ParseTreeListener {
 	void exitVoidType(@NotNull uIRParser.VoidTypeContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link uIRParser#InstBranch}.
-	 * @param ctx the parse tree
-	 */
-	void enterInstBranch(@NotNull uIRParser.InstBranchContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link uIRParser#InstBranch}.
-	 * @param ctx the parse tree
-	 */
-	void exitInstBranch(@NotNull uIRParser.InstBranchContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link uIRParser#immediate}.
 	 * @param ctx the parse tree
 	 */
@@ -315,6 +337,17 @@ public interface uIRListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitImmediate(@NotNull uIRParser.ImmediateContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link uIRParser#InstBranch}.
+	 * @param ctx the parse tree
+	 */
+	void enterInstBranch(@NotNull uIRParser.InstBranchContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link uIRParser#InstBranch}.
+	 * @param ctx the parse tree
+	 */
+	void exitInstBranch(@NotNull uIRParser.InstBranchContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link uIRParser#InstRet2}.

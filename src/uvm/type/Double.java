@@ -13,4 +13,9 @@ public class Double extends Type {
         return 64;
     }
 
+    @Override
+    public String prettyPrint() {
+        return "double";
+    }
+
 }

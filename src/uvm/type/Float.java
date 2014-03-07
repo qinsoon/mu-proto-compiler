@@ -13,4 +13,9 @@ public class Float extends Type {
         return 32;
     }
 
+    @Override
+    public String prettyPrint() {
+        return "float";
+    }
+
 }

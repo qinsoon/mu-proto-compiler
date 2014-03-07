@@ -5,15 +5,34 @@ import java.util.List;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import compiler.UVMCompiler;
 import parser.uIRParser.ConstDefContext;
 import parser.uIRParser.FuncSigContext;
 import parser.uIRParser.ImmediateContext;
 import parser.uIRParser.InstContext;
+import parser.uIRParser.IntImmediateContext;
 import parser.uIRParser.TypeContext;
 import parser.uIRParser.TypeDescriptorContext;
+import uvm.Function;
 import uvm.FunctionSignature;
+import uvm.IRTreeNode;
 import uvm.Instruction;
+import uvm.IntImmediate;
+import uvm.Label;
+import uvm.Register;
 import uvm.Type;
+import uvm.Value;
+import uvm.inst.InstAdd;
+import uvm.inst.InstBranch;
+import uvm.inst.InstBranch2;
+import uvm.inst.InstEq;
+import uvm.inst.InstParam;
+import uvm.inst.InstPhi;
+import uvm.inst.InstRet2;
+import uvm.inst.InstSgt;
+import uvm.inst.InstShl;
+import uvm.inst.InstSlt;
+import uvm.inst.InstSrem;
 import uvm.metadata.Const;
 import uvm.type.Int;
 
@@ -91,7 +110,138 @@ public abstract class ASTHelper {
         return ret;
     }
     
-    public static Instruction getInstruction(InstContext ctx) throws ASTParsingException {
+    public static Instruction getInstruction(Function f, InstContext ctx) throws ASTParsingException {
+        if (ctx instanceof parser.uIRParser.InstParamContext) {
+            Instruction node = new InstParam((int)getIntImmediateValue(((parser.uIRParser.InstParamContext) ctx).intImmediate()));
+            String id = getIdentifierName(((parser.uIRParser.InstParamContext) ctx).IDENTIFIER(), false);
+            node.setDefReg(f.findOrCreateRegister(id));
+            return node;
+        } else if (ctx instanceof parser.uIRParser.InstBranchContext) {
+            String target = getIdentifierName(((parser.uIRParser.InstBranchContext) ctx).IDENTIFIER(), false);
+            return new InstBranch(new Label(target));
+        } else if (ctx instanceof parser.uIRParser.InstBranch2Context) {
+            parser.uIRParser.ValueContext condContext = ((parser.uIRParser.InstBranch2Context) ctx).value();
+            
+            Value cond = getValue(f, condContext);            
+            Label ifTrue = new Label(getIdentifierName(((parser.uIRParser.InstBranch2Context) ctx).IDENTIFIER(0), false));
+            Label ifFalse = new Label(getIdentifierName(((parser.uIRParser.InstBranch2Context) ctx).IDENTIFIER(1), false));
+            
+            return new InstBranch2(cond, ifTrue, ifFalse);
+        } 
+        
+        else if (ctx instanceof parser.uIRParser.InstPhiContext) {
+            Type t = getType(((parser.uIRParser.InstPhiContext) ctx).type());
+            
+            String out = getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(0), false);
+            
+            Value val1 = getValue(f, ((parser.uIRParser.InstPhiContext) ctx).value(0));
+            Label label1 = new Label(getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(1), false));
+            Value val2 = getValue(f, ((parser.uIRParser.InstPhiContext) ctx).value(1));
+            Label label2 = new Label(getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(2), false));
+            
+            Instruction node = new InstPhi(t, val1, label1, val2, label2);
+            node.setDefReg(f.findOrCreateRegister(out));
+            return node;
+        }
+        
+        else if (ctx instanceof parser.uIRParser.InstRet2Context) {
+            Value v = getValue(f, ((parser.uIRParser.InstRet2Context) ctx).value());
+            Instruction node = new InstRet2(v);            
+            return node;
+        }
+        
+        // bin op
+        else if (ctx instanceof parser.uIRParser.InstShlContext) {
+            Type t = getType(((parser.uIRParser.InstShlContext) ctx).type());
+            Value op1 = getValue(f, ((parser.uIRParser.InstShlContext) ctx).value(0));
+            Value op2 = getValue(f, ((parser.uIRParser.InstShlContext) ctx).value(1));
+            
+            String out = getIdentifierName(((parser.uIRParser.InstShlContext) ctx).IDENTIFIER(), false);
+            
+            Instruction node = new InstShl(t, op1, op2);
+            node.setDefReg(f.findOrCreateRegister(out));
+            return node;
+        }
+        else if (ctx instanceof parser.uIRParser.InstAddContext) {
+            Type t = getType(((parser.uIRParser.InstAddContext) ctx).type());
+            Value op1 = getValue(f, ((parser.uIRParser.InstAddContext) ctx).value(0));
+            Value op2 = getValue(f, ((parser.uIRParser.InstAddContext) ctx).value(1));
+            
+            String out = getIdentifierName(((parser.uIRParser.InstAddContext) ctx).IDENTIFIER(), false);
+            
+            Instruction node = new InstAdd(t, op1, op2);
+            node.setDefReg(f.findOrCreateRegister(out));
+            return node;
+        }
+        else if (ctx instanceof parser.uIRParser.InstSremContext) {
+            Type t = getType(((parser.uIRParser.InstSremContext) ctx).type());
+            Value op1 = getValue(f, ((parser.uIRParser.InstSremContext) ctx).value(0));
+            Value op2 = getValue(f, ((parser.uIRParser.InstSremContext) ctx).value(1));
+            
+            String out = getIdentifierName(((parser.uIRParser.InstSremContext) ctx).IDENTIFIER(), false);
+            
+            Instruction node = new InstSrem(t, op1, op2);
+            node.setDefReg(f.findOrCreateRegister(out));
+            return node;
+        }
+        else if (ctx instanceof parser.uIRParser.InstSgtContext) {
+            Type t = getType(((parser.uIRParser.InstSgtContext) ctx).type());
+            Value op1 = getValue(f, ((parser.uIRParser.InstSgtContext) ctx).value(0));
+            Value op2 = getValue(f, ((parser.uIRParser.InstSgtContext) ctx).value(1));
+            
+            String out = getIdentifierName(((parser.uIRParser.InstSgtContext) ctx).IDENTIFIER(), false);
+            
+            Instruction node = new InstSgt(t, op1, op2);
+            node.setDefReg(f.findOrCreateRegister(out));
+            return node;
+        }
+        else if (ctx instanceof parser.uIRParser.InstSltContext) {
+            Type t = getType(((parser.uIRParser.InstSltContext) ctx).type());
+            Value op1 = getValue(f, ((parser.uIRParser.InstSltContext) ctx).value(0));
+            Value op2 = getValue(f, ((parser.uIRParser.InstSltContext) ctx).value(1));
+            
+            String out = getIdentifierName(((parser.uIRParser.InstSltContext) ctx).IDENTIFIER(), false);
+            
+            Instruction node = new InstSlt(t, op1, op2);
+            node.setDefReg(f.findOrCreateRegister(out));
+            return node;
+        }
+        else if (ctx instanceof parser.uIRParser.InstEqContext) {
+            Type t = getType(((parser.uIRParser.InstEqContext) ctx).type());
+            Value op1 = getValue(f, ((parser.uIRParser.InstEqContext) ctx).value(0));
+            Value op2 = getValue(f, ((parser.uIRParser.InstEqContext) ctx).value(1));
+            
+            String out = getIdentifierName(((parser.uIRParser.InstEqContext) ctx).IDENTIFIER(), false);
+            
+            Instruction node = new InstEq(t, op1, op2);
+            node.setDefReg(f.findOrCreateRegister(out));
+            return node;
+        }
+        
+        else {
+            UVMCompiler.error("incomplete implementation of " + ctx.getClass().toString());
+        }
         return null;
+    }
+    
+    private static Value getValue(Function f, parser.uIRParser.ValueContext ctx) throws ASTParsingException {
+        Value ret = null;
+        
+        if (ctx.immediate() != null) {
+            if (ctx.immediate().intImmediate() != null)
+                ret = new IntImmediate(getIntImmediateValue(ctx.immediate().intImmediate()));
+            else {
+                UVMCompiler.error("Missing implementation for fp immediate");
+            }
+        } else {
+            String id = getIdentifierName(ctx.IDENTIFIER(), false);
+            ret = f.findOrCreateRegister(id);
+        }
+        
+        return ret;
+    }
+
+    private static long getIntImmediateValue(IntImmediateContext intImmediate) {
+        return Long.parseLong(intImmediate.getText());
     }
 }

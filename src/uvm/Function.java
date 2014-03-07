@@ -20,6 +20,20 @@ public class Function {
     HashMap<String, Const> constPool;
     List<BasicBlock> BBs;
     
+    // IR tree
+    public IRTreeNode tree;
+    
+    public HashMap<String, Register> registers = new HashMap<String, Register>();
+    public Register findOrCreateRegister(String name) {
+        Register ret = registers.get(name);
+        if (ret == null) {
+            ret = new Register(name);
+            registers.put(name, ret);
+        }
+        
+        return ret;
+    }
+    
     public Function(String name, FunctionSignature sig) {
         this.ID = funcCount;
         funcCount++;
@@ -40,5 +54,29 @@ public class Function {
     @Override
     public String toString() {
         return name + " = " + sig;
+    }
+//    
+//    public HashMap<String, IRTreeNode> getIdMap() {
+//        return idMap;
+//    }
+
+    public int getID() {
+        return ID;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public FunctionSignature getSig() {
+        return sig;
+    }
+
+    public HashMap<String, Const> getConstPool() {
+        return constPool;
+    }
+
+    public List<BasicBlock> getBBs() {
+        return BBs;
     }
 }
