@@ -24,6 +24,10 @@ public abstract class Instruction extends IRTreeNode {
         return def;
     }
     
+    public boolean hasDefReg() {
+        return def != null;
+    }
+    
     public List<Register> getRegUses() {
         return regUses;
     }

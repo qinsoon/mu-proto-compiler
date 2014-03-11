@@ -3,6 +3,8 @@ package uvm;
 public abstract class OpCode {
     private OpCode() {}
     
+    public static final int PSEUDO_ASSIGN = 0x00;
+    
     // int binop
     public static final int ADD     = 0x01;
     public static final int SUB     = 0x02;

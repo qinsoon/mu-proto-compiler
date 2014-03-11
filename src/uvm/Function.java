@@ -2,6 +2,7 @@ package uvm;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 
 import uvm.metadata.Const;
 
@@ -21,7 +22,7 @@ public class Function {
     List<BasicBlock> BBs;
     
     // IR tree
-    public IRTreeNode tree;
+    public List<IRTreeNode> tree = new ArrayList<IRTreeNode>();
     
     public HashMap<String, Register> registers = new HashMap<String, Register>();
     public Register findOrCreateRegister(String name) {

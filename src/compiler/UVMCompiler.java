@@ -59,6 +59,8 @@ public class UVMCompiler {
             
             // get uses
             DefUseGeneration.execute();
+            
+            IRTreeGeneration.execute();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

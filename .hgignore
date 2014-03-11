@@ -2,6 +2,7 @@ syntax: regexp
 
 ?\.class
 ?\.DS_Store
+?\.orig
 bin\\*
 resource\\*
 package-list\\*

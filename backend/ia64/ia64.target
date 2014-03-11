@@ -4,53 +4,66 @@
 // as prefix of generated MC nodes
 .target IA64
 
-#1
-stmt : InstPhi(value, label, value, label)
-//=> MCPHI(this[0], this[1], this[2], this[3])
+#
+inst : InstPseudoAssign(reg op)
+1
+
+#
+inst : op
 0
 
-#2
-stmt : InstBranch2(cmpSltRes, label, label)
-//=> JLT(cmpSltRes[0], cmpSltRes[1], this[1], this[2])
+#
+op : InstParam(iim)
 0
 
-#3
-stmt : cmpSltRes
+#
+iim : INT_IMMEDIATE
 0
 
-#4
-cmpSltRes : InstSlt(value, value)
+#
+op : InstBranch(label)
 0
 
-#5
-stmt : InstSrem64(value, value)
-//=> MOV(this[0], %RAX); CQTO; IDIVQ(this[1])
+#
+op : InstPhi(value label value label)
 0
 
-#6
-stmt : InstBranch2(cmpEqRes, label, label)
+#
+op : InstSlt(value value)
 0
 
-#7
-stmt : cmpEqRes
+#
+op : InstEq(value value)
 0
 
-#8
-cmpEqRes : InstEq(value, value)
+#
+op : InstAdd(value value)
 0
 
-#9
-stmt : label
+#
+op : InstRet2(value)
 0
 
-#10
-stmt : value
+#
+op : InstBranch2(value label label)
 0
 
-#11
-stmt : InstAdd64(value, value)
+#
+op : InstSrem64(value value)
 0
 
-#12
-stmt : InstRet2(value)
+#
+label : LABEL
+0
+
+#
+value : reg
+0
+
+#
+value : iim
+0
+
+#
+reg : REGISTER
 0
