@@ -6,3 +6,5 @@ syntax: regexp
 bin\\*
 resource\\*
 package-list\\*
+parser-generated\\*
+backend/codegengen-gen\\*

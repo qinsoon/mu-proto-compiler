@@ -156,16 +156,20 @@ public class Burg {
             // for every rule, this terminal is rhs
             for (Rule rule : rules) {
                 if (rule.rhs.id == term.id) {
-                    code.append("if (");
-                    for (int i = 0; i < term.children.size(); i++) {
-                        code.appendNoIndent(String.format("leaves[%d].rule[%s] != 0", i, term.children.get(i).name));
-                        if (i != term.children.size() - 1)
-                            code.appendNoIndent(" && ");
-                    }
-                    code.appendNoIndent(") {");
-                    code.appendlnNoIndent();
+                    boolean needToMatchChildren = term.children.size() != 0;
                     
-                    code.increaseIndent();
+                    if (needToMatchChildren) {
+                        code.append("if (");
+                        for (int i = 0; i < term.children.size(); i++) {
+                            code.appendNoIndent(String.format("leaves[%d].rule[%s] != 0", i, term.children.get(i).name));
+                            if (i != term.children.size() - 1)
+                                code.appendNoIndent(" && ");
+                        }
+                        code.appendNoIndent(") {");
+                        code.appendlnNoIndent();
+                        
+                        code.increaseIndent();
+                    }
                     
                     // current cost
                     code.appendCommentln(rule.prettyPrint());
@@ -182,8 +186,10 @@ public class Burg {
                     code.appendCommentln("chain cost");
                     genChainCost(code, rule.lhs, "c");
                     
-                    code.decreaseIndent();
-                    code.appendln("}");
+                    if (needToMatchChildren) {
+                        code.decreaseIndent();
+                        code.appendln("}");
+                    }
                 }
             }
             

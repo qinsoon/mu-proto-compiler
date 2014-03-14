@@ -11,14 +11,16 @@
 	<property name="burg-rule" location="burg.g4"/>
 	<property name="codegengen-dir" location="${backend-dir}/codegengen-gen"/>
 	<property name="burg-impl-dir" location="${backend-dir}/codegengen"/>
+	<property name="burg-exec-dir" location="${codegengen-dir}/burg-temp"/>
 	
 	<property name="target" value="ia64"/>
 	<property name="target-rule-file" location="${backend-dir}/${target}/${target}.target"/>
-	<property name="burm-dir" location="${backend-dir}/codegengen/burm"/>
+	<property name="burm-dir" location="${codegengen-dir}/burm"/>
 	<property name="burm-file" location="${burm-dir}/BURM_GENERATED.java"/>
 	
 	<target name="build-uir-parser">
 		<echo message="Generating uIR parser from ${uir-rule} to ${uir-parser-generated}"/> 
+		<mkdir dir="${uir-parser-generated}"/>
 		<java jar="${antlr-jar}" fork="true" failonerror="true">
 			<arg value="${uir-rule}"/>
 			<arg line="-package ${uir-parser-package}"/>
@@ -37,20 +39,24 @@
 	
 	<target name="generate-BURM">
 		<echo message="javac for Burg"/>
+		<mkdir dir="${burg-exec-dir}"/>
 		<javac srcdir="${codegengen-dir}/burg" 
 		       classpath="${antlr-jar}" 
-		       includeantruntime="false"/>
+		       includeantruntime="false"
+		       destdir="${burg-exec-dir}"/>
 		<javac srcdir="${burg-impl-dir}/burg" 
 		       classpath="${antlr-jar}:${codegengen-dir}"
-		       includeantruntime="false"/>
+		       includeantruntime="false"
+		       destdir="${burg-exec-dir}"/>
+		<echo message=""/>
 	
 		<echo message="Generating BURM for target ${target}"/>
 		<echo message="to ${burm-dir}"/>
 		<mkdir dir="${burm-dir}"/>
-		<java classname="burg.Burg" fork="true" failonerror="true">
+		<java classname="burg.Burg" fork="true" failonerror="true"
+		      output="${burm-dir}/build-burm.log">
 			<classpath>
-				<pathelement path="${codegengen-dir}"/>
-				<pathelement path="${burg-impl-dir}"/>
+				<pathelement path="${burg-exec-dir}"/>
 				<pathelement path="${antlr-jar}"/>
 			</classpath>
 			<arg value="${target-rule-file}"/>
@@ -60,6 +66,8 @@
 	</target>
 	
 	<target name="clean">
+		<delete dir="${uir-parser-generated}"/>
+		<delete dir="${codegengen-dir}"/>
 	</target>
 	
 	<target name="gen-antlr">
