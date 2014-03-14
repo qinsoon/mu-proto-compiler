@@ -7,45 +7,42 @@
 grammar burg;
 
 start
-    :   declare
-    |   rule
+    :   (declare | treerule)*
     ;
 
 declare
-    :   sourceNodeDecl
-    |   targetDecl
+    :   targetDecl
     ;
 
-sourceNodeDecl
-    :   '.source' STRING;
-
 targetDecl
-    :   '.target' STRING;
+    :   '.target' string
+    ;
 
-rule
-    :   '#' 
-        NONTERM ':' STRING '(' any* ')'
-        COST;
+string
+    :   (NONTERM | TERM)
+    ;
 
-any
-    :   NONTERM
-    |   TERM
+treerule
+    :   NONTERM ':' node
+        COST
+    ;
+
+node
+    :   TERM ('(' node+ ')')?
+    |   NONTERM
     ;
 
 NONTERM
-    :   LOWERCHAR CHAR*
+    :   LOWERCHAR CHAR+
     ;
 
 TERM
-    :   UPPERCHAR+
+    :   UPPERCHAR CHAR+
     ;
 
 COST
-    : DIGIT+
+    :   DIGIT+
     ;
-
-STRING
-    :   CHAR+;
 
 fragment
 CHAR
@@ -71,7 +68,9 @@ UPPERCHAR
     :   [A-Z]
     ;
 
-WS : [ \t\r\n]+ -> skip ; // skip spaces, tabs, newlines
+WS 
+    :   [ \t\r\n]+ -> skip 
+    ; // skip spaces, tabs, newlines
 
 LINE_COMMENT
     :   '//' ~[\r\n]* -> skip

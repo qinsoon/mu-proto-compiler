@@ -1,1 +1,2 @@
-java -jar antlr-4.2-complete.jar $@
+#!/bin/bash
+java -jar $(dirname $0)/antlr-4.2-complete.jar $@

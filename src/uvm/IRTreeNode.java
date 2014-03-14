@@ -7,18 +7,10 @@ import compiler.UVMCompiler;
 
 public abstract class IRTreeNode {
     protected List<IRTreeNode> children = new ArrayList<IRTreeNode>();
-    protected IRTreeNode parent;
     protected int opcode;
     
     public int getArity() {
         return children.size();
-    }
-    
-    public void setParent(IRTreeNode node) {
-        if (parent != null)
-            UVMCompiler.error("setting parent twice for node: " + prettyPrint());
-        
-        parent = node;
     }
     
     public IRTreeNode getChild(int index) {

@@ -1,0 +1,20 @@
+  static class State {
+    int op;
+    State[] leaves;
+    static final short INFINITE = Short.MAX_VALUE;
+    short[] cost;
+    short[] rule; 
+ }
+    
+  public static void record(State p, int nt, int cost, int ruleno) {
+    if (cost < p.cost[nt]) {
+      p.cost[nt] = (short) cost;
+      p.rule[nt] = (short) ruleno;
+    }
+  }
+  
+  public static State state(int op, State[] leaves) {
+    State p = new State();
+       
+    p.op = op;
+    p.leaves = leaves;

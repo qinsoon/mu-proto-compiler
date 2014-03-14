@@ -1,0 +1,13 @@
+TERM=6
+WS=8
+LINE_COMMENT=9
+COST=7
+NONTERM=5
+T__1=3
+T__0=4
+T__3=1
+T__2=2
+'('=4
+':'=3
+'.target'=2
+')'=1

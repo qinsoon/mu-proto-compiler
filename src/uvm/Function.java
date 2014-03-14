@@ -56,10 +56,6 @@ public class Function {
     public String toString() {
         return name + " = " + sig;
     }
-//    
-//    public HashMap<String, IRTreeNode> getIdMap() {
-//        return idMap;
-//    }
 
     public int getID() {
         return ID;

@@ -1,69 +1,50 @@
 // expect to find 'getArity()', 'getChild(int)', 'getOpcode()' in the node
-.source IRTreeNode
+// IRTreeNode
 
 // as prefix of generated MC nodes
 .target IA64
 
-#
-inst : InstPseudoAssign(reg op)
-1
-
-#
-inst : op
+stmt : InstPseudoAssign(reg op)
 0
 
-#
-op : InstParam(iim)
+stmt : op
 0
 
-#
-iim : INT_IMMEDIATE
-0
-
-#
-op : InstBranch(label)
-0
-
-#
-op : InstPhi(value label value label)
-0
-
-#
-op : InstSlt(value value)
-0
-
-#
-op : InstEq(value value)
-0
-
-#
-op : InstAdd(value value)
-0
-
-#
-op : InstRet2(value)
-0
-
-#
 op : InstBranch2(value label label)
 0
 
-#
-op : InstSrem64(value value)
+op : InstBranch2(cmpRes label label)
 0
 
-#
-label : LABEL
+cmpRes : InstPseudoAssign(reg InstSgt(value value))
 0
 
-#
+cmpRes : InstPseudoAssign(reg InstEq(value value))
+0
+
+op : InstSgt(value value)
+0
+
+op : InstEq(value value)
+0
+
+op : InstRet2(value)
+0
+
+op : InstParam
+0
+
+op : InstSrem(value value)
+0
+
+op : InstPhi(value label value label)
+0
+
+op : InstAdd(value value)
+0
+
 value : reg
 0
 
-#
-value : iim
-0
-
-#
-reg : REGISTER
+value : INT_IMM
 0
