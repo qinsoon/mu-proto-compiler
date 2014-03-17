@@ -11,7 +11,6 @@ public abstract class Instruction extends IRTreeNode {
     protected List<Value> operands = new ArrayList<Value>();
     
     protected List<Register> regUses = new ArrayList<Register>();
-    protected List<Instruction> instUses = new ArrayList<Instruction>();
     
     public void setDefReg(Register reg) {
         if (def != null)
@@ -30,10 +29,6 @@ public abstract class Instruction extends IRTreeNode {
     
     public List<Register> getRegUses() {
         return regUses;
-    }
-    
-    public List<Instruction> getInstUses() {
-        return instUses;
     }
 
     public List<Value> getOperands() {

@@ -25,16 +25,14 @@ public class InstructionSelection {
     }
     
     private static void print(IRTreeNode node) {
-        System.out.println(node.prettyPrint());
+        System.out.println(node.printNode());
         System.out.println(node.state.prettyPrint());
         
         for (int i = 0; i < node.getArity(); i++)
             print(node.getChild(i));
     }
     
-    public static BurmState label(IRTreeNode p) {
-        System.out.println("label() " + p.prettyPrint());
-        
+    public static BurmState label(IRTreeNode p) {        
         if (p != null) {
             BurmState[] leaves = new BurmState[p.getArity()];
             for (int i = 0; i < leaves.length; i++)

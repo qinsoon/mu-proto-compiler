@@ -19,21 +19,27 @@ public class IRTreeGeneration {
                     if (inst instanceof InstBranch)
                         inst.addChild(((InstBranch)inst).getTarget());
                     else if (inst instanceof InstBranch2) {
-                        inst.addChild(((InstBranch2) inst).getCond());
+                        checkAndAddValue(inst, ((InstBranch2) inst).getCond());
                         inst.addChild(((InstBranch2) inst).getIfTrue());
                         inst.addChild(((InstBranch2) inst).getIfFalse());;
                     } else if (inst instanceof InstPhi) {
-                        inst.addChild(((InstPhi) inst).getVal1());
+                        checkAndAddValue(inst, ((InstPhi) inst).getVal1());
                         inst.addChild(((InstPhi) inst).getLabel1());
-                        inst.addChild(((InstPhi) inst).getVal2());
+                        checkAndAddValue(inst, ((InstPhi) inst).getVal2());
                         inst.addChild(((InstPhi) inst).getLabel2());
                     } else {
                         for (Value v : inst.getOperands()) {
-                            inst.addChild(v);
+                            checkAndAddValue(inst, v);
                         }
                     }
                     
                     if (inst.hasDefReg()) {
+                        // we dont need to define it
+                        // it becomes a subtree of another node
+                        if (inst.getDefReg().usesOnlyOnce()) {
+                            continue;
+                        }
+                        
                         Instruction assign = new InstPseudoAssign(inst.getDefReg(), inst);
                         assign.addChild(inst.getDefReg());
                         assign.addChild(inst);
@@ -47,6 +53,16 @@ public class IRTreeGeneration {
         }
         
         printIRTree();
+    }
+    
+    private static void checkAndAddValue(Instruction inst, Value v) {
+        if (v instanceof Register) {
+            Register reg = (Register) v;
+            if (reg.usesOnlyOnce()) {
+                inst.addChild(reg.getDef());
+            }
+            else inst.addChild(v);
+        } else inst.addChild(v);
     }
     
     public static void printIRTree() {

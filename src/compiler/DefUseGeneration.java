@@ -18,7 +18,8 @@ public class DefUseGeneration {
                         if (v.isRegister()) {
                             Register reg = (Register) v;
                             inst.getRegUses().add(reg);
-                            inst.getInstUses().add(findDef(f, reg));
+                            reg.addUse(inst);
+                            
                             System.out.println("  uses:" + v.prettyPrint());
                         }
                     }
@@ -32,16 +33,5 @@ public class DefUseGeneration {
             }
         }
         System.out.println();
-    }
-    
-    public static Instruction findDef(Function f, Register v) {
-        for (BasicBlock bb : f.getBBs()) {
-            for (Instruction inst : bb.getInsts())
-                if (inst.getDefReg() != null && inst.getDefReg().equals(v))
-                    return inst;
-        }
-        
-        UVMCompiler.error("Cant find def for register " + v.prettyPrint()); 
-        return null;
     }
 }

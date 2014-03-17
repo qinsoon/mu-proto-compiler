@@ -5,43 +5,62 @@
 .target IA64
 
 stmt : PSEUDO_ASSIGN(reg op)
-0
+// mov
+1
 
 stmt : op
 0
 
+reg : op
+0
+
 op : BRANCH2(value label label)
-0
+// cmp, jcc
+2
 
-op : BRANCH2(cmpRes label label)
-0
+op : BRANCH2(SLT(value value) label label)
+// cmp, jcc
+2
 
-cmpRes : PSEUDO_ASSIGN(reg SGT(value value))
-0
+op : BRANCH2(SGT(value value) label label)
+// cmp, jcc
+2
 
-cmpRes : PSEUDO_ASSIGN(reg EQ(value value))
-0
+op : BRANCH2(EQ(value value) label label)
+// jcc
+2
+
+op : SLT(value value)
+// cmp
+1
 
 op : SGT(value value)
-0
+// cmp
+1
 
 op : EQ(value value)
-0
+// cmp
+1
 
 op : RET2(value)
-0
+// mov, ret
+2
 
 op : PARAM
-0
+// mov
+1
 
 op : SREM(value value)
-0
+// mov, div, mov
+3
 
 op : PHI(value label value label)
-0
+// mov
+1
 
 op : ADD(value value)
-0
+// add
+1
 
 value : reg
 0
