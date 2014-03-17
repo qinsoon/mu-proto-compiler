@@ -4,6 +4,8 @@
 
 	<property name="antlr-jar" location="antlr-4.2-complete.jar"/>
 	
+	<property name="uvm-dir" location="src"/>
+	
 	<property name="uir-rule"  location="uIR.g4"/>
 	<property name="uir-parser-package"   value="parser"/>
 	<property name="uir-parser-generated" location="parser-generated"/>
@@ -40,18 +42,24 @@
 	<target name="generate-BURM">
 		<echo message="javac for Burg"/>
 		<mkdir dir="${burg-exec-dir}"/>
+		<javac srcdir="${uvm-dir}/uvm"
+		       includeantruntime="false"
+		       destdir="${burg-exec-dir}">
+		       <include name="OpCode.java"/>
+		</javac>
 		<javac srcdir="${codegengen-dir}/burg" 
-		       classpath="${antlr-jar}" 
+		       classpath="${antlr-jar}:${burg-exec-dir}" 
 		       includeantruntime="false"
 		       destdir="${burg-exec-dir}"/>
 		<javac srcdir="${burg-impl-dir}/burg" 
-		       classpath="${antlr-jar}:${codegengen-dir}"
+		       classpath="${antlr-jar}:${codegengen-dir}:${burg-exec-dir}"
 		       includeantruntime="false"
 		       destdir="${burg-exec-dir}"/>
 		<echo message=""/>
 	
 		<echo message="Generating BURM for target ${target}"/>
 		<echo message="to ${burm-dir}"/>
+	    <echo message="(in case of any error in this step, check ${burm-dir}/build-burm.log)"/>
 		<mkdir dir="${burm-dir}"/>
 		<java classname="burg.Burg" fork="true" failonerror="true"
 		      output="${burm-dir}/build-burm.log">

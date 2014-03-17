@@ -5,6 +5,7 @@ public class IntImmediate extends ImmediateValue {
     
     public IntImmediate(long value) {
         this.value = value;
+        this.opcode = OpCode.INT_IMM;
     }
     
     @Override

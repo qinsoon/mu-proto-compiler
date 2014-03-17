@@ -4,47 +4,53 @@
 // as prefix of generated MC nodes
 .target IA64
 
-stmt : InstPseudoAssign(reg op)
+stmt : PSEUDO_ASSIGN(reg op)
 0
 
 stmt : op
 0
 
-op : InstBranch2(value label label)
+op : BRANCH2(value label label)
 0
 
-op : InstBranch2(cmpRes label label)
+op : BRANCH2(cmpRes label label)
 0
 
-cmpRes : InstPseudoAssign(reg InstSgt(value value))
+cmpRes : PSEUDO_ASSIGN(reg SGT(value value))
 0
 
-cmpRes : InstPseudoAssign(reg InstEq(value value))
+cmpRes : PSEUDO_ASSIGN(reg EQ(value value))
 0
 
-op : InstSgt(value value)
+op : SGT(value value)
 0
 
-op : InstEq(value value)
+op : EQ(value value)
 0
 
-op : InstRet2(value)
+op : RET2(value)
 0
 
-op : InstParam
+op : PARAM
 0
 
-op : InstSrem(value value)
+op : SREM(value value)
 0
 
-op : InstPhi(value label value label)
+op : PHI(value label value label)
 0
 
-op : InstAdd(value value)
+op : ADD(value value)
 0
 
 value : reg
 0
 
 value : INT_IMM
+0
+
+reg : REG
+0
+
+label : LABEL
 0

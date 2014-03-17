@@ -18,4 +18,8 @@ public class InstBranch extends Instruction {
     public String prettyPrint() {
         return "(BRANCH " + target.prettyPrint() + ")";
     }
+    
+    public Label getTarget() {
+        return target;
+    }
 }

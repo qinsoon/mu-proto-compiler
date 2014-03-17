@@ -23,4 +23,16 @@ public class InstBranch2 extends Instruction {
     public String prettyPrint() {
         return "(BRANCH2 " + cond.prettyPrint() + " " + ifTrue.prettyPrint() + " " + ifFalse.prettyPrint() + ")";
     }
+    
+    public Value getCond() {
+        return cond;
+    }
+    
+    public Label getIfTrue() {
+        return ifTrue;
+    }
+    
+    public Label getIfFalse() {
+        return ifFalse;
+    }
 }

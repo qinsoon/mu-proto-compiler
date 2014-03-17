@@ -1,5 +1,8 @@
 package uvm;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
+
 public abstract class OpCode {
     private OpCode() {}
     
@@ -111,4 +114,29 @@ public abstract class OpCode {
     public static final int RET2    = 0xA2;
     public static final int SELECT  = 0xA3;
     public static final int PARAM   = 0xA4;
+    
+    // non-op terms
+    public static final int INT_IMM = 0xF0;
+    public static final int REG     = 0xF1;
+    public static final int LABEL   = 0xF2;
+    
+    public static final HashMap<Integer, String> names = new HashMap<Integer, String>();
+    
+    static {
+        for (Field f : OpCode.class.getFields()) {
+            if (f.getType().isPrimitive())
+                try {
+                    names.put(f.getInt(null), f.getName());
+                } catch (IllegalArgumentException e) {
+                    e.printStackTrace();
+                    System.exit(2);
+                } catch (IllegalAccessException e) {
+                    System.exit(2);
+                }
+        }
+    }
+    
+    public static String getOpName(int op) {
+        return names.get(op);
+    }
 }

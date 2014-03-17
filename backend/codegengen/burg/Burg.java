@@ -7,9 +7,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -17,11 +19,14 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import uvm.OpCode;
+
 public class Burg {
-    public static final String HARDCODE_PIECES = "/Users/apple/uvm-compiler-antlr/backend/codegengen/burg/burm-pieces.txt";
+    public static final Map<String, Integer> termNames = new HashMap<String, Integer>();
+    public static final Map<String, Integer> ntNames = new HashMap<String, Integer>();
     
-    public static final HashMap<String, Terminal> terminals = new HashMap<String, Terminal>();
-    public static final HashMap<String, NonTerminal> nonterminals = new HashMap<String, NonTerminal>();
+    public static final List<Terminal> terms = new ArrayList<Terminal>();
+    public static final List<NonTerminal> nonterms = new ArrayList<NonTerminal>();
     
     public static String ruleFile;
     public static String output;
@@ -36,7 +41,7 @@ public class Burg {
                 if (ruleFile == null)
                     ruleFile = args[i];
                 else{
-                    System.err.println("Only one rule file is allowed. ");
+                    System.out.println("Only one rule file is allowed. ");
                     System.exit(1);
                 }
             }
@@ -63,14 +68,14 @@ public class Burg {
             System.out.println();
             
             System.out.println("non-terms:");
-            for (NonTerminal nt : nonterminals.values()) {
-                System.out.println("static final int " + nt.name + " = " + nt.id + ";");
+            for (String nt : ntNames.keySet()) {
+                System.out.println("static final int " + nt + " = " + ntNames.get(nt) + ";");
             }
             System.out.println();
             
             System.out.println("terms:");
-            for (Terminal t : terminals.values()) {
-                System.out.println("static final int " + t.name + " = " + t.id + ";");
+            for (String t : termNames.keySet()) {
+                System.out.println("static final int " + t + " = " + termNames.get(t) + ";");
             }
             System.out.println();
             
@@ -82,12 +87,16 @@ public class Burg {
         }
     }
     
+    private static String curCost = null;
+    
     public static void generateBURM() {
         CodeBuilder code = new CodeBuilder();
         
         String pkg = "burm";
         
         code.appendStmtln("package " + pkg);
+        code.appendStmtln("import static burm.BurmState.INFINITE");
+        code.appendStmtln("import uvm.IRTreeNode;");
         
         code.appendln("public class BURM_GENERATED {");
         code.increaseIndent();
@@ -96,75 +105,62 @@ public class Burg {
          * terms / nonterms
          */
         code.appendCommentln("non terms");
-        for (NonTerminal nt : nonterminals.values()) {
-            code.appendStmtln("static final int " + nt.name + " = " + nt.id);
+        for (String nt : ntNames.keySet()) {
+            code.appendStmtln("static final int " + nt + " = " + ntNames.get(nt));
         }
         code.appendln();
         
         code.appendCommentln("terms");
-        for (Terminal t : terminals.values()) {
-            code.appendStmtln("static final int " + t.name + " = " + t.id);
+        for (String t : termNames.keySet()) {
+            code.appendStmtln("static final int " + t + " = " + termNames.get(t));
         }
         code.appendln();
         
         /*
-         * State and record() and first few lines of state()
+         * first few lines of state()
          */
-        Scanner hardcode = null;
-        try {
-            hardcode = new Scanner(new FileInputStream(HARDCODE_PIECES));
-            while (hardcode.hasNextLine()) {
-                code.appendlnNoIndent(hardcode.nextLine());
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            error("Error when copying from hard coded pieces: " + HARDCODE_PIECES); 
-        } finally {
-            if (hardcode != null)
-                hardcode.close();
-        }
+        code.appendln("public static BurmState state(IRTreeNode node, BurmState[] leaves) {");
+        code.increaseIndent();
+        code.appendStmtln("BurmState p = new BurmState()");
+        code.appendln();
+        code.appendStmtln("p.node = node");
+        code.appendStmtln("p.leaves = leaves");
         
         /*
          * rest of state()
          */
-        code.increaseIndent();
         code.append("p.cost = new short[]{");
-        int ntCount = nonterminals.size();
+        int ntCount = ntNames.size();
         for (int i = 0; i <= ntCount; i++)
-            if (i == 0)
-                code.appendNoIndent("0,");
-            else if (i != 0 && i != ntCount)
-                code.appendNoIndent("State.INFINITE,");
-            else code.appendlnNoIndent("State.INFINITE};");
+            if (i != ntCount)
+                code.appendNoIndent("INFINITE,");
+            else code.appendlnNoIndent("INFINITE};");
         code.append("p.rule = new short[]{");
         for (int i = 0; i <= ntCount; i++)
             if (i != ntCount)
-                code.appendNoIndent("0,");
-            else code.appendlnNoIndent("0};");
+                code.appendNoIndent("-1,");
+            else code.appendlnNoIndent("-1};");
         
         code.appendln();
         code.appendStmtln("int c");
         code.appendln();
         
-        code.appendln("switch (op) {");
+        code.appendln("switch (node.getOpcode()) {");
         
         // for every terminal
-        for (Terminal term : terminals.values()) {
-            code.appendln("case " + term.name + ":");
+        for (String term : termNames.keySet()) {
+            code.appendln("case " + term + ":");
             code.increaseIndent();
             
             // for every rule, this terminal is rhs
             for (Rule rule : rules) {
-                if (rule.rhs.id == term.id) {
-                    boolean needToMatchChildren = term.children.size() != 0;
+                if (rule.rhs.id == termNames.get(term)) {
+                    boolean needToMatchChildren = rule.rhs.children.size() != 0;
                     
                     if (needToMatchChildren) {
+                        curCost = "";
                         code.append("if (");
-                        for (int i = 0; i < term.children.size(); i++) {
-                            code.appendNoIndent(String.format("leaves[%d].rule[%s] != 0", i, term.children.get(i).name));
-                            if (i != term.children.size() - 1)
-                                code.appendNoIndent(" && ");
-                        }
+                        code.appendNoIndent(matchChildren(rule.rhs, null));
                         code.appendNoIndent(") {");
                         code.appendlnNoIndent();
                         
@@ -174,12 +170,11 @@ public class Burg {
                     // current cost
                     code.appendCommentln(rule.prettyPrint());
                     code.append("c = ");
-                    for (int i = 0; i < term.children.size(); i++) {
-                        code.appendNoIndent(String.format("leaves[%d].cost[%s] + ", i, term.children.get(i).name));
-                    }
+                    if (curCost != null)
+                        code.appendNoIndent(curCost);
                     code.appendNoIndent(Integer.toString(rule.cost));
                     code.appendNoIndent(";\n");
-                    code.appendStmtln(String.format("record(p, %s, c, %d)", rule.lhs.name, rule.ruleno));
+                    code.appendStmtln(String.format("p.record(%s, c, %d)", rule.lhs.name, rule.ruleno));
                     
                     // chain cost
                     code.appendln();
@@ -189,6 +184,7 @@ public class Burg {
                     if (needToMatchChildren) {
                         code.decreaseIndent();
                         code.appendln("}");
+                        curCost = null;
                     }
                 }
             }
@@ -218,7 +214,7 @@ public class Burg {
             writer = new BufferedWriter(new FileWriter(new File(output)));
             writer.write(code.toString());
         } catch (IOException e) {
-            System.err.println("Error when writing BURM to file:" + output);
+            System.out.println("Error when writing BURM to file:" + output);
             e.printStackTrace();
         } finally {
             if (writer != null)
@@ -230,13 +226,40 @@ public class Burg {
         }
     }
     
+    public static String matchChildren(TreeNode node, String base) {
+        if (base == null)
+            base = "";
+        
+        StringBuilder ret = new StringBuilder();
+        
+        for (int i = 0; i < node.children.size(); i++) {
+            TreeNode cur = node.children.get(i);
+            if (cur instanceof NonTerminal) {
+                ret.append(String.format(base + "leaves[%d].rule[%s] != -1", i, cur.name));
+                curCost += String.format(base + "leaves[%d].cost[%s] + ", i, cur.name);
+            } else {
+                // cur is terminal
+                ret.append(String.format(base + "leaves[%d].node.getOpcode() == %s", i, cur.name));
+            }
+            
+            if (cur.children.size() != 0)
+                ret.append(" && " + matchChildren(cur, String.format(base+"leaves[%d].", i)));
+            
+            if (i != node.children.size() - 1)
+                ret.append(" && ");
+        }
+        
+        return ret.toString();
+    }
+    
     public static void genChainCost(CodeBuilder code, NonTerminal nt, String cost) {
+        System.out.println("genChainCost(" + nt.prettyPrint() + ", " + cost + ")");
         for (Rule rule : rules) {
-            if (rule.rhs.id == nt.id) {
+            if (rule.rhs instanceof NonTerminal && rule.rhs.id == nt.id) {
                 String chainCost = cost + "+" + rule.cost;
                 code.appendCommentln(rule.prettyPrint());
                 code.appendStmtln(
-                        String.format("record(p, %s, %s, %d)", 
+                        String.format("p.record(%s, %s, %d)", 
                         rule.lhs.name,
                         chainCost,
                         rule.ruleno));
@@ -351,15 +374,16 @@ public class Burg {
         }
     }
     
-    
-    static final int MAX_NT = 100;
-    static class Terminal extends TreeNode {
-        static int nextId = MAX_NT + 1;
-        
-        Terminal(String name) {
+    static class Terminal extends TreeNode {        
+        Terminal(String name, int op) {
             super(name);
-            this.id = nextId;
-            nextId ++;
+            
+            if (termNames.containsKey(name))
+                this.id = termNames.get(name);
+            else {            
+                this.id = op;
+                termNames.put(name, op);
+            }
         }        
     }
     
@@ -367,11 +391,15 @@ public class Burg {
         static int nextId = 1;
         NonTerminal(String name) {
             super(name + "_NT");
-            this.id = nextId;
-            nextId ++;
+            name = name + "_NT";
             
-            if (nextId > MAX_NT)
-                error("Exceeds maximum of non terminal");
+            if (ntNames.containsKey(name)) {
+                this.id = ntNames.get(name);
+            } else {
+                this.id = nextId;
+                nextId ++;
+                ntNames.put(name, this.id);
+            }
         }
     }
     
@@ -399,21 +427,23 @@ public class Burg {
     }
     
     public static NonTerminal findOrCreateNonTerm(String name) {
-        if (nonterminals.containsKey(name))
-            return nonterminals.get(name);
-        
         NonTerminal nt = new NonTerminal(name);
-        nonterminals.put(name, nt);
+        nonterms.add(nt);
         return nt;
     }
     
     public static Terminal findOrCreateTerm(String name) {
-        if (terminals.containsKey(name))
-            return terminals.get(name);
-        
-        Terminal t = new Terminal(name);
-        terminals.put(name, t);
-        return t;
+        Field f = null;
+        try {
+            f = OpCode.class.getField(name);
+            Terminal t = new Terminal(name, f.getInt(null));
+            terms.add(t);
+            return t;
+        } catch (Exception e) {
+            e.printStackTrace();
+            error("Cannot find terminal : " + name + " in uvm.OpCode");
+            return null;
+        } 
     }
     
     public static List<Rule> rules = new ArrayList<Rule>();    
@@ -422,7 +452,7 @@ public class Burg {
     }
     
     public static void error(String message) {
-        System.err.println(message);
+        System.out.println(message);
         System.exit(1);
     }
 }

@@ -31,4 +31,20 @@ public class InstPhi extends Instruction {
     public String prettyPrint() {
         return "(PHI " + val1.prettyPrint() + " " + label1.prettyPrint() + " " + val2.prettyPrint() + " " + label2.prettyPrint() + ")";
     }
+
+    public Value getVal1() {
+        return val1;
+    }
+
+    public Label getLabel1() {
+        return label1;
+    }
+
+    public Value getVal2() {
+        return val2;
+    }
+
+    public Label getLabel2() {
+        return label2;
+    }
 }

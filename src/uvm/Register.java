@@ -10,6 +10,7 @@ public class Register extends Value{
     
     Register(String name) {
         this.name = name;
+        this.opcode = OpCode.REG;
     }
 
     @Override

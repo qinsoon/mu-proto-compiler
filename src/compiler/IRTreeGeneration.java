@@ -5,9 +5,10 @@ import uvm.Function;
 import uvm.IRTreeNode;
 import uvm.Instruction;
 import uvm.MicroVM;
+import uvm.OpCode;
 import uvm.Register;
 import uvm.Value;
-import uvm.inst.InstPseudoAssign;
+import uvm.inst.*;
 
 public class IRTreeGeneration {
     public static void execute() {
@@ -15,8 +16,21 @@ public class IRTreeGeneration {
             for (BasicBlock bb : f.getBBs()) {
                 for (Instruction inst : bb.getInsts()) {
                     
-                    for (Value v : inst.getOperands()) {
-                        inst.addChild(v);
+                    if (inst instanceof InstBranch)
+                        inst.addChild(((InstBranch)inst).getTarget());
+                    else if (inst instanceof InstBranch2) {
+                        inst.addChild(((InstBranch2) inst).getCond());
+                        inst.addChild(((InstBranch2) inst).getIfTrue());
+                        inst.addChild(((InstBranch2) inst).getIfFalse());;
+                    } else if (inst instanceof InstPhi) {
+                        inst.addChild(((InstPhi) inst).getVal1());
+                        inst.addChild(((InstPhi) inst).getLabel1());
+                        inst.addChild(((InstPhi) inst).getVal2());
+                        inst.addChild(((InstPhi) inst).getLabel2());
+                    } else {
+                        for (Value v : inst.getOperands()) {
+                            inst.addChild(v);
+                        }
                     }
                     
                     if (inst.hasDefReg()) {
@@ -40,18 +54,8 @@ public class IRTreeGeneration {
             System.out.println(f);
             
             for (IRTreeNode node : f.tree) {
-                printNode(1, node);
+                System.out.println("+" + node.printNode());
             }
         }
-    }
-    
-    public static void printNode(int level, IRTreeNode node) {
-//        for (int i = 0; i < level; i++)
-//            System.out.print(' ');
-        System.out.println("+" + node.prettyPrint());
-        for (int i = 0; i < node.getArity(); i++) {
-//            printNode(level + 1, node.getChild(i));
-        }
-            
     }
 }
