@@ -31,12 +31,22 @@ public class Burg {
     public static String ruleFile;
     public static String output;
     
+    public static final String BURM_FILE = "BURM_GENERATED.java";
+    
+    public static boolean debug = false;
+    
     public static void main(String[] args) {
         for (int i = 0; i < args.length; i++) {
-            if (args[i].equalsIgnoreCase("-o")) {
+            if (args[i].equalsIgnoreCase("-d")) {
+                debug = true;
+            }        
+            else if (args[i].equalsIgnoreCase("-o")) {
                 output = args[i+1];
+                if (!output.endsWith("/"))
+                    output += "/";
                 i++;
-            } else {
+            } 
+            else {
                 // naming a rule file
                 if (ruleFile == null)
                     ruleFile = args[i];
@@ -80,12 +90,16 @@ public class Burg {
             System.out.println();
             
             generateBURM();
+            
+            generateMCLayer();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    
+    public static String targetName = null;
     
     private static String curCost = null;
     
@@ -209,12 +223,16 @@ public class Burg {
         System.out.println("========BURM Generated========");
         System.out.println(code.toString());
         
+        writeTo(output + BURM_FILE, code.toString());
+    }
+    
+    public static void writeTo(String file, String code) {
         BufferedWriter writer = null;
         try {
-            writer = new BufferedWriter(new FileWriter(new File(output)));
-            writer.write(code.toString());
+            writer = new BufferedWriter(new FileWriter(new File(file)));
+            writer.write(code);
         } catch (IOException e) {
-            System.out.println("Error when writing BURM to file:" + output);
+            System.out.println("Error when writing to file:" + file);
             e.printStackTrace();
         } finally {
             if (writer != null)
@@ -266,6 +284,58 @@ public class Burg {
                 genChainCost(code, rule.lhs, chainCost);
             }
         }
+    }
+    
+    /*
+     * Machine Code Layer
+     */
+    static class MCOp {
+        String name;
+        int operands;
+    }
+    
+    public static final HashMap<String, MCOp> mcOps = new HashMap<String, MCOp>();
+    
+    public static String abstractOpClass = "MachineCode";    
+    
+    public static void generateMCLayer() {
+        System.out.println("MC ops:");
+        for (String op : mcOps.keySet()) {
+            System.out.println("-" + op + "(" + mcOps.get(op).operands + ")");
+        }
+        
+        generateMCOpAbstractClass();
+        for (MCOp op : mcOps.values()) {
+            generateMCOpClass(op);
+        }
+    }
+    
+    public static void generateMCOpAbstractClass() {
+        abstractOpClass = targetName + abstractOpClass;
+        
+        CodeBuilder code = new CodeBuilder();
+        
+        code.appendStmtln("package burm.mc");
+        
+        code.appendln("public abstract class " + abstractOpClass + " {");
+        code.increaseIndent();
+        
+        code.appendStmtln("public String name");
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        writeTo(output + "mc/" + abstractOpClass + ".java", code.toString());
+    }
+    
+    public static void generateMCOpClass(MCOp op) {
+        CodeBuilder code = new CodeBuilder();
+        
+        code.appendStmtln("package burm.mc");
+        
+        code.appendln("public class " + op.name + " extends " + abstractOpClass + "{");
+        code.appendln("}");
+        
+        writeTo(output + "mc/" + op.name + ".java", code.toString());
     }
     
     static class CodeBuilder {

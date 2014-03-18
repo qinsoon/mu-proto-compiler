@@ -24,12 +24,78 @@ string
 
 treerule
     :   NONTERM ':' node
-        COST
+        mcodes?
+        DIGITS
     ;
 
 node
     :   TERM ('(' node+ ')')?
     |   NONTERM
+    ;
+
+/*
+ * about machine code generation rule
+ */
+mcodes
+    :   ('>' mcode)+
+    ;
+                
+mcode
+    :   mcOp mcOperand*
+    ;
+
+mcOp
+    :   string
+    ;
+
+mcOperand
+    :   'P' multiIndex          # mcOpdNodeChild
+    |   'P.' funcCall '(' mcOperand* ')'
+                                # mcOpdNodeFunc
+    |   '$' mcImmediate         # mcOpdImm
+    |   '%' mcReg               # mcOpdReg
+    ;
+
+funcCall
+    :   string
+    ;
+
+multiIndex
+    :   index+
+    ;
+
+index
+    :   '[' DIGITS ']'
+    |   '[' mcOperand ']'
+    ;
+
+mcReg
+    :   'res_reg'                   # mcOpdResReg
+    |   'ret_reg' index             # mcOpdRetReg
+    |   'param_reg' index           # mcOpdParamReg
+    |   string                  # mcOpdMachineReg
+    ;
+
+mcImmediate
+    :   mcIntImmediate
+    |   mcFpImmediate
+    ;
+
+mcIntImmediate
+    :   ('+'|'-')? DIGITS
+    ;
+
+mcFpImmediate
+    :   ('+'|'-')? DIGITS 'e' ('+'|'-')? DIGITS
+    |   ('+'|'-')? DIGITS '.' DIGITS
+    ;
+
+/*
+ * terminals
+ */
+
+DIGITS
+    :   DIGIT+
     ;
 
 NONTERM
@@ -38,10 +104,6 @@ NONTERM
 
 TERM
     :   UPPERCHAR CHAR+
-    ;
-
-COST
-    :   DIGIT+
     ;
 
 fragment

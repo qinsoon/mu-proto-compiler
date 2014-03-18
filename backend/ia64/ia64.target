@@ -5,8 +5,7 @@
 .target IA64
 
 stmt : PSEUDO_ASSIGN(reg op)
-// mov
-1
+0
 
 stmt : op
 0
@@ -16,51 +15,80 @@ reg : op
 
 op : BRANCH2(value label label)
 // cmp, jcc
+> cmp P[0] $1
+> je  P[1]
+> jne P[2]
 2
 
 op : BRANCH2(SLT(value value) label label)
 // cmp, jcc
+> cmp P[0][0] P[0][1]
+> jl  P[1]
+> jge P[2]
 2
 
 op : BRANCH2(SGT(value value) label label)
 // cmp, jcc
+> cmp P[0][0] P[0][1]
+> jg  P[1]
+> jle P[2]
 2
 
 op : BRANCH2(EQ(value value) label label)
 // jcc
+> cmp P[0][0] P[0][1]
+> je  P[1]
+> jne P[2]
 2
 
 op : SLT(value value)
-// cmp
-1
+// mov cmp cmov
+> mov %res_reg_reg $0
+> cmp P[0] P[1]
+> cmovlt %res_reg $1
+2
 
 op : SGT(value value)
-// cmp
-1
+// mov cmp cmov
+> mov %res_reg $0
+> cmp P[0] P[1]
+> cmovgt %res_reg $1
+2
 
 op : EQ(value value)
-// cmp
+// mov cmp cmov
+> mov %res_reg $0
+> cmp P[0] P[1]
+> cmoveq %res_reg $0
 1
 
 op : RET2(value)
 // mov, ret
+> mov %ret_reg[0] P[0]
+> ret
 2
 
 op : PARAM
 // mov
+> mov %res_reg %param_reg[P.getIndex()]
 1
 
 op : SREM(value value)
 // mov, div, mov
+> mov %rax P[0]
+> idiv P[1]
+> mov %res_reg %rdx
 3
 
 op : PHI(value label value label)
-// mov
+> mcphi P[0] P[1] P[2] P[3]
 1
 
 op : ADD(value value)
 // add
-1
+> mov %res_reg P[0]
+> add %res_reg P[1]
+2
 
 value : reg
 0
