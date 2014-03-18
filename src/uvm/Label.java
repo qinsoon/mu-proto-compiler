@@ -5,7 +5,7 @@ public class Label extends IRTreeNode {
     
     Instruction inst;
     
-    public Label(String name) {
+    Label(String name) {
         this.name = name;
         this.opcode = OpCode.LABEL;
     }

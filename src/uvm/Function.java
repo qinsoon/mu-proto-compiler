@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
+import compiler.UVMCompiler;
+
 import uvm.metadata.Const;
 
 public class Function {
@@ -25,6 +27,7 @@ public class Function {
     public List<IRTreeNode> tree = new ArrayList<IRTreeNode>();
     
     public HashMap<String, Register> registers = new HashMap<String, Register>();
+    
     public Register findOrCreateRegister(String name) {
         Register ret = registers.get(name);
         if (ret == null) {
@@ -33,6 +36,32 @@ public class Function {
         }
         
         return ret;
+    }
+    
+    public HashMap<String, Label> labels = new HashMap<String, Label>();
+    
+    public Label findOrCreateLabel(String name) {
+        if (labels.containsKey(name))
+            return labels.get(name);
+        
+        Label ret = new Label(name);
+        labels.put(name, ret);
+        return ret;
+    }
+    
+
+    public void resolveLabels() {
+        for (BasicBlock bb : BBs) {
+            Label label = labels.get(bb.getName());
+            if (label == null)
+                UVMCompiler.error("Cant find label for basic block " + bb.getName());
+            
+            label.inst = bb.getInsts().get(0);
+        }
+        
+        // assertion
+        for (Label l : labels.values())
+            UVMCompiler._assert(l.inst != null, "cannot find instruction for label " + l.name); 
     }
     
     public Function(String name, FunctionSignature sig) {

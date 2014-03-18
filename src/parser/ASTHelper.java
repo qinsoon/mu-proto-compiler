@@ -118,13 +118,13 @@ public abstract class ASTHelper {
             return node;
         } else if (ctx instanceof parser.uIRParser.InstBranchContext) {
             String target = getIdentifierName(((parser.uIRParser.InstBranchContext) ctx).IDENTIFIER(), false);
-            return new InstBranch(new Label(target));
+            return new InstBranch(f.findOrCreateLabel(target));
         } else if (ctx instanceof parser.uIRParser.InstBranch2Context) {
             parser.uIRParser.ValueContext condContext = ((parser.uIRParser.InstBranch2Context) ctx).value();
             
             Value cond = getValue(f, condContext);            
-            Label ifTrue = new Label(getIdentifierName(((parser.uIRParser.InstBranch2Context) ctx).IDENTIFIER(0), false));
-            Label ifFalse = new Label(getIdentifierName(((parser.uIRParser.InstBranch2Context) ctx).IDENTIFIER(1), false));
+            Label ifTrue = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstBranch2Context) ctx).IDENTIFIER(0), false));
+            Label ifFalse = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstBranch2Context) ctx).IDENTIFIER(1), false));
             
             return new InstBranch2(cond, ifTrue, ifFalse);
         } 
@@ -135,9 +135,9 @@ public abstract class ASTHelper {
             String out = getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(0), false);
             
             Value val1 = getValue(f, ((parser.uIRParser.InstPhiContext) ctx).value(0));
-            Label label1 = new Label(getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(1), false));
+            Label label1 = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(1), false));
             Value val2 = getValue(f, ((parser.uIRParser.InstPhiContext) ctx).value(1));
-            Label label2 = new Label(getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(2), false));
+            Label label2 = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(2), false));
             
             Instruction node = new InstPhi(t, val1, label1, val2, label2);
             node.setDefReg(f.findOrCreateRegister(out));

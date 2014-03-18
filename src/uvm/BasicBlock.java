@@ -4,20 +4,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BasicBlock {
-    String name;
+    Label label;
     List<Instruction> insts;
     
-    public BasicBlock(String name) {
-        this.name = name;
+    public BasicBlock(Function f, String name) {
+        this.label = f.findOrCreateLabel(name);
         this.insts = new ArrayList<Instruction>();
     }
     
     public void addInstruction(Instruction i) {
         this.insts.add(i);
     }
+    
+    public Label getLabel() {
+        return label;
+    }
 
     public String getName() {
-        return name;
+        return label.name;
     }
 
     public List<Instruction> getInsts() {

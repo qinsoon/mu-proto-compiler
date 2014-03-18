@@ -78,4 +78,9 @@ public class UVMCompiler {
         Thread.dumpStack();
         System.exit(1);
     }
+    
+    public static final void _assert(boolean cond, String message) {
+        if (!cond)
+            error(message);
+    }
 }

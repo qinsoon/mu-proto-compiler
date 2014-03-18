@@ -47,6 +47,7 @@ public class uIRListenerImpl extends uIRBaseListener {
             BBs.add(curBB);
         
         currentFunc.defineFunction(localConstPool, BBs);
+        currentFunc.resolveLabels();
         
         // reset
         currentFunc = null;
@@ -64,11 +65,13 @@ public class uIRListenerImpl extends uIRBaseListener {
                 localConstPool.put(c.getName(), c);
             } else if (ctx.label() != null) {
                 // label - end of last BB, starts of a new BB
-                if (curBB != null)
+                if (curBB != null) {
+                    UVMCompiler._assert(curBB.getInsts().size() != 0, "A basic block needs at least one instruction. BB " + curBB.getName() + " is empty. ");
                     BBs.add(curBB);
+                }
                 
                 String labelName = ASTHelper.getIdentifierName(ctx.label().IDENTIFIER(), false);
-                curBB = new BasicBlock(labelName);
+                curBB = new BasicBlock(currentFunc, labelName);
             } else if (ctx.inst() != null) {
                 // inst
                 Instruction i = ASTHelper.getInstruction(currentFunc, ctx.inst());
