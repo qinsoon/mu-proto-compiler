@@ -9,6 +9,11 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import compiler.phase.DefUseGeneration;
+import compiler.phase.IRTreeGeneration;
+import compiler.phase.InstructionSelection;
+import compiler.phase.MachineCodeEmission;
+
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
@@ -58,13 +63,13 @@ public class UVMCompiler {
             }
             
             // get uses
-            DefUseGeneration.execute();
+            new DefUseGeneration("defusegen").execute();
             
-            IRTreeGeneration.execute();
+            new IRTreeGeneration("treegen").execute();
             
-            InstructionSelection.execute();
+            new InstructionSelection("instsel").execute();
             
-            MachineCodeEmission.execute();
+            new MachineCodeEmission("mcemit").execute();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

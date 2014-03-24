@@ -1,8 +1,10 @@
-package compiler;
+package compiler.phase;
 
 import java.util.List;
 
+import compiler.UVMCompiler;
 import burm.BURM_GENERATED;
+import uvm.BasicBlock;
 import uvm.CompiledFunction;
 import uvm.Function;
 import uvm.IRTreeNode;
@@ -10,8 +12,12 @@ import uvm.Instruction;
 import uvm.MicroVM;
 import uvm.mc.AbstractMachineCode;
 
-public class MachineCodeEmission {
-    public static void execute() {
+public class MachineCodeEmission extends CompilationPhase{
+    public MachineCodeEmission(String name) {
+        super(name);
+    }
+
+    public void execute() {
         for (Function f : MicroVM.v.funcs.values()) {
             CompiledFunction cf = new CompiledFunction(f);
             
@@ -31,6 +37,41 @@ public class MachineCodeEmission {
                 System.out.println(mc.prettyPrint());
             }
             System.out.println();
+            
+            MicroVM.v.compiledFunc(cf);
         }
+    }
+
+    @Override
+    protected void preChecklist() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    protected void postChecklist() {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    protected void visitTreeNode(IRTreeNode node) {
+
+    }
+
+    @Override
+    protected void visitInstruction(Instruction inst) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    protected void visitFunction(Function f) {
+    }
+
+    @Override
+    protected void visitBasicBlock(BasicBlock bb) {
+        // TODO Auto-generated method stub
+        
     }
 }
