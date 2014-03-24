@@ -1,10 +1,11 @@
-syntax: regexp
+syntax: glob
 
-?\.class
-?\.DS_Store
-?\.orig
-bin\\*
-resource\\*
-package-list\\*
-parser-generated\\*
-backend/codegengen-gen\\*
+*.swp
+.DS_Store
+.ant_targets
+bin
+resource
+package-list
+parser-generated
+backend/codegengen-gen
+

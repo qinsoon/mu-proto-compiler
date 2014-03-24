@@ -68,7 +68,7 @@
 				<pathelement path="${antlr-jar}"/>
 			</classpath>
 			<arg value="${target-rule-file}"/>
-			<arg line="-o ${burm-file}"/>
+			<arg line="-o ${burm-dir}"/>
 		</java>
 
 	</target>

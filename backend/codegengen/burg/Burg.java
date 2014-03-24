@@ -229,7 +229,9 @@ public class Burg {
     public static void writeTo(String file, String code) {
         BufferedWriter writer = null;
         try {
-            writer = new BufferedWriter(new FileWriter(new File(file)));
+            File outFile = new File(file);
+            outFile.getParentFile().mkdirs();
+            writer = new BufferedWriter(new FileWriter(outFile));
             writer.write(code);
         } catch (IOException e) {
             System.out.println("Error when writing to file:" + file);
