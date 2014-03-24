@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import compiler.UVMCompiler;
-
+import uvm.mc.AbstractMachineCode;
 import uvm.metadata.Const;
 
 public class Function {
@@ -56,12 +56,8 @@ public class Function {
             if (label == null)
                 UVMCompiler.error("Cant find label for basic block " + bb.getName());
             
-            label.inst = bb.getInsts().get(0);
-        }
-        
-        // assertion
-        for (Label l : labels.values())
-            UVMCompiler._assert(l.inst != null, "cannot find instruction for label " + l.name); 
+            bb.getInsts().get(0).setLabel(label);
+        } 
     }
     
     public Function(String name, FunctionSignature sig) {

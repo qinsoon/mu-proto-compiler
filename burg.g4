@@ -18,14 +18,19 @@ targetDecl
     :   '.target' string
     ;
 
-string
-    :   (NONTERM | TERM)
-    ;
-
 treerule
     :   NONTERM ':' node
         mcodes?
+        asOperand?
         DIGITS
+    ;
+
+asOperand
+    :   '=' 
+    ;
+
+string
+    :   (NONTERM | TERM)
     ;
 
 node
@@ -50,10 +55,13 @@ mcOp
 
 mcOperand
     :   'P' multiIndex          # mcOpdNodeChild
-    |   'P.' funcCall '(' mcOperand* ')'
-                                # mcOpdNodeFunc
+    |   'P(' funcCallRcv ').' funcCall '()'      # mcOpdNodeFunc
     |   '$' mcImmediate         # mcOpdImm
     |   '%' mcReg               # mcOpdReg
+    ;
+
+funcCallRcv
+    :   string
     ;
 
 funcCall

@@ -15,4 +15,8 @@ public class InstParam extends Instruction {
     public String prettyPrint() {
         return "(PARAM " + paramIndex + ")";
     }
+    
+    public int getIndex() {
+        return paramIndex;
+    }
 }

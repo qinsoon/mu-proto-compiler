@@ -44,6 +44,12 @@ public class IRTreeGeneration {
                         assign.addChild(inst.getDefReg());
                         assign.addChild(inst);
                         
+                        // check if the old inst has a label associated with it
+                        if (inst.getLabel() != null) {
+                            assign.setLabel(inst.getLabel());
+                            inst.setLabel(null);
+                        }                            
+                        
                         f.tree.add(assign);
                     } else {
                         f.tree.add(inst);

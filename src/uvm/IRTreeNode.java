@@ -7,12 +7,20 @@ import burm.BurmState;
 import compiler.UVMCompiler;
 
 public abstract class IRTreeNode {
+    static int nextId = 0;
+    int id;
+    
     private static final int UNDEFINE = 0xABCD;
     
     protected List<IRTreeNode> children = new ArrayList<IRTreeNode>();
     protected int opcode = UNDEFINE;
     
     public BurmState state;
+    
+    protected IRTreeNode() {
+        this.id = nextId;
+        nextId++;
+    }
     
     public int getArity() {
         return children.size();
@@ -28,6 +36,10 @@ public abstract class IRTreeNode {
     
     public int getOpcode() {
         return opcode;
+    }
+    
+    public int getId() {
+        return id;
     }
     
     public final String printNode() {

@@ -12,4 +12,8 @@ public class IntImmediate extends ImmediateValue {
     public String prettyPrint() {
         return "(INT_IMM " + value + ")";
     }
+    
+    public long getValue() {
+        return value;
+    }
 }

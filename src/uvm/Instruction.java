@@ -12,11 +12,21 @@ public abstract class Instruction extends IRTreeNode {
     
     protected List<Register> regUses = new ArrayList<Register>();
     
+    uvm.Label label;
+    
     public void setDefReg(Register reg) {
         if (def != null)
             UVMCompiler.error("trying to rewrite def of " + this.prettyPrint());
         
         def = reg;
+    }
+    
+    public void setLabel(Label label) {
+        this.label = label;
+    }
+    
+    public Label getLabel() {
+        return label;
     }
     
     public Register getDefReg() {
