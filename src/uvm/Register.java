@@ -22,6 +22,10 @@ public class Register extends Value{
     public String prettyPrint() {
         return "%" + name;
     }
+    
+    public String getName() {
+        return name;
+    }
 
     @Override
     public boolean isRegister() {

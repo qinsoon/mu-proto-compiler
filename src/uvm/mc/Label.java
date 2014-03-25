@@ -1,11 +1,10 @@
-package uvm;
+package uvm.mc;
 
-public class Label extends IRTreeNode {
+public class Label extends Operand {
     String name;
     
-    Label(String name) {
+    public Label(String name) {
         this.name = name;
-        this.opcode = OpCode.LABEL;
     }
     
     public String getName() {
@@ -13,6 +12,6 @@ public class Label extends IRTreeNode {
     }
     
     public String prettyPrint() {
-        return "(LABEL " + name + ")";
+        return "#" + name;
     }
 }

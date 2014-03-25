@@ -40,13 +40,20 @@
 	</target>
 	
 	<target name="generate-BURM">
-		<echo message="javac for Burg"/>
+		<echo message="javac for Burg:"/>
 		<mkdir dir="${burg-exec-dir}"/>
+		
+		<echo message="javac some uVM classes..."/>
 		<javac srcdir="${uvm-dir}/uvm"
 		       includeantruntime="false"
 		       destdir="${burg-exec-dir}">
 		       <include name="OpCode.java"/>
 		</javac>
+		<javac srcdir="${uvm-dir}/uvm/mc"
+			   includeantruntime="false"
+			   destdir="${burg-exec-dir}"/>
+			   
+		<echo message="javac burg..."/>
 		<javac srcdir="${codegengen-dir}/burg" 
 		       classpath="${antlr-jar}:${burg-exec-dir}" 
 		       includeantruntime="false"
@@ -61,6 +68,7 @@
 		<echo message="to ${burm-dir}"/>
 	    <echo message="(in case of any error in this step, check ${burm-dir}/build-burm.log)"/>
 		<mkdir dir="${burm-dir}"/>
+		<mkdir dir="${burm-dir}/mc"/>
 		<java classname="burg.Burg" fork="true" failonerror="true"
 		      output="${burm-dir}/build-burm.log">
 			<classpath>

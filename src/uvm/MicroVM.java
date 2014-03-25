@@ -1,6 +1,8 @@
 package uvm;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class MicroVM {
     public static final int POINTER_SIZE = 64;
@@ -21,5 +23,11 @@ public class MicroVM {
     public void declareFunc(String name, Function f) {
         funcs.put(name, f);
         System.out.println("declared func: " + f);
+    }
+    
+    public List<CompiledFunction> compiledFuncs = new ArrayList<CompiledFunction>();
+    
+    public void compiledFunc(CompiledFunction cf) {
+        compiledFuncs.add(cf);
     }
 }

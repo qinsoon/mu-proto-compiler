@@ -5,7 +5,9 @@
 .target IA64
 
 stmt : PSEUDO_ASSIGN(reg op)
-0
+// mov
+> mov P[0] P[1]
+1
 
 stmt : op
 0
@@ -43,24 +45,24 @@ op : BRANCH2(EQ(value value) label label)
 
 op : SLT(value value)
 // mov cmp cmov
-> mov %res_reg_reg $0
+> mov %res_reg $0
 > cmp P[0] P[1]
 > cmovlt %res_reg $1
-2
+3
 
 op : SGT(value value)
 // mov cmp cmov
 > mov %res_reg $0
 > cmp P[0] P[1]
 > cmovgt %res_reg $1
-2
+3
 
 op : EQ(value value)
 // mov cmp cmov
 > mov %res_reg $0
 > cmp P[0] P[1]
 > cmoveq %res_reg $0
-1
+3
 
 op : RET2(value)
 // mov, ret
@@ -70,7 +72,7 @@ op : RET2(value)
 
 op : PARAM
 // mov
-> mov %res_reg %param_reg[P.getIndex()]
+> mov %res_reg %param_reg[P(InstParam).getIndex()]
 1
 
 op : SREM(value value)
