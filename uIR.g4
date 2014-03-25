@@ -69,11 +69,15 @@ typeDescriptor
     :   'int' '<' intImmediate '>'          # IntType
     |   'float'                             # FloatType
     |   'double'                            # DoubleType
-    |   'struct' '<' type+ '>'              # StructType
-    |   'array' '<' type intImmediate '>'   # ArrayType
     |   'ref' '<' type '>'                  # RefType
     |   'iref' '<' type '>'                 # IRefType
+    |   'struct' '<' type+ '>'              # StructType
+    |   'array' '<' type intImmediate '>'   # ArrayType
+    |   'hybrid' '<' type type '>'          # HybridType
     |   'void'                              # VoidType
+    |   'func' '<' funcSig '>'              # FuncType
+    |   'thread'                            # ThreadType
+    |   'stack'                             # StackType
     ;
 
 inst
@@ -85,11 +89,10 @@ instBody
     :   'PARAM' intImmediate                    # InstParam
 
     // Integer/FP Arithmetic
-    |   binOps '<' type '>' value value         # BinOp
+    |   binOps '<' type '>' value value         # InstBinOp
 
     // Integer/FP Comparison
-    |   'ICMP' iCmpOps '<' type '>' value value     # ICmp
-    |   'FCMP' fCmpOps '<' type '>' value value     # FCmp
+    |   cmpOps '<' type '>' value value         # InstCmp
     
     // Select
     |   'SELECT' '<' type '>' value value value     # InstSelect
@@ -106,12 +109,9 @@ instBody
             (IDENTIFIER ':' value ';')* '}'         # InstPhi
 
     // Inter-function Control Flow
-    |   'CALL' '<' funcSig '>' IDENTIFIER '('
-            ('<' type '>' value)* ')'               # InstCall
-    |   'INVOKE' '<' funcSig '>' IDENTIFIER '('
-            ('<' type '>' value)* ')' IDENTIFIER IDENTIFIER # InstInvoke
-    |   'TAILCALL' '<' funcSig '>' IDENTIFIER '('
-            ('<' type '>' value)* ')'               # InstTailCall
+    |   'CALL' funcCallBody                         # InstCall
+    |   'INVOKE' funcCallBody IDENTIFIER IDENTIFIER # InstInvoke
+    |   'TAILCALL' funcCallBody                     # InstTailCall
 
     |   'RET' '<' type '>' value                    # InstRet
     |   'RETVOID'                                   # InstRetVoid
@@ -142,10 +142,31 @@ instBody
     |   'ATOMICRMW' atomicDecl? atomicRMWOp
                 '<' type '>' value value                # InstAtomicRMW
 
-    // TODO: add thread/stack operations
-    // TODO: add native interfaces
-    // TODO: add traps
+    // Thread and Stack Operations
+    |   'NEWSTACK'  funcCallBody                        # InstNewStack
+    |   'NEWTHREAD' value                               # InstNewThread
+    |   'SWAPSTACK' value                               # InstSwapStack
+    |   'KILLSTACK' value                               # InstKillStack
+    |   'SWAPANDKILL' value                             # InstSwapAndKill
+    |   'THREADEXIT'                                    # InstThreadExit
+
+    // Trap
+    |   'TRAP' args                                     # InstTrap
+    |   'TRAPCALL' '<' type '>' args                    # InstTrapCall
+
+    // Foreign Function Interface
+    |   'CCALL' callConv funcCallBody                   # InstCCall
     ;
+
+funcCallBody
+    :   '<' funcSig '>' value args
+    ;
+
+args
+    :   '(' value* ')'
+    ;
+
+callConv : 'DEFAULT' ;
 
 binOps : iBinOps | fBinOps ;
 
@@ -157,15 +178,17 @@ iBinOps
 fBinOps
     : 'FADD' | 'FSUB' | 'FMUL' | 'FDIV' | 'FREM'
     ;
-    
+
+cmpOps : iCmpOps | fCmpOps ;
+
 iCmpOps
     : 'EQ' | 'NE' | 'SGT'| 'SLT'| 'SGE'| 'SLE' | 'UGT' | 'ULT' | 'UGE' | 'ULE'
     ;
 
 fCmpOps
-    : 'TRUE' | 'FALSE' 
-    | 'UNO' | 'UEQ' | 'UNE' | 'UGT' | 'ULT' | 'UGE' | 'ULE'
-    | 'ORD' | 'OEQ' | 'ONE' | 'OGT' | 'OLT' | 'OGE' | 'OLE'
+    : 'FTRUE' | 'FFALSE' 
+    | 'FUNO' | 'FUEQ' | 'FUNE' | 'FUGT' | 'FULT' | 'FUGE' | 'FULE'
+    | 'FORD' | 'FOEQ' | 'FONE' | 'FOGT' | 'FOLT' | 'FOGE' | 'FOLE'
     ;
     
 convOps
