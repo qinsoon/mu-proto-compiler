@@ -5,6 +5,7 @@ syntax: glob
 .ant_targets
 bin
 resource
+target
 package-list
 parser-generated
 backend/codegengen-gen

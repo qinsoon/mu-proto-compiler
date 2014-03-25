@@ -10,8 +10,9 @@ ir
 
 metaData
     :   constDef
+    |   funcSigDef
+    |   funcDecl
     |   funcDef
-    |   label
     |   typeDef
     ;
 
@@ -19,6 +20,19 @@ constDef
     :   '.const' IDENTIFIER '=' '<' type '>' immediate
     ;
 
+funcSigDef
+    :   '.funcsig' IDENTIFIER '=' funcSig
+    ;
+
+funcSig
+    :   IDENTIFIER
+    |   type '(' type* ')'
+    ;
+
+funcDecl
+    :   '.funcdecl' IDENTIFIER '<' funcSig '>'
+    ;
+    
 funcDef
     :   '.funcdef' IDENTIFIER '<' funcSig '>' funcBody
     ;
@@ -51,10 +65,6 @@ immediate
     |   fpImmediate
     ;
 
-funcSig
-    :   type '(' type* ')'
-    ;
-
 typeDescriptor
     :   'int' '<' intImmediate '>'          # IntType
     |   'float'                             # FloatType
@@ -67,31 +77,114 @@ typeDescriptor
     ;
 
 inst
-    :   IDENTIFIER '=' 'PARAM' intImmediate                 # InstParam
-
-    |   'BRANCH' IDENTIFIER                                 # InstBranch
-    |   'BRANCH2' value IDENTIFIER IDENTIFIER               # InstBranch2
-    |   IDENTIFIER '=' 'SHL' '<' type '>' value value       # InstShl
-
-    |   IDENTIFIER '=' 'ADD' '<' type '>' value value       # InstAdd
-    |   IDENTIFIER '=' 'SREM' '<' type '>' value value      # InstSrem
-
-    |   'BRANCH' IDENTIFIER                                 # InstBranch
-    |   IDENTIFIER '=' 'PHI' '<' type '>' value IDENTIFIER value IDENTIFIER # InstPhi
-    |   'RET2' value                                        # InstRet2
-
-    |   IDENTIFIER '=' 'ALLOCA' '<' type '>'                # InstAlloca
-    |   'STORE' '<' type '>' IDENTIFIER value               # InstStore
-    |   IDENTIFIER '=' 'LOAD' '<' type '>' IDENTIFIER       # InstLoad
-
-    |   IDENTIFIER '=' 'SGT' '<' type '>' value value       # InstSgt
-    |   IDENTIFIER '=' 'EQ' '<' type '>' value value        # InstEq
-    |   IDENTIFIER '=' 'SLT' '<' type '>' value value       # InstSlt
+    :   IDENTIFIER '=' instBody
+    |   instBody
     ;
 
+instBody
+    :   'PARAM' intImmediate                    # InstParam
+
+    // Integer/FP Arithmetic
+    |   binOps '<' type '>' value value         # BinOp
+
+    // Integer/FP Comparison
+    |   'ICMP' iCmpOps '<' type '>' value value     # ICmp
+    |   'FCMP' fCmpOps '<' type '>' value value     # FCmp
+    
+    // Select
+    |   'SELECT' '<' type '>' value value value     # InstSelect
+
+    // Conversions
+    |   convOps  '<' type type '>' value            # InstConversion
+
+    // Intra-function Control Flow
+    |   'BRANCH' IDENTIFIER                         # InstBranch
+    |   'BRANCH2' value IDENTIFIER IDENTIFIER       # InstBranch2
+    |   'SWITCH' '<' type '>' value IDENTIFIER '{'
+            (value ':' IDENTIFIER ';')* '}'         # InstSwitch
+    |   'PHI' '<' type '>' '{'
+            (IDENTIFIER ':' value ';')* '}'         # InstPhi
+
+    // Inter-function Control Flow
+    |   'CALL' '<' funcSig '>' IDENTIFIER '('
+            ('<' type '>' value)* ')'               # InstCall
+    |   'INVOKE' '<' funcSig '>' IDENTIFIER '('
+            ('<' type '>' value)* ')' IDENTIFIER IDENTIFIER # InstInvoke
+    |   'TAILCALL' '<' funcSig '>' IDENTIFIER '('
+            ('<' type '>' value)* ')'               # InstTailCall
+
+    |   'RET' '<' type '>' value                    # InstRet
+    |   'RETVOID'                                   # InstRetVoid
+    |   'THROW' value                               # InstThrow
+    |   'LANDINGPAD'                                # InstLandingPad
+
+    // Aggregate Operations
+    |   'EXTRACTVALUE' '<' type intImmediate '>' value  # InstExtractValue
+    |   'INSERTVALUE' '<' type intImmediate '>' value value # InstInsertValue
+
+    // Memory Operations
+    |   'NEW'           '<' type '>'                # InstNew
+    |   'NEWHYBRID'     '<' type '>' value          # InstNewHybrid
+    |   'ALLOCA'        '<' type '>'                # InstAlloca
+    |   'ALLOCAHYBRID'  '<' type '>' value          # InstAllocaHybrid
+    
+    |   'GETIREF'       '<' type '>' value              # InstGetIRef
+
+    |   'GETFIELDIREF'  '<' type intImmediate '>' value # InstGetFieldIRef
+    |   'GETELEMIREF'   '<' type '>' value value        # InstGetElemIRef
+    |   'SHIFTIREF'     '<' type '>' value value        # InstShiftIRef
+    |   'GETFIXEDPARTIREF'  '<' type '>' value          # InstGetFixedPartIRef
+    |   'GETVARPARTIREF'    '<' type '>' value          # InstGetVarPartIRef
+    
+    |   'LOAD' atomicDecl? '<' type '>' value           # InstLoad
+    |   'STORE' atomicDecl? '<' type '>' value value    # InstStore
+    |   'CMPXCHG' atomicDecl? '<' type '>' value value value   # InstCmpXChg
+    |   'ATOMICRMW' atomicDecl? atomicRMWOp
+                '<' type '>' value value                # InstAtomicRMW
+
+    // TODO: add thread/stack operations
+    // TODO: add native interfaces
+    // TODO: add traps
+    ;
+
+binOps : iBinOps | fBinOps ;
+
+iBinOps
+    : 'ADD' | 'SUB' | 'MUL' | 'UDIV' | 'SDIV' | 'UREM' | 'SREM' 
+    | 'SHL' | 'LSHR' | 'ASHR' | 'AND' | 'OR' | 'XOR'
+    ;
+    
+fBinOps
+    : 'FADD' | 'FSUB' | 'FMUL' | 'FDIV' | 'FREM'
+    ;
+    
+iCmpOps
+    : 'EQ' | 'NE' | 'SGT'| 'SLT'| 'SGE'| 'SLE' | 'UGT' | 'ULT' | 'UGE' | 'ULE'
+    ;
+
+fCmpOps
+    : 'TRUE' | 'FALSE' 
+    | 'UNO' | 'UEQ' | 'UNE' | 'UGT' | 'ULT' | 'UGE' | 'ULE'
+    | 'ORD' | 'OEQ' | 'ONE' | 'OGT' | 'OLT' | 'OGE' | 'OLE'
+    ;
+    
+convOps
+    : 'TRUNC' | 'ZEXT' | 'SEXT' | 'FPTRUNC' | 'FPEXT'
+    | 'FPTOUI' | 'FPTOSI' | 'UITOFP' | 'SITOFP' | 'BITCAST'
+    | 'REFCAST' | 'IREFCAST'
+    ;
+
+atomicDecl
+    : 'NOT_ATOMIC' | 'UNORDERED' | 'MONOTONIC' | 'AQUIRE' | 'RELEASE'
+    | 'ACQ_REL' | 'SQL_CST'
+    ;
+
+atomicRMWOp
+    : 'XCHG' | 'ADD' | 'SUB' | 'AND' | 'NAND' | 'OR' | 'XOR'
+    | 'MAX' | 'MIN' | 'UMAX' | 'UMIN'
+    ;
 value
     :   IDENTIFIER
-    |   immediate
     ;
 
 intImmediate
