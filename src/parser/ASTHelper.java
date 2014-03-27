@@ -1,6 +1,7 @@
 package parser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -9,6 +10,7 @@ import compiler.UVMCompiler;
 import parser.uIRParser.ConstDefContext;
 import parser.uIRParser.FuncSigContext;
 import parser.uIRParser.ImmediateContext;
+import parser.uIRParser.InstBodyContext;
 import parser.uIRParser.InstContext;
 import parser.uIRParser.IntImmediateContext;
 import parser.uIRParser.TypeContext;
@@ -28,7 +30,7 @@ import uvm.inst.InstBranch2;
 import uvm.inst.InstEq;
 import uvm.inst.InstParam;
 import uvm.inst.InstPhi;
-import uvm.inst.InstRet2;
+import uvm.inst.InstRet;
 import uvm.inst.InstSgt;
 import uvm.inst.InstShl;
 import uvm.inst.InstSlt;
@@ -111,110 +113,98 @@ public abstract class ASTHelper {
     }
     
     public static Instruction getInstruction(Function f, InstContext ctx) throws ASTParsingException {
-        if (ctx instanceof parser.uIRParser.InstParamContext) {
-            Instruction node = new InstParam((int)getIntImmediateValue(((parser.uIRParser.InstParamContext) ctx).intImmediate()));
-            String id = getIdentifierName(((parser.uIRParser.InstParamContext) ctx).IDENTIFIER(), false);
-            node.setDefReg(f.findOrCreateRegister(id));
+        Register def = null;
+        if (ctx.IDENTIFIER() != null)
+            def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false));
+        
+        InstBodyContext inst = ctx.instBody();
+        
+        if (inst instanceof parser.uIRParser.InstParamContext) {
+            Instruction node = new InstParam((int)getIntImmediateValue(((parser.uIRParser.InstParamContext) inst).intImmediate()));
+            node.setDefReg(def);
             return node;
-        } else if (ctx instanceof parser.uIRParser.InstBranchContext) {
-            String target = getIdentifierName(((parser.uIRParser.InstBranchContext) ctx).IDENTIFIER(), false);
+        } else if (inst instanceof parser.uIRParser.InstBranchContext) {
+            String target = getIdentifierName(((parser.uIRParser.InstBranchContext) inst).IDENTIFIER(), false);
             return new InstBranch(f.findOrCreateLabel(target));
-        } else if (ctx instanceof parser.uIRParser.InstBranch2Context) {
-            parser.uIRParser.ValueContext condContext = ((parser.uIRParser.InstBranch2Context) ctx).value();
+        } else if (inst instanceof parser.uIRParser.InstBranch2Context) {
+            parser.uIRParser.ValueContext condContext = ((parser.uIRParser.InstBranch2Context) inst).value();
             
             Value cond = getValue(f, condContext);            
-            Label ifTrue = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstBranch2Context) ctx).IDENTIFIER(0), false));
-            Label ifFalse = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstBranch2Context) ctx).IDENTIFIER(1), false));
+            Label ifTrue = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstBranch2Context) inst).IDENTIFIER(0), false));
+            Label ifFalse = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstBranch2Context) inst).IDENTIFIER(1), false));
             
             return new InstBranch2(cond, ifTrue, ifFalse);
+        } else if (inst instanceof parser.uIRParser.InstPhiContext) {
+            Type t = getType(((parser.uIRParser.InstPhiContext) inst).type());
+            
+            HashMap<Label, Value> values = new HashMap<Label, Value>();
+            for (int i = 0; i < ((parser.uIRParser.InstPhiContext) inst).IDENTIFIER().size(); i++) {
+                Value v = getValue(f, ((parser.uIRParser.InstPhiContext) inst).value(i));
+                Label l = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstPhiContext) inst).IDENTIFIER(i), false));
+                values.put(l, v);
+            }
+            
+            Instruction node = new InstPhi(t, values);
+            
+            node.setDefReg(def);
+            return node;
+        } else if (inst instanceof parser.uIRParser.InstRetContext) {
+            Value v = getValue(f, ((parser.uIRParser.InstRetContext) inst).value());
+            Instruction node = new InstRet(v);
+            return node;
         } 
-        
-        else if (ctx instanceof parser.uIRParser.InstPhiContext) {
-            Type t = getType(((parser.uIRParser.InstPhiContext) ctx).type());
-            
-            String out = getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(0), false);
-            
-            Value val1 = getValue(f, ((parser.uIRParser.InstPhiContext) ctx).value(0));
-            Label label1 = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(1), false));
-            Value val2 = getValue(f, ((parser.uIRParser.InstPhiContext) ctx).value(1));
-            Label label2 = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstPhiContext) ctx).IDENTIFIER(2), false));
-            
-            Instruction node = new InstPhi(t, val1, label1, val2, label2);
-            node.setDefReg(f.findOrCreateRegister(out));
-            return node;
-        }
-        
-        else if (ctx instanceof parser.uIRParser.InstRet2Context) {
-            Value v = getValue(f, ((parser.uIRParser.InstRet2Context) ctx).value());
-            Instruction node = new InstRet2(v);            
-            return node;
-        }
-        
         // bin op
-        else if (ctx instanceof parser.uIRParser.InstShlContext) {
-            Type t = getType(((parser.uIRParser.InstShlContext) ctx).type());
-            Value op1 = getValue(f, ((parser.uIRParser.InstShlContext) ctx).value(0));
-            Value op2 = getValue(f, ((parser.uIRParser.InstShlContext) ctx).value(1));
+        else if (inst instanceof parser.uIRParser.InstBinOpContext) {
+            Type t = getType(((parser.uIRParser.InstBinOpContext) inst).type());
+            Value op1 = getValue(f, ((parser.uIRParser.InstBinOpContext) inst).value(0));
+            Value op2 = getValue(f, ((parser.uIRParser.InstBinOpContext) inst).value(1));
             
-            String out = getIdentifierName(((parser.uIRParser.InstShlContext) ctx).IDENTIFIER(), false);
+            parser.uIRParser.BinOpsContext binOp = ((parser.uIRParser.InstBinOpContext) inst).binOps();
+
+            Instruction node = null;
+            if (binOp.iBinOps() != null) {
+                parser.uIRParser.IBinOpsContext iBinOp = binOp.iBinOps();
+                if (iBinOp instanceof parser.uIRParser.InstShlContext) {
+                    node = new InstShl(t, op1, op2);
+                } else if (iBinOp instanceof parser.uIRParser.InstAddContext) {
+                    node = new InstAdd(t, op1, op2);
+                } else if (iBinOp instanceof parser.uIRParser.InstSRemContext) {
+                    node = new InstSrem(t, op1, op2);
+                } else {
+                    UVMCompiler.error("incomplete implementation of i binops: " + inst.getText());
+                }
+            } else if (binOp.fBinOps() != null) {
+                UVMCompiler.error("havent implemented f binops");
+            }
             
-            Instruction node = new InstShl(t, op1, op2);
-            node.setDefReg(f.findOrCreateRegister(out));
+            node.setDefReg(def);
             return node;
         }
-        else if (ctx instanceof parser.uIRParser.InstAddContext) {
-            Type t = getType(((parser.uIRParser.InstAddContext) ctx).type());
-            Value op1 = getValue(f, ((parser.uIRParser.InstAddContext) ctx).value(0));
-            Value op2 = getValue(f, ((parser.uIRParser.InstAddContext) ctx).value(1));
+        // cmp
+        else if (inst instanceof parser.uIRParser.InstCmpContext) {
+            Type t = getType(((parser.uIRParser.InstCmpContext) inst).type());
+            Value op1 = getValue(f, ((parser.uIRParser.InstCmpContext) inst).value(0));
+            Value op2 = getValue(f, ((parser.uIRParser.InstCmpContext) inst).value(1));
             
-            String out = getIdentifierName(((parser.uIRParser.InstAddContext) ctx).IDENTIFIER(), false);
+            parser.uIRParser.CmpOpsContext cmpOp = ((parser.uIRParser.InstCmpContext) inst).cmpOps();
             
-            Instruction node = new InstAdd(t, op1, op2);
-            node.setDefReg(f.findOrCreateRegister(out));
-            return node;
-        }
-        else if (ctx instanceof parser.uIRParser.InstSremContext) {
-            Type t = getType(((parser.uIRParser.InstSremContext) ctx).type());
-            Value op1 = getValue(f, ((parser.uIRParser.InstSremContext) ctx).value(0));
-            Value op2 = getValue(f, ((parser.uIRParser.InstSremContext) ctx).value(1));
+            Instruction node = null;
+            if (cmpOp.iCmpOps() != null) {
+                parser.uIRParser.ICmpOpsContext iCmpOp = cmpOp.iCmpOps();
+                if (iCmpOp instanceof parser.uIRParser.InstEqContext) {
+                    node = new InstEq(t, op1, op2);
+                } else if (iCmpOp instanceof parser.uIRParser.InstSgtContext) {
+                    node = new InstSgt(t, op1, op2);
+                } else if (iCmpOp instanceof parser.uIRParser.InstSltContext) {
+                    node = new InstSlt(t, op1, op2);
+                } else {
+                    UVMCompiler.error("incomplete implementation of i cmp op: " + inst.getText());
+                }
+            } else if (cmpOp.fCmpOps() != null) {
+                UVMCompiler.error("havent implemented f cmp ops");
+            }
             
-            String out = getIdentifierName(((parser.uIRParser.InstSremContext) ctx).IDENTIFIER(), false);
-            
-            Instruction node = new InstSrem(t, op1, op2);
-            node.setDefReg(f.findOrCreateRegister(out));
-            return node;
-        }
-        else if (ctx instanceof parser.uIRParser.InstSgtContext) {
-            Type t = getType(((parser.uIRParser.InstSgtContext) ctx).type());
-            Value op1 = getValue(f, ((parser.uIRParser.InstSgtContext) ctx).value(0));
-            Value op2 = getValue(f, ((parser.uIRParser.InstSgtContext) ctx).value(1));
-            
-            String out = getIdentifierName(((parser.uIRParser.InstSgtContext) ctx).IDENTIFIER(), false);
-            
-            Instruction node = new InstSgt(t, op1, op2);
-            node.setDefReg(f.findOrCreateRegister(out));
-            return node;
-        }
-        else if (ctx instanceof parser.uIRParser.InstSltContext) {
-            Type t = getType(((parser.uIRParser.InstSltContext) ctx).type());
-            Value op1 = getValue(f, ((parser.uIRParser.InstSltContext) ctx).value(0));
-            Value op2 = getValue(f, ((parser.uIRParser.InstSltContext) ctx).value(1));
-            
-            String out = getIdentifierName(((parser.uIRParser.InstSltContext) ctx).IDENTIFIER(), false);
-            
-            Instruction node = new InstSlt(t, op1, op2);
-            node.setDefReg(f.findOrCreateRegister(out));
-            return node;
-        }
-        else if (ctx instanceof parser.uIRParser.InstEqContext) {
-            Type t = getType(((parser.uIRParser.InstEqContext) ctx).type());
-            Value op1 = getValue(f, ((parser.uIRParser.InstEqContext) ctx).value(0));
-            Value op2 = getValue(f, ((parser.uIRParser.InstEqContext) ctx).value(1));
-            
-            String out = getIdentifierName(((parser.uIRParser.InstEqContext) ctx).IDENTIFIER(), false);
-            
-            Instruction node = new InstEq(t, op1, op2);
-            node.setDefReg(f.findOrCreateRegister(out));
+            node.setDefReg(def);
             return node;
         }
         

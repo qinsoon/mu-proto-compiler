@@ -1,9 +1,12 @@
 package compiler.phase;
 
+import java.util.Map.Entry;
+
 import uvm.BasicBlock;
 import uvm.Function;
 import uvm.IRTreeNode;
 import uvm.Instruction;
+import uvm.Label;
 import uvm.MicroVM;
 import uvm.OpCode;
 import uvm.Register;
@@ -63,10 +66,12 @@ public class IRTreeGeneration extends CompilationPhase{
             inst.addChild(((InstBranch2) inst).getIfTrue());
             inst.addChild(((InstBranch2) inst).getIfFalse());;
         } else if (inst instanceof InstPhi) {
-            checkAndAddValue(inst, ((InstPhi) inst).getVal1());
-            inst.addChild(((InstPhi) inst).getLabel1());
-            checkAndAddValue(inst, ((InstPhi) inst).getVal2());
-            inst.addChild(((InstPhi) inst).getLabel2());
+            InstPhi phi = (InstPhi) inst;
+            
+            for (Entry<Label, Value> entry : phi.getValues().entrySet()) {
+                checkAndAddValue(phi, entry.getValue());
+                inst.addChild(entry.getKey());
+            }
         } else {
             for (Value v : inst.getOperands()) {
                 checkAndAddValue(inst, v);

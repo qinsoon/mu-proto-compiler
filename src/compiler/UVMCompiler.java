@@ -24,7 +24,7 @@ import uvm.MicroVM;
 
 public class UVMCompiler {
     
-    public static final String file = "/Users/apple/uvm-bench/micro-bm/int-prime-number/prime-number.uir";
+    public static final String file = "tests/micro-bm/int-prime-number/prime-number.uir";
     
     public static void main(String[] args) {
 

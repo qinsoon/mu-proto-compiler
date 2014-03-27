@@ -171,8 +171,19 @@ callConv : 'DEFAULT' ;
 binOps : iBinOps | fBinOps ;
 
 iBinOps
-    : 'ADD' | 'SUB' | 'MUL' | 'UDIV' | 'SDIV' | 'UREM' | 'SREM' 
-    | 'SHL' | 'LSHR' | 'ASHR' | 'AND' | 'OR' | 'XOR'
+    : 'ADD'                                             # InstAdd
+    | 'SUB'                                             # InstSub
+    | 'MUL'                                             # InstMul
+    | 'UDIV'                                            # InstUDiv
+    | 'SDIV'                                            # InstSDiv
+    | 'UREM'                                            # InstURem
+    | 'SREM'                                            # InstSRem
+    | 'SHL'                                             # InstShl
+    | 'LSHR'                                            # InstLshr
+    | 'ASHR'                                            # InstAshr
+    | 'AND'                                             # InstAnd
+    | 'OR'                                              # InstOr
+    | 'XOR'                                             # InstXor
     ;
     
 fBinOps
@@ -182,7 +193,16 @@ fBinOps
 cmpOps : iCmpOps | fCmpOps ;
 
 iCmpOps
-    : 'EQ' | 'NE' | 'SGT'| 'SLT'| 'SGE'| 'SLE' | 'UGT' | 'ULT' | 'UGE' | 'ULE'
+    : 'EQ'                                              # InstEq
+    | 'NE'                                              # InstNe
+    | 'SGT'                                             # InstSgt
+    | 'SLT'                                             # InstSlt
+    | 'SGE'                                             # InstSge
+    | 'SLE'                                             # InstSle
+    | 'UGT'                                             # InstUgt
+    | 'ULT'                                             # InstUlt
+    | 'UGE'                                             # InstUge
+    | 'ULE'                                             # InstUle
     ;
 
 fCmpOps
@@ -208,6 +228,7 @@ atomicRMWOp
     ;
 value
     :   IDENTIFIER
+    |   immediate
     ;
 
 intImmediate

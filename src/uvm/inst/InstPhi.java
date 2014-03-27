@@ -1,5 +1,9 @@
 package uvm.inst;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import uvm.IRTreeNode;
 import uvm.Instruction;
 import uvm.Label;
@@ -10,41 +14,34 @@ import uvm.Value;
 public class InstPhi extends Instruction {
     Type type;
     
-    Value val1;
-    Label label1;
-    Value val2;
-    Label label2;
+    HashMap<Label, Value> values = new HashMap<Label, Value>();
     
-    public InstPhi(Type type, Value val1, Label label1, Value val2, Label label2) {
-        this.val1 = val1;
-        this.label1 = label1;
-        this.val2 = val2;
-        this.label2 = label2;
+    public InstPhi(Type type, HashMap<Label, Value> values) {
+        this.type = type;
+        this.values = values;
         
-        operands.add(val1);
-        operands.add(val2);
+        for (Value v : values.values())
+            operands.add(v);
         
         opcode = OpCode.PHI;
+    }
+    
+    public Map<Label, Value> getValues() {
+        return values;
     }
 
     @Override
     public String prettyPrint() {
-        return "(PHI " + val1.prettyPrint() + " " + label1.prettyPrint() + " " + val2.prettyPrint() + " " + label2.prettyPrint() + ")";
-    }
-
-    public Value getVal1() {
-        return val1;
-    }
-
-    public Label getLabel1() {
-        return label1;
-    }
-
-    public Value getVal2() {
-        return val2;
-    }
-
-    public Label getLabel2() {
-        return label2;
+        StringBuilder ret = new StringBuilder();
+        ret.append("(PHI ");
+        for (Entry<Label, Value> i : values.entrySet()) {
+            ret.append("[");
+            ret.append(i.getKey().prettyPrint());
+            ret.append(",");
+            ret.append(i.getValue().prettyPrint());
+            ret.append("]");
+        }
+        ret.append(")");
+        return ret.toString();
     }
 }

@@ -2,7 +2,7 @@
 // IRTreeNode
 
 // as prefix of generated MC nodes
-.target IA64
+.target X64
 
 stmt : PSEUDO_ASSIGN(reg op)
 // mov

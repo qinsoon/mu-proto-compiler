@@ -15,7 +15,7 @@
 	<property name="burg-impl-dir" location="${backend-dir}/codegengen"/>
 	<property name="burg-exec-dir" location="${codegengen-dir}/burg-temp"/>
 	
-	<property name="target" value="ia64"/>
+	<property name="target" value="x64"/>
 	<property name="target-rule-file" location="${backend-dir}/${target}/${target}.target"/>
 	<property name="burm-dir" location="${codegengen-dir}/burm"/>
 	<property name="burm-file" location="${burm-dir}/BURM_GENERATED.java"/>
