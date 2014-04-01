@@ -20,6 +20,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import uvm.OpCode;
+import uvm.mc.AbstractMachineCode;
+import uvm.mc.MCOperand;
 
 public class Burg {
     public static final Map<String, Integer> termNames = new HashMap<String, Integer>();
@@ -34,6 +36,12 @@ public class Burg {
     public static final String BURM_FILE = "BURM_GENERATED.java";
     
     public static boolean debug = false;
+    
+    public static final List<String>    MC_COND_JUMP = new ArrayList<String>();
+    public static final List<String>    MC_UNCOND_JUMP = new ArrayList<String>();
+    public static final String          MC_PHI = "mcphi";
+    public static final List<String>    MC_RET = new ArrayList<String>();
+    public static String                MC_MOV = null;
     
     public static void main(String[] args) {
         for (int i = 0; i < args.length; i++) {
@@ -89,6 +97,8 @@ public class Burg {
             }
             System.out.println();
             
+            checkCorrectness();
+            
             // gen MC layer first, it creates a few things that we need
             generateMCLayer();
             generateBURM();
@@ -97,6 +107,11 @@ public class Burg {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public static void checkCorrectness() {
+        if (MC_MOV == null)
+            error("need to define mov instruction by using .mc_mov in .target file. ");
     }
     
     public static String targetName = null;
@@ -340,24 +355,24 @@ public class Burg {
          * operandFromNode()
          */
         code.appendln(String.format(
-                "public static Operand operandFromNode(%s node) {", IR_NODE_TYPE));
+                "public static MCOperand operandFromNode(%s node) {", IR_NODE_TYPE));
         code.increaseIndent();
         code.appendln("switch(node.getOpcode()) {");
         code.appendln("case OpCode.INT_IMM:");
         code.increaseIndent();
-        code.appendln("return new uvm.mc.IntImmediate(((uvm.IntImmediate)node).getValue());");
+        code.appendln("return new uvm.mc.MCIntImmediate(((uvm.IntImmediate)node).getValue());");
         code.decreaseIndent();
         code.appendln("case OpCode.REG:");
         code.increaseIndent();
-        code.appendln("return uvm.mc.Temp.findOrCreate(((uvm.Register)node).getName(), uvm.mc.Temp.OTHER_SYMBOL_REG);");
+        code.appendln("return uvm.mc.MCRegister.findOrCreate(((uvm.Register)node).getName(), uvm.mc.MCRegister.OTHER_SYMBOL_REG);");
         code.decreaseIndent();
         code.appendln("case OpCode.LABEL:");
         code.increaseIndent();
-        code.appendln("return new uvm.mc.Label(((uvm.Label)node).getName());");
+        code.appendln("return new uvm.mc.MCLabel(((uvm.Label)node).getName());");
         code.decreaseIndent();
         code.appendln("default:");
         code.increaseIndent();
-        code.appendln("return uvm.mc.Temp.findOrCreate(\"res_reg\"+node.getId(), uvm.mc.Temp.RES_REG);");
+        code.appendln("return uvm.mc.MCRegister.findOrCreate(\"res_reg\"+node.getId(), uvm.mc.MCRegister.RES_REG);");
         code.decreaseIndent();
         code.appendln("}");
         code.decreaseIndent();
@@ -377,21 +392,21 @@ public class Burg {
         String newOperandStr = null;
                 
         if (operand instanceof OpdIntImmediate) {
-            newOperandStr = "new IntImmediate(" + ((OpdIntImmediate) operand).value + ")";
+            newOperandStr = "new MCIntImmediate(" + ((OpdIntImmediate) operand).value + ")";
         } else if (operand instanceof OpdLabel) {
-            newOperandStr = "new Label(" + ((OpdLabel)operand).name + ")";
+            newOperandStr = "new MCLabel(" + ((OpdLabel)operand).name + ")";
         } else if (operand instanceof OpdRegister) {
             switch (((OpdRegister) operand).type) {
             case OpdRegister.MACHINE_REG:
             case OpdRegister.OTHER_SYMBOL_REG:
                 newOperandStr = String.format(
-                        "Temp.findOrCreate(\"%s\", %d)",  
+                        "MCRegister.findOrCreate(\"%s\", %d)",  
                         ((OpdRegister) operand).name, 
                         ((OpdRegister) operand).type);
                 break;
-            case uvm.mc.Temp.RES_REG:
+            case uvm.mc.MCRegister.RES_REG:
                 newOperandStr = String.format(
-                        "Temp.findOrCreate(\"%s\"+%s, %d)", 
+                        "MCRegister.findOrCreate(\"%s\"+%s, %d)", 
                         ((OpdRegister) operand).name,
                         "node.getId()",
                         ((OpdRegister) operand).type);
@@ -401,7 +416,7 @@ public class Burg {
             case OpdRegister.PARAM_REG:
             case OpdRegister.RET_REG:
                 newOperandStr = String.format(
-                        "Temp.findOrCreate(\"%s\"+%s, %d)",
+                        "MCRegister.findOrCreate(\"%s\"+%s, %d)",
                         ((OpdRegister) operand).name,
                         getCompileTimeOperand(((OpdRegister) operand).index),
                         ((OpdRegister) operand).type);
@@ -625,6 +640,8 @@ public class Burg {
         for (MCOp op : mcOps.values()) {
             generateMCOpClass(op);
         }
+        
+        generateMCDriver();
     }
     
     public static void generateMCOpAbstractClass() {
@@ -662,20 +679,73 @@ public class Burg {
         code.appendln(String.format("public %s() {", opFullName));
         code.increaseIndent();
         code.appendStmtln("this.name = \"" + op.name + "\"");
-        code.appendStmtln(String.format("this.operands = Arrays.asList(new Operand[%d])", op.operands));
+        code.appendStmtln(String.format("this.operands = Arrays.asList(new MCOperand[%d])", op.operands));
         code.decreaseIndent();
         code.appendln("}");
         
+        // set operands
         code.appendln();
         for (int i = 0; i < op.operands; i++) {
             code.appendln(String.format(
-                    "public void setOperand%d(Operand op) {operands.set(%d, op);}", i, i));
+                    "public void setOperand%d(MCOperand op) {operands.set(%d, op);}", i, i));
+        }
+        
+        // is mc phi?
+        if (op.name.equals(MC_PHI)) {
+            code.appendln();
+            code.appendln("@Override public boolean isPhi() {return true; }");
+        }
+        
+        // is mc jump?
+        if (MC_COND_JUMP.contains(op.name)) {
+            code.appendln();
+            code.appendln("@Override public boolean isCondJump() {return true; }");
+        }
+        
+        if (MC_UNCOND_JUMP.contains(op.name)) {
+            code.appendln();
+            code.appendln("@Override public boolean isUncondJump() {return true; }");
+        }
+        
+        // is mc ret?
+        if (MC_RET.contains(op.name)) {
+            code.appendln();
+            code.appendln("@Override public boolean isRet() {return true;}");
         }
         
         code.decreaseIndent();
         code.appendln("}");
         
         writeTo(output + "mc/" + opFullName + ".java", code.toString());
+    }
+    
+    public static void generateMCDriver() {
+        CodeBuilder code = new CodeBuilder();
+        
+        code.appendStmtln("package burm.mc");
+        code.appendStmtln("import uvm.mc.*");
+        
+        String driver = targetName + "Driver";
+        code.appendln(String.format("public class %s extends AbstractMCDriver {", driver));
+        code.increaseIndent();
+        
+        code.appendln("public AbstractMachineCode genMove(MCOperand dest, MCOperand src) {");
+        code.increaseIndent();
+        
+        String mov = targetName + MC_MOV;
+        code.appendStmtln(String.format("%s ret = new %s()", mov, mov));
+        code.appendStmtln("ret.setOperand0(dest)");
+        code.appendStmtln("ret.setOperand1(src)");
+        code.appendStmtln("return ret");
+        
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        // end of class
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        writeTo(output + "mc/" + driver + ".java", code.toString());
     }
     
     /*

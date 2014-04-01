@@ -1,9 +1,9 @@
 package uvm.mc;
 
-public class Label extends Operand {
+public class MCLabel extends MCOperand {
     String name;
     
-    public Label(String name) {
+    public MCLabel(String name) {
         this.name = name;
     }
     

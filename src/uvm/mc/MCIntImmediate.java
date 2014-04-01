@@ -1,9 +1,9 @@
 package uvm.mc;
 
-public class IntImmediate extends Operand {
+public class MCIntImmediate extends MCOperand {
     long value;
     
-    public IntImmediate(long value) {
+    public MCIntImmediate(long value) {
         this.value = value;
     }
     

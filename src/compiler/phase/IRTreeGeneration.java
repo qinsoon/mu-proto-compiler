@@ -53,8 +53,7 @@ public class IRTreeGeneration extends CompilationPhase{
 
     @Override
     protected void postChecklist() {
-        // TODO Auto-generated method stub
-        
+       printIRTree();
     }
 
     @Override

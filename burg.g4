@@ -12,6 +12,26 @@ start
 
 declare
     :   targetDecl
+    |   mcCondJumpDecl
+    |   mcUncondJumpDecl
+    |   mcRetDecl
+    |   mcMovDecl
+    ;
+
+mcMovDecl
+    :   '.mc_mov' string
+    ;
+
+mcRetDecl
+    :   '.mc_ret' string+
+    ;
+
+mcCondJumpDecl
+    :   '.mc_cond_jump' string+
+    ;
+
+mcUncondJumpDecl
+    :   '.mc_uncond_jump' string+
     ;
 
 targetDecl

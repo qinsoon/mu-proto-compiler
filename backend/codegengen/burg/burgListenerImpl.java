@@ -15,6 +15,25 @@ public class burgListenerImpl extends burgBaseListener {
         Burg.targetName = ctx.string().getText();
     }
     
+    @Override public void exitMcCondJumpDecl(@NotNull burgParser.McCondJumpDeclContext ctx) {
+        for (burgParser.StringContext s : ctx.string())
+            Burg.MC_COND_JUMP.add(s.getText());
+    }
+    
+    @Override public void exitMcUncondJumpDecl(@NotNull burgParser.McUncondJumpDeclContext ctx) {
+        for (burgParser.StringContext s : ctx.string())
+            Burg.MC_UNCOND_JUMP.add(s.getText());
+    }
+    
+    @Override public void exitMcRetDecl(@NotNull burgParser.McRetDeclContext ctx) {
+        for (burgParser.StringContext s : ctx.string())
+            Burg.MC_RET.add(s.getText());
+    }
+    
+    @Override public void exitMcMovDecl(@NotNull burgParser.McMovDeclContext ctx) {
+        Burg.MC_MOV = ctx.string().getText();
+    }
+    
     List<MCRule> mcEmissionRules = new ArrayList<MCRule>();
     
     @Override public void enterTreerule(@NotNull burgParser.TreeruleContext ctx) {

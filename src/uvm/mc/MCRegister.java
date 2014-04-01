@@ -2,7 +2,7 @@ package uvm.mc;
 
 import java.util.HashMap;
 
-public class Temp extends Operand{
+public class MCRegister extends MCOperand{
     public static final int RES_REG     = 0;
     public static final int RET_REG     = 1;
     public static final int PARAM_REG   = 2;
@@ -12,18 +12,18 @@ public class Temp extends Operand{
     int type;
     String name;
     
-    private Temp(String name, int type) {
+    private MCRegister(String name, int type) {
         this.name = name;
         this.type = type;
     }
     
-    static final HashMap<String, Temp> temps = new HashMap<String, Temp>();
+    static final HashMap<String, MCRegister> temps = new HashMap<String, MCRegister>();
     
-    public static Temp findOrCreate(String name, int type) {
+    public static MCRegister findOrCreate(String name, int type) {
         if (temps.containsKey(name))
             return temps.get(name);
         
-        Temp ret = new Temp(name, type);
+        MCRegister ret = new MCRegister(name, type);
         temps.put(name, ret);
         return ret;
     }

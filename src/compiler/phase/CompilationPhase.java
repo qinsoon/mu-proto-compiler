@@ -34,11 +34,11 @@ public abstract class CompilationPhase {
         postChecklist();
     }
     
-    protected abstract void preChecklist();
-    protected abstract void postChecklist();
+    protected void preChecklist() {}
+    protected void postChecklist() {}
     
-    protected abstract void visitTreeNode(IRTreeNode node);
-    protected abstract void visitInstruction(Instruction inst);
-    protected abstract void visitFunction(Function f);    
-    protected abstract void visitBasicBlock(BasicBlock bb);
+    protected void visitTreeNode(IRTreeNode node) {}
+    protected void visitInstruction(Instruction inst) {}
+    protected void visitFunction(Function f) {}    
+    protected void visitBasicBlock(BasicBlock bb) {}
 }

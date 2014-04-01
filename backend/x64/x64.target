@@ -4,6 +4,11 @@
 // as prefix of generated MC nodes
 .target X64
 
+.mc_cond_jump je jne jl jge jle jg
+.mc_uncond_jump jmp
+.mc_ret ret
+.mc_mov mov
+
 stmt : PSEUDO_ASSIGN(reg op)
 // mov
 > mov P[0] P[1]

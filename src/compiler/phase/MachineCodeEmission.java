@@ -25,7 +25,7 @@ public class MachineCodeEmission extends CompilationPhase{
                 List<AbstractMachineCode> mc = BURM_GENERATED.emitCode(node);
                 if (node instanceof Instruction) {
                     if (((Instruction) node).getLabel() != null) {
-                        mc.get(0).setLabel(new uvm.mc.Label(((Instruction) node).getLabel().getName()));
+                        mc.get(0).setLabel(new uvm.mc.MCLabel(((Instruction) node).getLabel().getName()));
                     }
                 } else UVMCompiler.error("node " + node.prettyPrint() + " is not an inst");
                 

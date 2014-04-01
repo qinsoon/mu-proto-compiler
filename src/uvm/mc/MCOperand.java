@@ -1,5 +1,5 @@
 package uvm.mc;
 
-public abstract class Operand {
+public abstract class MCOperand {
     public abstract String prettyPrint();
 }

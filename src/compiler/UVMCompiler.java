@@ -13,7 +13,7 @@ import compiler.phase.DefUseGeneration;
 import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
 import compiler.phase.MachineCodeEmission;
-
+import compiler.phase.mc.BBReconstruction;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
@@ -62,14 +62,16 @@ public class UVMCompiler {
                 System.out.println();
             }
             
-            // get uses
-            new DefUseGeneration("defusegen").execute();
-            
+            // generating IR tree
+            new DefUseGeneration("defusegen").execute();            
             new IRTreeGeneration("treegen").execute();
             
+            // instruction selection
             new InstructionSelection("instsel").execute();
-            
             new MachineCodeEmission("mcemit").execute();
+            
+            // mc level
+            new BBReconstruction("reconstbb").execute();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
