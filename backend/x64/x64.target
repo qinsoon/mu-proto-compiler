@@ -29,21 +29,18 @@ op : BRANCH2(value label label)
 
 op : BRANCH2(SLT(value value) label label)
 // cmp, jcc
-> cmp P[0][0] P[0][1]
 > jl  P[1]
 > jge P[2]
 2
 
 op : BRANCH2(SGT(value value) label label)
 // cmp, jcc
-> cmp P[0][0] P[0][1]
 > jg  P[1]
 > jle P[2]
 2
 
 op : BRANCH2(EQ(value value) label label)
 // jcc
-> cmp P[0][0] P[0][1]
 > je  P[1]
 > jne P[2]
 2

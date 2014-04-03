@@ -9,7 +9,7 @@ import compiler.UVMCompiler;
 import compiler.phase.CompilationPhase;
 
 public class BBReconstruction extends CompilationPhase{
-    private static final boolean VERBOSE = false;
+    private static final boolean VERBOSE = true;
     
     public BBReconstruction(String name) {
         super(name);
@@ -84,21 +84,25 @@ public class BBReconstruction extends CompilationPhase{
             // print
             if (VERBOSE) {
                 for (MCBasicBlock bb : cf.BBs) {
-                    System.out.println("BB: #" + bb.getName());
-                    
-                    System.out.print("predecessors: {");
-                    for (MCBasicBlock p : bb.getPredecessors())
-                        System.out.print(p.getName() + " ");
-                    System.out.println("}");
-                    
-                    System.out.print("sucessors: {");
-                    for (MCBasicBlock s : bb.getSuccessor()) 
-                        System.out.print(s.getName() + " ");
-                    System.out.println("}");
-                    
-                    System.out.println(bb.prettyPrint());
+                    printBB(bb);
                 }
             }
         }
+    }
+    
+    public static void printBB(MCBasicBlock bb) {
+        System.out.println("BB: #" + bb.getName());
+        
+        System.out.print("predecessors: {");
+        for (MCBasicBlock p : bb.getPredecessors())
+            System.out.print(p.getName() + " ");
+        System.out.println("}");
+        
+        System.out.print("sucessors: {");
+        for (MCBasicBlock s : bb.getSuccessor()) 
+            System.out.print(s.getName() + " ");
+        System.out.println("}");
+        
+        System.out.println(bb.prettyPrint());
     }
 }

@@ -13,6 +13,8 @@ import uvm.MicroVM;
 import uvm.mc.AbstractMachineCode;
 
 public class MachineCodeEmission extends CompilationPhase{
+    private static final boolean VERBOSE = false;
+    
     public MachineCodeEmission(String name) {
         super(name);
     }
@@ -32,11 +34,13 @@ public class MachineCodeEmission extends CompilationPhase{
                 cf.addMachineCode(mc);
             }
             
-            System.out.println(f.getName() + " machine code:");
-            for (AbstractMachineCode mc : cf.getMachineCode()) {
-                System.out.println(mc.prettyPrint());
+            if (VERBOSE) {
+                System.out.println(f.getName() + " machine code:");
+                for (AbstractMachineCode mc : cf.getMachineCode()) {
+                    System.out.println(mc.prettyPrint());
+                }
+                System.out.println();
             }
-            System.out.println();
             
             MicroVM.v.compiledFunc(cf);
         }

@@ -34,6 +34,22 @@ public class MCBasicBlock {
         return label;
     }
     
+    public String prettyPrintWithPreAndSucc() {
+        StringBuilder ret = new StringBuilder();
+        ret.append("predecessors: {");
+        for (MCBasicBlock p : getPredecessors())
+            ret.append(p.getName() + " ");
+        ret.append("}");
+        
+        ret.append("sucessors: {");
+        for (MCBasicBlock s : getSuccessor()) 
+            ret.append(s.getName() + " ");
+        ret.append("}");
+        
+        ret.append(prettyPrint());
+        return ret.toString();
+    }
+    
     public String prettyPrint() {
         StringBuilder ret = new StringBuilder();
         ret.append("#" + label.name + ": {\n");

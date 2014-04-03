@@ -3,7 +3,9 @@ package uvm.mc;
 import java.util.List;
 
 public abstract class AbstractMachineCode {
-    protected int index;
+    public int sequence;        // used for instruction numbering
+    
+    protected int node;
     
     protected String name;
     protected List<MCOperand> operands;
@@ -90,10 +92,10 @@ public abstract class AbstractMachineCode {
     }
 
     public int getNodeIndex() {
-        return index;
+        return node;
     }
 
     public void setNodeIndex(int index) {
-        this.index = index;
+        this.node = index;
     }
 }

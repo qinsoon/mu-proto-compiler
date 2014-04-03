@@ -22,6 +22,17 @@ public class GenMovForPhi extends CompilationPhase {
         super(name);
     }
     
+    public void changeSuccessor(MCBasicBlock b, MCBasicBlock oldSuccessor, MCBasicBlock newSuccessor) {
+        b.getSuccessor().remove(oldSuccessor);
+        b.addSuccessor(newSuccessor);
+        
+        // check if the last inst in b jumps to oldSuccessor
+        AbstractMachineCode last = b.getLast();
+        if (last.isJump() && ((MCLabel)last.getOperand(0)).getName().equals(oldSuccessor.getName())) {
+            last.setOperand(0, newSuccessor.getLabel());
+        }
+    }
+    
     @Override
     public void execute() {
         int genMovBBIndex = 0;
@@ -39,17 +50,17 @@ public class GenMovForPhi extends CompilationPhase {
                     System.out.println("check its predecessor: #" + p.getLabel().getName());
                     MCBasicBlock n;
                     if (bb.getPredecessors().size() > 1 && p.getSuccessor().size() > 1) {
-                        System.out.println("inserting new bb");
+                        // insert new bb between p and bb
                         n = new MCBasicBlock("genmov" + genMovBBIndex);
                         genMovBBIndex++;
                         
                         bb.getPredecessors().remove(p);
-                        p.getSuccessor().remove(bb);
+                        bb.addPredecessors(n);
+                        
+                        changeSuccessor(p, bb, n);
                         
                         n.addPredecessors(p);
-                        p.addSuccessor(n);
                         n.addSuccessor(bb);
-                        bb.addPredecessors(n);
                         
                         // reset j
                         j = 0;
@@ -61,7 +72,6 @@ public class GenMovForPhi extends CompilationPhase {
                     for (AbstractMachineCode mc : bb.getMC()) {
                         if (mc.isPhi()) {
                             int opdForP = -1;
-                            System.out.println("searching for value for " + p.getLabel().getName());
                             for (int i = 2; i < mc.getNumberOfOperands(); i += 2) {
                                 MCLabel l = (MCLabel) mc.getOperand(i);
                                 System.out.println("l=" + l.getName());
@@ -73,7 +83,6 @@ public class GenMovForPhi extends CompilationPhase {
                                 MCRegister genMovReg = MCRegister.findOrCreate("gen_mov_reg" + genMovRegIndex, MCRegister.OTHER_SYMBOL_REG);
                                 genMovRegIndex++;
                                 
-                                // TODO
                                 // i <- new RegMov(phi.opd(p))
                                 AbstractMachineCode i = new X64Driver().genMove(genMovReg, mc.getOperand(opdForP));
                                 // phi.opd(p) <- i

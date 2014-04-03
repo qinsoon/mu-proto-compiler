@@ -26,21 +26,19 @@ public class CompiledFunction {
         
         // traverse from entryBB
         Queue<MCBasicBlock> traverse = new LinkedList<MCBasicBlock>();
+        List<String> traversed = new ArrayList<String>();
+        
         traverse.add(entryBB);
         
         while (!traverse.isEmpty()) {
             MCBasicBlock bb = traverse.poll();
-            str.append(bb.prettyPrint());
+            str.append(bb.prettyPrintWithPreAndSucc());
             str.append('\n');
+            traversed.add(bb.getName());
             
             for (MCBasicBlock succ : bb.getSuccessor()) {
-                if (succ.getPredecessors().size() == 1) {
-                    str.append("**fallthrough**\n");
-                    str.append(succ.prettyPrint());
-                    str.append('\n');
-                } else {
+                if (!traversed.contains(succ.getName()))
                     traverse.add(succ);
-                }                    
             }
         }
         
