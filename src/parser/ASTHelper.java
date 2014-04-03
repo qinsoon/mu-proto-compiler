@@ -13,8 +13,8 @@ import parser.uIRParser.ImmediateContext;
 import parser.uIRParser.InstBodyContext;
 import parser.uIRParser.InstContext;
 import parser.uIRParser.IntImmediateContext;
+import parser.uIRParser.TypeConstructorContext;
 import parser.uIRParser.TypeContext;
-import parser.uIRParser.TypeDescriptorContext;
 import uvm.Function;
 import uvm.FunctionSignature;
 import uvm.IRTreeNode;
@@ -75,9 +75,9 @@ public abstract class ASTHelper {
     }
 
     public static Type getType(TypeContext typeContext) throws ASTParsingException {
-        if (typeContext.typeDescriptor() != null) {
+        if (typeContext.typeConstructor() != null) {
             // defining a type via type descriptor
-            TypeDescriptorContext ctx = typeContext.typeDescriptor();
+            TypeConstructorContext ctx = typeContext.typeConstructor();
             if (ctx instanceof parser.uIRParser.IntTypeContext) {
                 int size = Integer.parseInt(
                         ((parser.uIRParser.IntTypeContext) ctx).intImmediate().getText());

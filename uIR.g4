@@ -17,16 +17,11 @@ metaData
     ;
 
 constDef
-    :   '.const' IDENTIFIER '=' '<' type '>' immediate
+    :   '.const' IDENTIFIER '<' type '>' '=' immediate
     ;
 
 funcSigDef
-    :   '.funcsig' IDENTIFIER '=' funcSig
-    ;
-
-funcSig
-    :   IDENTIFIER
-    |   type '(' type* ')'
+    :   '.funcsig' IDENTIFIER funcSig
     ;
 
 funcDecl
@@ -35,6 +30,15 @@ funcDecl
     
 funcDef
     :   '.funcdef' IDENTIFIER '<' funcSig '>' funcBody
+    ;
+
+typeDef
+    :   '.typedef' IDENTIFIER type
+    ;
+
+funcSig
+    :   IDENTIFIER
+    |   type '(' type* ')'
     ;
 
 funcBody
@@ -51,13 +55,9 @@ label
     :   '.label' IDENTIFIER ':'
     ;
 
-typeDef
-    :   '.typedef' IDENTIFIER typeDescriptor
-    ;
-
 type
     :   IDENTIFIER
-    |   typeDescriptor
+    |   typeConstructor
     ;
 
 immediate
@@ -65,7 +65,7 @@ immediate
     |   fpImmediate
     ;
 
-typeDescriptor
+typeConstructor
     :   'int' '<' intImmediate '>'          # IntType
     |   'float'                             # FloatType
     |   'double'                            # DoubleType
