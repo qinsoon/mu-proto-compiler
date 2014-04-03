@@ -329,6 +329,8 @@ public class Burg {
                                 "%s.setOperand%d(%s)", var, j, newOperandStr));
                     }
                     
+                    code.appendStmtln(String.format("%s.setNodeIndex(node.getId())", var));
+                    
                     code.appendStmtln(String.format(
                             "ret.add(%s)", var));
                     

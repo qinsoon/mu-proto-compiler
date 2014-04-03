@@ -9,6 +9,8 @@ import compiler.UVMCompiler;
 import compiler.phase.CompilationPhase;
 
 public class BBReconstruction extends CompilationPhase{
+    private static final boolean VERBOSE = false;
+    
     public BBReconstruction(String name) {
         super(name);
     }
@@ -52,12 +54,7 @@ public class BBReconstruction extends CompilationPhase{
                 if (mc.isBranchingCode()) {
                     curBB = null;
                 }
-            }
-            
-            // print
-            System.out.println(cf.getOriginFunction().getName());
-            for (MCBasicBlock bb : cf.BBs)
-                System.out.println(bb.prettyPrint());
+            }            
             
             // collect more info for BBs
             for (int i = 0; i < cf.BBs.size(); i++) {
@@ -81,6 +78,25 @@ public class BBReconstruction extends CompilationPhase{
                     MCBasicBlock next = cf.BBs.get(i + 1);
                     bb.addSuccessor(next);
                     next.addPredecessors(bb);
+                }
+            }
+            
+            // print
+            if (VERBOSE) {
+                for (MCBasicBlock bb : cf.BBs) {
+                    System.out.println("BB: #" + bb.getName());
+                    
+                    System.out.print("predecessors: {");
+                    for (MCBasicBlock p : bb.getPredecessors())
+                        System.out.print(p.getName() + " ");
+                    System.out.println("}");
+                    
+                    System.out.print("sucessors: {");
+                    for (MCBasicBlock s : bb.getSuccessor()) 
+                        System.out.print(s.getName() + " ");
+                    System.out.println("}");
+                    
+                    System.out.println(bb.prettyPrint());
                 }
             }
         }

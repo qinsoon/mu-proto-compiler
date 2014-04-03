@@ -3,10 +3,23 @@ package uvm.mc;
 import java.util.List;
 
 public abstract class AbstractMachineCode {
+    protected int index;
+    
     protected String name;
     protected List<MCOperand> operands;
     
     protected uvm.mc.MCLabel label;
+    
+    /**
+     * this may not always be valid result (when the mc doesnt have a result)
+     */
+    public MCRegister getResult() {
+        return (MCRegister) operands.get(0);
+    }
+    
+    public int getNumberOfOperands() {
+        return operands.size();
+    }
     
     public void setLabel(uvm.mc.MCLabel label) {
         this.label = label;
@@ -18,6 +31,10 @@ public abstract class AbstractMachineCode {
     
     public MCOperand getOperand(int index) {
         return operands.get(index);
+    }
+    
+    public void setOperand(int index, MCOperand operand) {
+        operands.set(index, operand);
     }
     
     public String prettyPrint() {
@@ -70,5 +87,13 @@ public abstract class AbstractMachineCode {
     // a ret machine code will not take any operand
     public boolean isRet() {
         return false;
+    }
+
+    public int getNodeIndex() {
+        return index;
+    }
+
+    public void setNodeIndex(int index) {
+        this.index = index;
     }
 }

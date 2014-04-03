@@ -26,6 +26,10 @@ public class MCBasicBlock {
         this.label = label;
     }
     
+    public String getName() {
+        return label.getName();
+    }
+    
     public MCLabel getLabel() {
         return label;
     }

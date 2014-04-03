@@ -74,12 +74,18 @@ public class burgListenerImpl extends burgBaseListener {
         if (!Burg.mcOps.containsKey(opName)) {
             op = new MCOp();
             op.name = opName;
-            op.operands = ctx.mcOperand().size();
+            if (opName.equals(Burg.MC_PHI)) {
+                op.operands = ctx.mcOperand().size() + 1;       // one for the result
+            } else op.operands = ctx.mcOperand().size();
             
             Burg.mcOps.put(opName, op);
         } else op = Burg.mcOps.get(opName);
         
         List<CCTOperand> operands = new ArrayList<CCTOperand>();
+        
+        if (opName.equals(Burg.MC_PHI))
+            operands.add(Burg.OpdRegister.findOrCreate("res_reg", OpdRegister.RES_REG));
+        
         for (burgParser.McOperandContext operandCtx : ctx.mcOperand()) {
             operands.add(getOperand(operandCtx));
         }

@@ -1,7 +1,9 @@
 package uvm;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
@@ -15,6 +17,35 @@ public class CompiledFunction {
     // MC BB
     public List<MCBasicBlock> BBs = new ArrayList<MCBasicBlock>();
     public MCBasicBlock entryBB;
+    
+    public String prettyPrint() {
+        StringBuilder str = new StringBuilder();
+        // print
+        str.append(getOriginFunction().getName());
+        str.append('\n');
+        
+        // traverse from entryBB
+        Queue<MCBasicBlock> traverse = new LinkedList<MCBasicBlock>();
+        traverse.add(entryBB);
+        
+        while (!traverse.isEmpty()) {
+            MCBasicBlock bb = traverse.poll();
+            str.append(bb.prettyPrint());
+            str.append('\n');
+            
+            for (MCBasicBlock succ : bb.getSuccessor()) {
+                if (succ.getPredecessors().size() == 1) {
+                    str.append("**fallthrough**\n");
+                    str.append(succ.prettyPrint());
+                    str.append('\n');
+                } else {
+                    traverse.add(succ);
+                }                    
+            }
+        }
+        
+        return str.toString();
+    }
     
     public CompiledFunction(Function origin) {
         this.origin = origin;
