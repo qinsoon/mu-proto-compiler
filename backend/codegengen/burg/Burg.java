@@ -41,7 +41,7 @@ public class Burg {
     public static final List<String>    MC_UNCOND_JUMP = new ArrayList<String>();
     public static final String          MC_PHI = "mcphi";
     public static final List<String>    MC_RET = new ArrayList<String>();
-    public static String                MC_MOV = null;
+    public static final List<String>    MC_MOV = new ArrayList<String>();
     
     public static void main(String[] args) {
         for (int i = 0; i < args.length; i++) {
@@ -110,7 +110,7 @@ public class Burg {
     }
     
     public static void checkCorrectness() {
-        if (MC_MOV == null)
+        if (MC_MOV.isEmpty())
             error("need to define mov instruction by using .mc_mov in .target file. ");
     }
     
@@ -331,6 +331,9 @@ public class Burg {
                     
                     code.appendStmtln(String.format("%s.setNodeIndex(node.getId())", var));
                     
+                    if (mc.reg != null)
+                        code.appendStmtln(String.format("%s.setReg((MCRegister)%s)", var, getOperandCreation(mc.reg)));
+                    
                     code.appendStmtln(String.format(
                             "ret.add(%s)", var));
                     
@@ -530,10 +533,12 @@ public class Burg {
     static class MCRule {
         MCOp op;
         List<CCTOperand> operands = new ArrayList<CCTOperand>();
+        CCTOperand reg;
         
-        MCRule(MCOp op, List<CCTOperand> operands) {
+        MCRule(MCOp op, List<CCTOperand> operands, CCTOperand reg) {
             this.op = op;
             this.operands = operands;
+            this.reg = reg;
         }
 
         String prettyPrint() {
@@ -731,17 +736,31 @@ public class Burg {
         code.appendln(String.format("public class %s extends AbstractMCDriver {", driver));
         code.increaseIndent();
         
-        code.appendln("public AbstractMachineCode genMove(MCOperand dest, MCOperand src) {");
+        code.appendln("public AbstractMachineCode genMove(MCRegister dest, MCOperand src) {");
         code.increaseIndent();
         
-        String mov = targetName + MC_MOV;
+        String mov = targetName + MC_MOV.get(0);
         code.appendStmtln(String.format("%s ret = new %s()", mov, mov));
-        code.appendStmtln("ret.setOperand0(dest)");
-        code.appendStmtln("ret.setOperand1(src)");
+        code.appendStmtln("ret.setOperand0(src)");
+        code.appendStmtln("ret.setReg(dest)");
         code.appendStmtln("return ret");
         
         code.decreaseIndent();
         code.appendln("}");
+        
+        for (int i = 0; i < MC_MOV.size(); i++) {
+            String s = targetName + MC_MOV.get(i);
+            code.appendln(String.format("public AbstractMachineCode gen%s(MCRegister dest, MCOperand src) {", s));
+            
+            code.increaseIndent();
+            code.appendStmtln(String.format("%s ret = new %s()", s, s));
+            code.appendStmtln("ret.setOperand0(src)");
+            code.appendStmtln("ret.setReg(dest)");
+            code.appendStmtln("return ret");
+            
+            code.decreaseIndent();
+            code.appendln("}");
+        }
         
         // end of class
         code.decreaseIndent();

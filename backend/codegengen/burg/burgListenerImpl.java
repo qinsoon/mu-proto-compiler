@@ -31,7 +31,8 @@ public class burgListenerImpl extends burgBaseListener {
     }
     
     @Override public void exitMcMovDecl(@NotNull burgParser.McMovDeclContext ctx) {
-        Burg.MC_MOV = ctx.string().getText();
+        for (burgParser.StringContext s : ctx.string())
+            Burg.MC_MOV.add(s.getText());
     }
     
     List<MCRule> mcEmissionRules = new ArrayList<MCRule>();
@@ -74,23 +75,23 @@ public class burgListenerImpl extends burgBaseListener {
         if (!Burg.mcOps.containsKey(opName)) {
             op = new MCOp();
             op.name = opName;
-            if (opName.equals(Burg.MC_PHI)) {
-                op.operands = ctx.mcOperand().size() + 1;       // one for the result
-            } else op.operands = ctx.mcOperand().size();
+            op.operands = ctx.mcOperand().size();
             
             Burg.mcOps.put(opName, op);
         } else op = Burg.mcOps.get(opName);
         
         List<CCTOperand> operands = new ArrayList<CCTOperand>();
         
-        if (opName.equals(Burg.MC_PHI))
-            operands.add(Burg.OpdRegister.findOrCreate("res_reg", OpdRegister.RES_REG));
-        
         for (burgParser.McOperandContext operandCtx : ctx.mcOperand()) {
             operands.add(getOperand(operandCtx));
         }
         
-        MCRule r = new MCRule(op, operands);
+        CCTOperand reg = null;
+        if (ctx.resOperand() != null) {
+            reg = getOperand(ctx.resOperand().mcOperand());
+        }
+        
+        MCRule r = new MCRule(op, operands, reg);
         mcEmissionRules.add(r);
     }
 

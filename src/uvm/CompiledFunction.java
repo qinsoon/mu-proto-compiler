@@ -1,18 +1,25 @@
 package uvm;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
 import uvm.mc.AbstractMachineCode;
+import uvm.mc.LiveInterval;
 import uvm.mc.MCBasicBlock;
+import uvm.mc.MCRegister;
 
 public class CompiledFunction {
     Function origin;
     
     // MC
     public List<AbstractMachineCode> mc = new ArrayList<AbstractMachineCode>();
+    public List<AbstractMachineCode> sequenceMC = new ArrayList<AbstractMachineCode>();    
+    
+    // register live interval
+    public HashMap<MCRegister, LiveInterval> intervals = new HashMap<MCRegister, LiveInterval>();
     
     // MC BB
     public List<MCBasicBlock> BBs = new ArrayList<MCBasicBlock>();
@@ -63,5 +70,13 @@ public class CompiledFunction {
     
     public List<AbstractMachineCode> getMachineCode() {
         return mc;
+    }
+
+    public List<AbstractMachineCode> getSequenceMC() {
+        return sequenceMC;
+    }
+
+    public void addSequenceMC(AbstractMachineCode mc) {
+        this.sequenceMC.add(mc);
     }
 }

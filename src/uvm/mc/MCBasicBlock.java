@@ -18,6 +18,8 @@ public class MCBasicBlock {
     AbstractMachineCode phi;            // first phi instruction
     List<AbstractMachineCode> mc = new ArrayList<AbstractMachineCode>();    // first/last instruction can be found here
     
+    public List<MCRegister> liveIn = new ArrayList<MCRegister>();
+    
     public MCBasicBlock(String name) {
         this.label = new MCLabel(name);
     }
@@ -32,6 +34,14 @@ public class MCBasicBlock {
     
     public MCLabel getLabel() {
         return label;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof MCBasicBlock && getName().equals(((MCBasicBlock)o).getName()))
+            return true;
+        
+        return false;
     }
     
     public String prettyPrintWithPreAndSucc() {

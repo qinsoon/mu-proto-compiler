@@ -12,11 +12,17 @@ public abstract class AbstractMachineCode {
     
     protected uvm.mc.MCLabel label;
     
+    protected uvm.mc.MCRegister reg;
+    
     /**
      * this may not always be valid result (when the mc doesnt have a result)
      */
-    public MCRegister getResult() {
-        return (MCRegister) operands.get(0);
+    public MCRegister getReg() {
+        return reg;
+    }
+    
+    public void setReg(MCRegister reg) {
+        this.reg = reg;
     }
     
     public int getNumberOfOperands() {
@@ -57,6 +63,8 @@ public abstract class AbstractMachineCode {
             if (i != operands.size() - 1)
                 ret.append(", ");
         }
+        if (reg != null)
+            ret.append(" ->" + reg.prettyPrint());
         return ret.toString();
     }
     

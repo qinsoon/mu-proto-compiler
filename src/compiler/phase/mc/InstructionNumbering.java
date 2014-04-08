@@ -41,10 +41,13 @@ public class InstructionNumbering extends CompilationPhase {
                 }
             }
             
-            int sequence = 1;
+            System.out.println("\ninstruction numbering:\n");
+            int sequence = 0;
             for (MCBasicBlock cur : topologicalOrder) {
                 for (AbstractMachineCode mc : cur.getMC()) {
+                    System.out.println(sequence + ": " + mc.prettyPrint());
                     mc.sequence = sequence;
+                    cf.addSequenceMC(mc);
                     sequence ++;
                 }
             }

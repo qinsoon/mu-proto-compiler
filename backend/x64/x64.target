@@ -7,11 +7,11 @@
 .mc_cond_jump je jne jl jge jle jg
 .mc_uncond_jump jmp
 .mc_ret ret
-.mc_mov mov
+.mc_mov mov cmovlt cmovgt cmoveq
 
 stmt : PSEUDO_ASSIGN(reg op)
 // mov
-> mov P[0] P[1]
+> mov P[1] -> P[0]
 1
 
 stmt : op
@@ -27,71 +27,83 @@ op : BRANCH2(value label label)
 > jne P[2]
 2
 
-op : BRANCH2(SLT(value value) label label)
+op : BRANCH2(cmpSltRes label label)
 // cmp, jcc
 > jl  P[1]
 > jge P[2]
-2
+1
 
-op : BRANCH2(SGT(value value) label label)
+op : BRANCH2(cmpSgtRes label label)
 // cmp, jcc
 > jg  P[1]
 > jle P[2]
-2
+1
 
-op : BRANCH2(EQ(value value) label label)
+op : BRANCH2(cmpEqRes label label)
 // jcc
 > je  P[1]
 > jne P[2]
-2
+1
+
+cmpSltRes : SLT(value value)
+> cmp P[0] P[1]
+1
+
+cmpSgtRes : SGT(value value)
+> cmp P[0] P[1]
+1
+
+cmpEqRes: EQ(value value)
+> cmp P[0] P[1]
+1
 
 op : SLT(value value)
 // mov cmp cmov
-> mov %res_reg $0
+> mov $0 -> %res_reg
 > cmp P[0] P[1]
-> cmovlt %res_reg $1
+> cmovlt $1 -> %res_reg
 3
 
 op : SGT(value value)
 // mov cmp cmov
-> mov %res_reg $0
+> mov $0 -> %res_reg
 > cmp P[0] P[1]
-> cmovgt %res_reg $1
+> cmovgt $1 -> %res_reg
 3
 
 op : EQ(value value)
 // mov cmp cmov
-> mov %res_reg $0
+> mov $0 -> %res_reg
 > cmp P[0] P[1]
-> cmoveq %res_reg $0
+> cmoveq $0 -> %res_reg
 3
 
 op : RET2(value)
 // mov, ret
-> mov %ret_reg[0] P[0]
+> mov P[0] -> %ret_reg[0]
 > ret
 2
 
 op : PARAM
 // mov
-> mov %res_reg %param_reg[P(InstParam).getIndex()]
+> mov %param_reg[P(InstParam).getIndex()] -> %res_reg
 1
 
 op : SREM(value value)
 // mov, div, mov
-> mov %rax P[0]
-> idiv P[1]
-> mov %res_reg %rdx
+> mov P[0] -> %rax
+> idiv P[1] -> %rdx
+> mov %rdx -> %res_reg
 3
 
 op : PHI(value label value label)
-> mcphi P[0] P[1] P[2] P[3]
+> mcphi P[0] P[1] P[2] P[3] -> %res_reg
 1
 
 op : ADD(value value)
 // add
-> mov %res_reg P[0]
-> add %res_reg P[1]
+> mov P[0] -> %res_reg
+> add %res_reg P[1] -> %res_reg
 2
 
 value : reg

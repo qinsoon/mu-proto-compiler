@@ -19,7 +19,7 @@ declare
     ;
 
 mcMovDecl
-    :   '.mc_mov' string
+    :   '.mc_mov' string+
     ;
 
 mcRetDecl
@@ -40,13 +40,8 @@ targetDecl
 
 treerule
     :   NONTERM ':' node
-        mcodes?
-        asOperand?
+        mcodes ?
         DIGITS
-    ;
-
-asOperand
-    :   '=' 
     ;
 
 string
@@ -66,7 +61,11 @@ mcodes
     ;
                 
 mcode
-    :   mcOp mcOperand*
+    :   mcOp mcOperand* ('->' resOperand)?
+    ;
+
+resOperand
+    :   mcOperand
     ;
 
 mcOp
