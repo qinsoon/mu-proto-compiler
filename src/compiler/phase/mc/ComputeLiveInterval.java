@@ -46,13 +46,13 @@ public class ComputeLiveInterval extends CompilationPhase {
             for (AbstractMachineCode mc : bb.getMC()) {
                 for (int i = 0; i < mc.getNumberOfOperands(); i++) {
                     MCOperand op = mc.getOperand(i);
-                    if (op instanceof uvm.mc.MCRegister && !defined.contains(op)) 
+                    if (op instanceof uvm.mc.MCRegister && !defined.contains(((uvm.mc.MCRegister) op).REP())) 
                         // if this mc uses a register which is not defined within this basic block, then it is a live-in register
-                        bb.liveIn.add((MCRegister) op);
+                        bb.liveIn.add(((MCRegister) op).REP());
                 }
                 
                 if (mc.getReg() != null) {
-                    defined.add(mc.getReg());                    
+                    defined.add(mc.getReg().REP());                    
                 }
             }
             
@@ -73,7 +73,7 @@ public class ComputeLiveInterval extends CompilationPhase {
                     MCOperand op = mc.getOperand(j);
                     // this mc uses a register, so the register has a range that ends with this mc
                     if (op instanceof MCRegister) {
-                        addRange(cf, bb, (MCRegister) op, UNKNOWN_START, mc.sequence);
+                        addRange(cf, bb, ((MCRegister) op).REP(), UNKNOWN_START, mc.sequence);
                     }
                 }
                 
@@ -85,17 +85,17 @@ public class ComputeLiveInterval extends CompilationPhase {
                     }
                     
                     // this mc defines a register, so the register has a range that starts with _next_ mc
-                    addRange(cf, bb, mc.getReg(), mc.sequence + 1, UNKNOWN_END);
+                    addRange(cf, bb, mc.getReg().REP(), mc.sequence + 1, UNKNOWN_END);
                 }
             }
         }
         
         // there might be some ranges with UNKNOWN_START/UNKNOWN_END
         for (MCRegister reg : cf.intervals.keySet()) {
-            for (Range range : cf.intervals.get(reg).getRanges()) {
+            for (Range range : cf.intervals.get(reg.REP()).getRanges()) {
                 if (range.getStart() == UNKNOWN_START) {
                     // if this register is in live-in set, then the start is the first mc of the block
-                    if (range.getBB().liveIn.contains(reg))
+                    if (range.getBB().liveIn.contains(reg.REP()))
                         range.setStart(range.getBB().getFirst().sequence);
                     // otherwise, this register might be implicitly produced by other mc
                     // we set the start to its previous mc
