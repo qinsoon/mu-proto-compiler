@@ -84,25 +84,9 @@ public class BBReconstruction extends CompilationPhase{
             // print
             if (VERBOSE) {
                 for (MCBasicBlock bb : cf.BBs) {
-                    printBB(bb);
+                    System.out.println(bb.prettyPrintWithPreAndSucc());
                 }
             }
         }
-    }
-    
-    public static void printBB(MCBasicBlock bb) {
-        System.out.println("BB: #" + bb.getName());
-        
-        System.out.print("predecessors: {");
-        for (MCBasicBlock p : bb.getPredecessors())
-            System.out.print(p.getName() + " ");
-        System.out.println("}");
-        
-        System.out.print("sucessors: {");
-        for (MCBasicBlock s : bb.getSuccessor()) 
-            System.out.print(s.getName() + " ");
-        System.out.println("}");
-        
-        System.out.println(bb.prettyPrint());
     }
 }

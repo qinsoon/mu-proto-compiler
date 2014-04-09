@@ -14,6 +14,7 @@ public abstract class AbstractMachineCode {
     
     protected uvm.mc.MCRegister reg;
     
+    
     /**
      * this may not always be valid result (when the mc doesnt have a result)
      */
@@ -64,7 +65,8 @@ public abstract class AbstractMachineCode {
                 ret.append(", ");
         }
         if (reg != null)
-            ret.append(" ->" + reg.prettyPrint());
+            ret.append(" -> " + reg.prettyPrint());
+
         return ret.toString();
     }
     
@@ -91,6 +93,11 @@ public abstract class AbstractMachineCode {
     }
     
     public boolean isUncondJump() {
+        return false;
+    }
+    
+    // we will try register coalescing for mov mc
+    public boolean isMov() {
         return false;
     }
     

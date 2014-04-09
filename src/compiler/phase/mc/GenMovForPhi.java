@@ -47,11 +47,8 @@ public class GenMovForPhi extends CompilationPhase {
                 if (bb.getPhi() == null)
                     continue;
                 
-                System.out.println("bb #" + bb.getLabel().getName() + " contains phi. ");
-                
                 for (int j = 0; j < bb.getPredecessors().size(); ) {
                     MCBasicBlock p = bb.getPredecessors().get(j);
-                    System.out.println("check its predecessor: #" + p.getLabel().getName());
                     MCBasicBlock n;
                     
                     boolean newBlock = false;
@@ -85,7 +82,6 @@ public class GenMovForPhi extends CompilationPhase {
                             int opdForP = -1;
                             for (int i = 1; i < mc.getNumberOfOperands(); i += 2) {
                                 MCLabel l = (MCLabel) mc.getOperand(i);
-                                System.out.println("l=" + l.getName());
                                 if (l.getName().equals(p.getLabel().getName()))
                                     opdForP = i - 1;
                             }
@@ -100,12 +96,15 @@ public class GenMovForPhi extends CompilationPhase {
                                     i.setLabel(n.getLabel());
                                 // phi.opd(p) <- i
                                 mc.setOperand(opdForP, genMovReg);
+                                mc.setOperand(opdForP + 1, n.getLabel());
                                 // append i to n
                                 n.addMC(i);
-                                // TODO this is arbitrary order
+                                // this is arbitrary order
                                 cf.addMachineCode(i);
                                 // TODO join i with phi
-                                // ignore now
+                                // i is genMovReg
+                                // phi is mc.getReg()
+                                genMovReg.setREP(mc.getReg());
                             }
                         }
                     }

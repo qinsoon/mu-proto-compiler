@@ -44,10 +44,10 @@ public class InstructionNumbering extends CompilationPhase {
             System.out.println("\ninstruction numbering:\n");
             int sequence = 0;
             for (MCBasicBlock cur : topologicalOrder) {
+                cf.topoloticalBBs.add(cur);
                 for (AbstractMachineCode mc : cur.getMC()) {
                     System.out.println(sequence + ": " + mc.prettyPrint());
                     mc.sequence = sequence;
-                    cf.addSequenceMC(mc);
                     sequence ++;
                 }
             }

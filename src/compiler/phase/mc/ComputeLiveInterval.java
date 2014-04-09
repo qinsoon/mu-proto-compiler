@@ -35,7 +35,7 @@ public class ComputeLiveInterval extends CompilationPhase {
             buildLiveIn(cf);
             buildIntervals(cf);
             
-            printInterval(cf);
+            cf.printInterval();;
         }
     }
     
@@ -77,9 +77,16 @@ public class ComputeLiveInterval extends CompilationPhase {
                     }
                 }
                 
-                if (mc.getReg() != null)
-                    // this mc defines a register, so the register has a range that starts with this mc
-                    addRange(cf, bb, mc.getReg(), mc.sequence, UNKNOWN_END);
+                if (mc.getReg() != null) {
+                    if (mc.sequence == cf.getMachineCode().size() - 1) {
+                        System.out.println("mc sequence: " + mc.sequence);
+                        System.out.println("mc: " + mc.prettyPrint());
+                        UVMCompiler.error("defining a reg in the last mc (shouldnt be)");
+                    }
+                    
+                    // this mc defines a register, so the register has a range that starts with _next_ mc
+                    addRange(cf, bb, mc.getReg(), mc.sequence + 1, UNKNOWN_END);
+                }
             }
         }
         
@@ -88,8 +95,8 @@ public class ComputeLiveInterval extends CompilationPhase {
             for (Range range : cf.intervals.get(reg).getRanges()) {
                 if (range.getStart() == UNKNOWN_START) {
                     // if this register is in live-in set, then the start is the first mc of the block
-                    if (range.getBb().liveIn.contains(reg))
-                        range.setStart(range.getBb().getFirst().sequence);
+                    if (range.getBB().liveIn.contains(reg))
+                        range.setStart(range.getBB().getFirst().sequence);
                     // otherwise, this register might be implicitly produced by other mc
                     // we set the start to its previous mc
                     else range.setStart(range.getEnd());
@@ -97,7 +104,7 @@ public class ComputeLiveInterval extends CompilationPhase {
                 
                 if (range.getEnd() == UNKNOWN_END) {
                     // this register lives til the end of the bb
-                    range.setEnd(range.getBb().getLast().sequence);
+                    range.setEnd(range.getBB().getLast().sequence);
                 }
             }
         }
@@ -118,32 +125,5 @@ public class ComputeLiveInterval extends CompilationPhase {
         }
     }
     
-    public void printInterval(CompiledFunction cf) {        
-        System.out.println("Live interval for " + cf.getOriginFunction().getName());
-        
-        int maxRegNameLength = -1;
-        for (MCRegister reg : cf.intervals.keySet()) {
-            if (reg.getName().length() > maxRegNameLength)
-                maxRegNameLength = reg.getName().length();
-        }
-        
-        for (MCRegister reg : cf.intervals.keySet()) {
-            System.out.print(String.format("%-"+maxRegNameLength+"s ", reg.getName()));
-            
-            char[] output = new char[cf.mc.size()];
-            for (int i = 0; i < output.length; i++)
-                output[i] = 'x';
-            LiveInterval interval = cf.intervals.get(reg);
-            for (Range range : interval.getRanges()) {
-                if (range.getStart() != UNKNOWN_START && range.getEnd() != UNKNOWN_END) {
-                    for (int i = range.getStart(); i <= range.getEnd(); i++)
-                        output[i] = '-';
-                } else {
-                    UVMCompiler.error("fml");
-                }
-            }
-            
-            System.out.println(output);
-        }
-    }
+
 }

@@ -720,6 +720,12 @@ public class Burg {
             code.appendln("@Override public boolean isRet() {return true;}");
         }
         
+        // is mc mov?
+        if (MC_MOV.contains(op.name)) {
+            code.appendln();
+            code.append("@Override public boolean isMov() {return true;}");
+        }
+        
         code.decreaseIndent();
         code.appendln("}");
         

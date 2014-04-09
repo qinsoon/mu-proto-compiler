@@ -17,6 +17,7 @@ import compiler.phase.mc.BBReconstruction;
 import compiler.phase.mc.ComputeLiveInterval;
 import compiler.phase.mc.GenMovForPhi;
 import compiler.phase.mc.InstructionNumbering;
+import compiler.phase.mc.RegisterCoalescing;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
@@ -78,6 +79,7 @@ public class UVMCompiler {
             new GenMovForPhi("genmovforphi").execute();
             new InstructionNumbering("instnumbering").execute();
             new ComputeLiveInterval("compinterval").execute();
+            new RegisterCoalescing("regcoalesc").execute();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

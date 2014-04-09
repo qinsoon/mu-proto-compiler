@@ -46,15 +46,16 @@ public class MCBasicBlock {
     
     public String prettyPrintWithPreAndSucc() {
         StringBuilder ret = new StringBuilder();
-        ret.append("predecessors: {");
+        ret.append("BB: #" + getName() + "\n");
+        ret.append("  predecessors: {");
         for (MCBasicBlock p : getPredecessors())
             ret.append(p.getName() + " ");
-        ret.append("}");
+        ret.append("}\n");
         
-        ret.append("sucessors: {");
+        ret.append("  sucessors: {");
         for (MCBasicBlock s : getSuccessor()) 
             ret.append(s.getName() + " ");
-        ret.append("}");
+        ret.append("}\n");
         
         ret.append(prettyPrint());
         return ret.toString();
@@ -64,7 +65,7 @@ public class MCBasicBlock {
         StringBuilder ret = new StringBuilder();
         ret.append("#" + label.name + ": {\n");
         for (AbstractMachineCode c : mc) {
-            ret.append(c.prettyPrintNoLabel() + "\n");
+            ret.append("  " + c.prettyPrintNoLabel() + "\n");
         }
         ret.append("}");
         return ret.toString();
@@ -96,6 +97,9 @@ public class MCBasicBlock {
     }
     public List<AbstractMachineCode> getMC() {
         return mc;
+    }
+    public void setMC(List<AbstractMachineCode> mc) {
+        this.mc = mc;
     }
     public void addMC(AbstractMachineCode c) {
         this.mc.add(c);

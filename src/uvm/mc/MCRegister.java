@@ -12,9 +12,31 @@ public class MCRegister extends MCOperand{
     int type;
     String name;
     
+    MCRegister join;
+    
     private MCRegister(String name, int type) {
         this.name = name;
         this.type = type;
+        
+        this.join = this;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof MCRegister && ((MCRegister) o).type == this.type && ((MCRegister) o).name.equals(this.name))
+            return true;
+        
+        return false;
+    }
+    
+    public void setREP(MCRegister reg) {
+        this.join = reg;
+    }
+    
+    public MCRegister REP() {
+        if (this.join == this)
+            return this;
+        else return join.REP();
     }
     
     static final HashMap<String, MCRegister> temps = new HashMap<String, MCRegister>();
@@ -37,7 +59,7 @@ public class MCRegister extends MCOperand{
     }
     
     public int getType() {
-        return type;
+        return join.type;
     }
     
     public static void clearTemps() {
@@ -46,6 +68,6 @@ public class MCRegister extends MCOperand{
     
     @Override
     public String prettyPrint() {
-        return "%" + name;
+        return "%" + join.name;
     }
 }
