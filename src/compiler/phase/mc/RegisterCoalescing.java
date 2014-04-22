@@ -98,6 +98,7 @@ public class RegisterCoalescing extends CompilationPhase {
             System.out.println(" keeping " + y.REP().prettyPrint() + ", removing " + x.REP().prettyPrint());
             
             // join
+            System.out.println(" join current range");
             Range union = Range.union(i, j);
             
             if (j == null)
@@ -108,7 +109,15 @@ public class RegisterCoalescing extends CompilationPhase {
             if (i != null)
                 cf.intervals.get(x.REP()).removeRange(i.getBB());
             
-            x.setREP(y.REP());
+            // TODO this part of code might be problematic
+            System.out.println(" copy other x ranges to y");
+            for (LiveInterval.Range r : cf.intervals.get(x.REP()).getRanges())
+                cf.intervals.get(y.REP()).addRange(r);
+            
+            cf.intervals.get(x.REP()).getRanges().clear();
+            // end of problem code
+            
+            x.REP().setREP(y.REP());
             
             return true;
         } 
@@ -122,8 +131,11 @@ public class RegisterCoalescing extends CompilationPhase {
             return true;
         
         // both have to be in the same specific register
-        else if (isSpecificRegister(x) && isSpecificRegister(y) && x.equals(y))
-            return true;
+        else if (isSpecificRegister(x) && isSpecificRegister(y)) {
+            if (x.equals(y))
+                return true;
+            else return false;
+        }
         
         // x in a specific register and interval of y does not overlap any other intervals
         else if (isSpecificRegister(x) && !cf.intervals.get(y).overlapOtherThan(cf.intervals.get(x), mc.sequence))
@@ -136,7 +148,7 @@ public class RegisterCoalescing extends CompilationPhase {
     }
     
     private static boolean isSpecificRegister(MCRegister reg) {
-        if (reg.getType() == MCRegister.OTHER_SYMBOL_REG ||  reg.getType() == MCRegister.RES_REG)
+        if (reg.getREPType() == MCRegister.OTHER_SYMBOL_REG ||  reg.getREPType() == MCRegister.RES_REG)
             return false;
         else return true;
     }

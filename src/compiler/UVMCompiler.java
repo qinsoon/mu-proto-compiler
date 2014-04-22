@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
+import burm.mc.X64Driver;
 import compiler.phase.DefUseGeneration;
 import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
@@ -17,6 +18,7 @@ import compiler.phase.mc.BBReconstruction;
 import compiler.phase.mc.ComputeLiveInterval;
 import compiler.phase.mc.GenMovForPhi;
 import compiler.phase.mc.InstructionNumbering;
+import compiler.phase.mc.LinearScan;
 import compiler.phase.mc.RegisterCoalescing;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
@@ -25,10 +27,14 @@ import uvm.BasicBlock;
 import uvm.Function;
 import uvm.Instruction;
 import uvm.MicroVM;
+import uvm.mc.AbstractMCDriver;
 
 public class UVMCompiler {
     
     public static final String file = "tests/micro-bm/int-prime-number/prime-number.uir";
+    
+    public static AbstractMCDriver MCDriver = new X64Driver();
+    public static final int MC_REG_SIZE = 64;
     
     public static void main(String[] args) {
 
@@ -80,6 +86,7 @@ public class UVMCompiler {
             new InstructionNumbering("instnumbering").execute();
             new ComputeLiveInterval("compinterval").execute();
             new RegisterCoalescing("regcoalesc").execute();
+            new LinearScan("linearscan").execute();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -12,10 +12,27 @@ start
 
 declare
     :   targetDecl
+// mc    
     |   mcCondJumpDecl
     |   mcUncondJumpDecl
     |   mcRetDecl
     |   mcMovDecl
+// regs
+    |   gprDecl
+    |   gprParamDecl
+    |   gprRetDecl
+    ;
+
+gprDecl
+    :   '.gpr' string+
+    ;
+
+gprParamDecl
+    :   '.gpr_param' string+
+    ;
+
+gprRetDecl
+    :   '.gpr_ret' string+
     ;
 
 mcMovDecl

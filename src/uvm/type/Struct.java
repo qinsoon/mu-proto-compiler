@@ -34,4 +34,14 @@ public class Struct extends Type {
         return ret.toString();
     }
 
+    @Override
+    public int fitsInGPR() {
+        return 0;
+    }
+
+    @Override
+    public int fitsInFPR() {
+        return 0;
+    }
+
 }

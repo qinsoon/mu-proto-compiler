@@ -19,4 +19,7 @@ public abstract class Type {
     }
     
     public abstract String prettyPrint();
+    
+    public abstract int fitsInGPR();
+    public abstract int fitsInFPR();
 }

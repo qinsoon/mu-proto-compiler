@@ -14,4 +14,14 @@ public class Void extends Type {
         return "";
     }
 
+    @Override
+    public int fitsInGPR() {
+        return 0;
+    }
+
+    @Override
+    public int fitsInFPR() {
+        return 0;
+    }
+
 }

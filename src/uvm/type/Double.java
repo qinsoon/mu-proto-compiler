@@ -18,4 +18,14 @@ public class Double extends Type {
         return "double";
     }
 
+    @Override
+    public int fitsInGPR() {
+        return 0;
+    }
+
+    @Override
+    public int fitsInFPR() {
+        return 2;
+    }
+
 }

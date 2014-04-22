@@ -11,6 +11,7 @@ import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCLabel;
 import uvm.mc.MCRegister;
+import compiler.UVMCompiler;
 import compiler.phase.CompilationPhase;
 
 /*
@@ -87,11 +88,11 @@ public class GenMovForPhi extends CompilationPhase {
                             }
                             
                             if (opdForP != -1) {
-                                MCRegister genMovReg = MCRegister.findOrCreate("gen_mov_reg" + genMovRegIndex, MCRegister.OTHER_SYMBOL_REG);
+                                MCRegister genMovReg = cf.findOrCreateRegister("gen_mov_reg" + genMovRegIndex, MCRegister.OTHER_SYMBOL_REG);
                                 genMovRegIndex++;
                                 
                                 // i <- new RegMov(phi.opd(p))
-                                AbstractMachineCode i = new X64Driver().genMove(genMovReg, mc.getOperand(opdForP));
+                                AbstractMachineCode i = UVMCompiler.MCDriver.genMove(genMovReg, mc.getOperand(opdForP));
                                 if (newBlock)
                                     i.setLabel(n.getLabel());
                                 // phi.opd(p) <- i

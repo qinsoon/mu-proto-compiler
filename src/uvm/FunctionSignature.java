@@ -29,4 +29,12 @@ public class FunctionSignature {
     public String prettyPrint() {
         return toString();
     }
+
+    public Type getReturnType() {
+        return returnType;
+    }
+
+    public List<Type> getParamTypes() {
+        return paramTypes;
+    }
 }

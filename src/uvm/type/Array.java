@@ -22,4 +22,14 @@ public class Array extends Type {
         return "array<" + eleType.prettyPrint() + " " + length + ">";
     }
 
+    @Override
+    public int fitsInGPR() {
+        return 0;
+    }
+
+    @Override
+    public int fitsInFPR() {
+        return 0;
+    }
+
 }

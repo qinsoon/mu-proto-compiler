@@ -14,7 +14,7 @@ public class MCRegister extends MCOperand{
     
     MCRegister join;
     
-    private MCRegister(String name, int type) {
+    public MCRegister(String name, int type) {
         this.name = name;
         this.type = type;
         
@@ -39,8 +39,15 @@ public class MCRegister extends MCOperand{
         else return join.REP();
     }
     
-    static final HashMap<String, MCRegister> temps = new HashMap<String, MCRegister>();
+    public static HashMap<String, MCRegister> temps = new HashMap<String, MCRegister>();
     
+    /**
+     * do not use this method. Instead use CompiledFunction.findOrCreateRegister
+     * this method is only supposed to use during emitting code (by BURM)
+     * @param name
+     * @param type
+     * @return
+     */
     public static MCRegister findOrCreate(String name, int type) {
         if (temps.containsKey(name))
             return temps.get(name);
@@ -48,6 +55,10 @@ public class MCRegister extends MCOperand{
         MCRegister ret = new MCRegister(name, type);
         temps.put(name, ret);
         return ret;
+    }
+    
+    public static void clearTemps() {
+        temps = new HashMap<String, MCRegister>();
     }
     
     public void setName(String name) {
@@ -59,15 +70,20 @@ public class MCRegister extends MCOperand{
     }
     
     public int getType() {
-        return join.type;
+        return type;
     }
     
-    public static void clearTemps() {
-        temps.clear();
+    public int getREPType() {
+        if (join == this)
+            return type;
+        else return join.getREPType();
     }
+
     
     @Override
     public String prettyPrint() {
-        return "%" + join.name;
+        if (join == this)
+            return "%" + name;
+        else return "%" + name + "(REP=" + join.prettyPrint() + ")";
     }
 }

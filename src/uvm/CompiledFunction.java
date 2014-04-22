@@ -23,14 +23,46 @@ public class CompiledFunction {
     // MC
     public List<AbstractMachineCode> mc = new ArrayList<AbstractMachineCode>();
     
-    // register live interval
-    public HashMap<MCRegister, LiveInterval> intervals = new HashMap<MCRegister, LiveInterval>();
-    
     // MC BB
     public List<MCBasicBlock> BBs = new ArrayList<MCBasicBlock>();
     public MCBasicBlock entryBB;
     public List<MCBasicBlock> topoloticalBBs = new ArrayList<MCBasicBlock>();
     
+    // register live interval
+    public HashMap<MCRegister, LiveInterval> intervals = new HashMap<MCRegister, LiveInterval>();
+
+    // register
+    private HashMap<String, MCRegister> regs = new HashMap<String, MCRegister>();
+    
+    public MCRegister findOrCreateRegister(String name, int type) {
+        if (regs.containsKey(name))
+            return regs.get(name);
+        
+        MCRegister ret = new MCRegister(name, type);
+        regs.put(name, ret);
+        return ret;
+    }
+    
+    public MCRegister findRegister(String name, int type) {
+        MCRegister ret = regs.get(name);
+        if (ret != null) {
+            if (ret.getType() == type)
+                return ret;
+            else UVMCompiler.error(
+                    "tring to find register " + name + " with type " + type + " but it was created as type " + ret.getType());
+        }
+        
+        return ret;
+    }
+    
+    public HashMap<String, MCRegister> getRegs() {
+        return regs;
+    }
+
+    public void setRegs(HashMap<String, MCRegister> regs) {
+        this.regs = regs;
+    }
+
     public String prettyPrint() {
         StringBuilder str = new StringBuilder();
         // print
@@ -103,7 +135,9 @@ public class CompiledFunction {
                 }
             }
             
-            System.out.println(output);
+            System.out.print(output);
+            
+            System.out.println(" " + reg.prettyPrint());
         }
     }
 }

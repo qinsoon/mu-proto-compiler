@@ -43,6 +43,10 @@ public class Burg {
     public static final List<String>    MC_RET = new ArrayList<String>();
     public static final List<String>    MC_MOV = new ArrayList<String>();
     
+    public static final List<String>    REG_GPR = new ArrayList<String>();
+    public static final List<String>    REG_GPR_PARAM = new ArrayList<String>();
+    public static final List<String>    REG_GPR_RET = new ArrayList<String>();
+    
     public static void main(String[] args) {
         for (int i = 0; i < args.length; i++) {
             if (args[i].equalsIgnoreCase("-d")) {
@@ -742,6 +746,7 @@ public class Burg {
         code.appendln(String.format("public class %s extends AbstractMCDriver {", driver));
         code.increaseIndent();
         
+        // mov
         code.appendln("public AbstractMachineCode genMove(MCRegister dest, MCOperand src) {");
         code.increaseIndent();
         
@@ -754,6 +759,7 @@ public class Burg {
         code.decreaseIndent();
         code.appendln("}");
         
+        // all movs
         for (int i = 0; i < MC_MOV.size(); i++) {
             String s = targetName + MC_MOV.get(i);
             code.appendln(String.format("public AbstractMachineCode gen%s(MCRegister dest, MCOperand src) {", s));
@@ -767,6 +773,48 @@ public class Burg {
             code.decreaseIndent();
             code.appendln("}");
         }
+        
+        // GPRs
+        code.appendln();
+        code.append("public static final String[] GPR = {");
+        for (int i = 0; i < Burg.REG_GPR.size(); i++) {
+            String s = Burg.REG_GPR.get(i);
+            code.appendNoIndent(String.format("\"%s\"", s));
+            if (i != Burg.REG_GPR.size() - 1)
+                code.appendNoIndent(",");
+        }
+        code.appendlnNoIndent("};");
+        
+        code.appendln("@Override public int getNumberOfGPR() {return GPR.length;}");
+        code.appendln("@Override public String getGPRName(int i) {return GPR[i];}");
+        
+        // GPR param
+        code.appendln();
+        code.append("public static final String[] GPR_PARAM = {");
+        for (int i = 0; i < Burg.REG_GPR_PARAM.size(); i++) {
+            String s = Burg.REG_GPR_PARAM.get(i);
+            code.appendNoIndent(String.format("\"%s\"", s));
+            if (i != Burg.REG_GPR_PARAM.size() - 1)
+                code.appendNoIndent(",");
+        }
+        code.appendlnNoIndent("};");
+        
+        code.appendln("@Override public int getNumberOfGPRParam() {return GPR_PARAM.length;}");
+        code.appendln("@Override public String getGPRParamName(int i) {return GPR_PARAM[i];}");
+        
+        // GPR ret
+        code.appendln();
+        code.append("public static final String[] GPR_RET = {");
+        for (int i = 0; i < Burg.REG_GPR_RET.size(); i++) {
+            String s = Burg.REG_GPR_RET.get(i);
+            code.appendNoIndent(String.format("\"%s\"", s));
+            if (i != Burg.REG_GPR_RET.size() - 1)
+                code.appendNoIndent(",");
+        }
+        code.appendlnNoIndent("};");
+        
+        code.appendln("@Override public int getNumberOfGPRRet() {return GPR_RET.length;}");
+        code.appendln("@Override public String getGPRRetName(int i) {return GPR_RET[i];}");
         
         // end of class
         code.decreaseIndent();

@@ -1,5 +1,7 @@
 package uvm.type;
 
+import compiler.UVMCompiler;
+
 import uvm.MicroVM;
 import uvm.Type;
 
@@ -44,5 +46,15 @@ public class Int extends Type {
     @Override
     public String prettyPrint() {
         return toString();
+    }
+
+    @Override
+    public int fitsInGPR() {
+        return size / UVMCompiler.MC_REG_SIZE;
+    }
+
+    @Override
+    public int fitsInFPR() {
+        return 0;
     }
 }

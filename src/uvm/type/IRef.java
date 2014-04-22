@@ -22,4 +22,14 @@ public class IRef extends Type {
         return "iref<" + referenced.prettyPrint() + ">";
     }
 
+    @Override
+    public int fitsInGPR() {
+        return 1;
+    }
+
+    @Override
+    public int fitsInFPR() {
+        return 0;
+    }
+
 }

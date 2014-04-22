@@ -35,6 +35,21 @@ public class burgListenerImpl extends burgBaseListener {
             Burg.MC_MOV.add(s.getText());
     }
     
+    @Override public void exitGprDecl(@NotNull burgParser.GprDeclContext ctx) {
+        for (burgParser.StringContext s : ctx.string())
+            Burg.REG_GPR.add(s.getText());
+    }
+    
+    @Override public void exitGprParamDecl(@NotNull burgParser.GprParamDeclContext ctx) {
+        for (burgParser.StringContext s : ctx.string())
+            Burg.REG_GPR_PARAM.add(s.getText());
+    }
+    
+    @Override public void exitGprRetDecl(@NotNull burgParser.GprRetDeclContext ctx) {
+        for (burgParser.StringContext s : ctx.string())
+            Burg.REG_GPR_RET.add(s.getText());
+    }
+    
     List<MCRule> mcEmissionRules = new ArrayList<MCRule>();
     
     @Override public void enterTreerule(@NotNull burgParser.TreeruleContext ctx) {

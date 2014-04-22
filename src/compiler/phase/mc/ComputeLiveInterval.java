@@ -92,7 +92,8 @@ public class ComputeLiveInterval extends CompilationPhase {
         
         // there might be some ranges with UNKNOWN_START/UNKNOWN_END
         for (MCRegister reg : cf.intervals.keySet()) {
-            for (Range range : cf.intervals.get(reg.REP()).getRanges()) {
+            LiveInterval interval = cf.intervals.get(reg.REP());
+            for (Range range : interval.getRanges()) {
                 if (range.getStart() == UNKNOWN_START) {
                     // if this register is in live-in set, then the start is the first mc of the block
                     if (range.getBB().liveIn.contains(reg.REP()))

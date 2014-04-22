@@ -20,4 +20,14 @@ public class Ref extends Type {
     public String prettyPrint() {
         return "ref<" + referenced.prettyPrint() + ">";
     }
+
+    @Override
+    public int fitsInGPR() {
+        return 1;
+    }
+
+    @Override
+    public int fitsInFPR() {
+        return 0;
+    }
 }

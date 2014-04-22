@@ -5,12 +5,26 @@ import java.util.List;
 import uvm.mc.*;
 
 public class LiveInterval {
-    MCRegister i;
+    MCRegister reg;
     
+    int begin = Integer.MAX_VALUE;
+    int end = Integer.MIN_VALUE;
     LinkedList<Range> ranges = new LinkedList<Range>();
     
     public LiveInterval(MCRegister reg) {
-        this.i = reg;
+        this.reg = reg;
+    }
+    
+    public String prettyPrint() {
+        StringBuilder ret = new StringBuilder();
+        ret.append(reg.prettyPrint());
+        ret.append(" beg=" + begin);
+        ret.append(" end=" + end);
+        ret.append(" ");
+        for (Range r : ranges) {
+            ret.append(r.prettyPrint() + ",");
+        }
+        return ret.toString();
     }
     
     /**
@@ -28,6 +42,14 @@ public class LiveInterval {
         }
         
         return false;
+    }
+    
+    public boolean overlap(int mc) {
+        for (Range range : ranges)
+            if (range.contains(mc))
+                return false;
+        
+        return true;
     }
     
     public static class Range{
@@ -182,7 +204,7 @@ public class LiveInterval {
             }
         }
         
-        error("cannot find range for BB " + bb.getName() + " for reg " + i.prettyPrint());
+        error("cannot find range for BB " + bb.getName() + " for reg " + reg.prettyPrint());
     }
     
     public void replaceRange(MCBasicBlock bb, Range b) {
@@ -193,7 +215,7 @@ public class LiveInterval {
             }
         }
         
-        error("cannot find range for BB " + bb.getName() + " for reg " + i.prettyPrint());
+        error("cannot find range for BB " + bb.getName() + " for reg " + reg.prettyPrint());
     }
     
     public void addRange(MCBasicBlock bb, int start, int end) {
@@ -221,5 +243,29 @@ public class LiveInterval {
         System.err.println(message);
         Thread.dumpStack();
         System.exit(4);
+    }
+
+    public int getBegin() {
+        return begin;
+    }
+
+    public void setBegin(int begin) {
+        this.begin = begin;
+    }
+
+    public int getEnd() {
+        return end;
+    }
+
+    public void setEnd(int end) {
+        this.end = end;
+    }
+
+    public MCRegister getReg() {
+        return reg;
+    }
+
+    public void setReg(MCRegister reg) {
+        this.reg = reg;
     }
 }
