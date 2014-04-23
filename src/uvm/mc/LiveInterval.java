@@ -52,6 +52,17 @@ public class LiveInterval {
         return true;
     }
     
+    public boolean overlap(LiveInterval another) {
+        for (Range range : ranges) {
+            for (Range range2 : another.ranges) {
+                if (range.overlap(range2))
+                    return true;
+            }
+        }
+        
+        return false;
+    }
+    
     public static class Range{
         public static final int UNKNOWN_START = Integer.MAX_VALUE;
         public static final int UNKNOWN_END   = Integer.MIN_VALUE;

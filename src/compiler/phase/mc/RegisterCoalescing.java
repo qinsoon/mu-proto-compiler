@@ -30,7 +30,7 @@ public class RegisterCoalescing extends CompilationPhase {
                     if (mc.isMov()) {
                         // try join
                         if (mc.getOperand(0) instanceof MCRegister &&
-                            join(cf, bb,  mc, (MCRegister) mc.getOperand(0), mc.getReg())) {
+                                join(cf, bb,  mc, ((MCRegister) mc.getOperand(0)).REP(), mc.getReg().REP())) {
                             // remove this mov mc
                             remove = true;
                         }

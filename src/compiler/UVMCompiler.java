@@ -14,6 +14,7 @@ import compiler.phase.DefUseGeneration;
 import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
 import compiler.phase.MachineCodeEmission;
+import compiler.phase.mc.AllocateParamRetRegister;
 import compiler.phase.mc.BBReconstruction;
 import compiler.phase.mc.ComputeLiveInterval;
 import compiler.phase.mc.GenMovForPhi;
@@ -84,6 +85,7 @@ public class UVMCompiler {
             new BBReconstruction("reconstbb").execute();
             new GenMovForPhi("genmovforphi").execute();
             new InstructionNumbering("instnumbering").execute();
+            new AllocateParamRetRegister("allocparamret").execute();
             new ComputeLiveInterval("compinterval").execute();
             new RegisterCoalescing("regcoalesc").execute();
             new LinearScan("linearscan").execute();

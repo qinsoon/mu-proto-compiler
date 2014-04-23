@@ -50,7 +50,7 @@ public class Int extends Type {
 
     @Override
     public int fitsInGPR() {
-        return size / UVMCompiler.MC_REG_SIZE;
+        return (int) Math.ceil( ((double)size) / UVMCompiler.MC_REG_SIZE);
     }
 
     @Override

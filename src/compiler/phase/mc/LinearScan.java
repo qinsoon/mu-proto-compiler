@@ -46,10 +46,6 @@ public class LinearScan extends CompilationPhase {
                 System.out.print(reg.prettyPrint() + " ");
             System.out.println();
             
-            // assign symbolic param register (param_regx) to physical register
-            // we shouldnt do it here, we should do it long long ago
-            // insert some code here
-            
             // while unhandled <> {} do
             while (!unhandled.isEmpty()) {
                 LiveInterval cur = unhandled.poll();
@@ -97,8 +93,53 @@ public class LinearScan extends CompilationPhase {
                     } else i++;
                 }
                 
+                // if current interval is already a physical register
+                // we dont need to anything
+                if (cur.getReg().REP().getREPType() == MCRegister.MACHINE_REG)
+                    continue;
+                
                 // collect available registers in f
+                
+                // f <- free
+                LinkedList<MCRegister> f = new LinkedList<MCRegister>();
+                f.addAll(free);
+                
+                // for each interval i in inactive that overlaps cur
+                // do f <- f - {i.reg}
+                for (LiveInterval i : inactive) {
+                    if (i.overlap(cur)) {
+                        MCRegister reg = i.getReg().REP();
+                        if (f.contains(reg))
+                            f.remove(reg);
+                    }
+                }
+                
+                // for each fixed interval i in unhandled that overlaps cur
+                // do f <- f - {i.reg}
+                for (LiveInterval i : unhandled) {
+                    if (i.overlap(cur)) {
+                        MCRegister reg = i.getReg().REP();
+                        if (f.contains(reg))
+                            f.remove(reg);
+                    }
+                }
+                
+                // select a register from f
+                if (f.isEmpty()) {
+                    UVMCompiler.error("run out of register. assignMemLoc()");
+                } else {
+                    MCRegister freeReg = f.poll();
+                    
+                    System.out.println("assigning " + cur.getReg().REP().prettyPrint() + " to " + freeReg.prettyPrint());
+                    cur.getReg().REP().setREP(freeReg);
+                    
+                    // move cur to active
+                    active.add(cur);
+                }
             }
+        
+            System.out.println("\nAfter linear scan:");
+            System.out.println(cf.prettyPrint());
         }
     }
 
