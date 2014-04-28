@@ -133,6 +133,9 @@ public class LinearScan extends CompilationPhase {
                     System.out.println("assigning " + cur.getReg().REP().prettyPrint() + " to " + freeReg.prettyPrint());
                     cur.getReg().REP().setREP(freeReg);
                     
+                    // free <- free - {cur.reg}
+                    free.remove(freeReg);
+                    
                     // move cur to active
                     active.add(cur);
                 }

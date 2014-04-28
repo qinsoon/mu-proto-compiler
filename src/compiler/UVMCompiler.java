@@ -14,13 +14,7 @@ import compiler.phase.DefUseGeneration;
 import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
 import compiler.phase.MachineCodeEmission;
-import compiler.phase.mc.AllocateParamRetRegister;
-import compiler.phase.mc.BBReconstruction;
-import compiler.phase.mc.ComputeLiveInterval;
-import compiler.phase.mc.GenMovForPhi;
-import compiler.phase.mc.InstructionNumbering;
-import compiler.phase.mc.LinearScan;
-import compiler.phase.mc.RegisterCoalescing;
+import compiler.phase.mc.*;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
@@ -89,6 +83,8 @@ public class UVMCompiler {
             new ComputeLiveInterval("compinterval").execute();
             new RegisterCoalescing("regcoalesc").execute();
             new LinearScan("linearscan").execute();
+            
+            new MachineCodeCleanup("mccleanup").execute();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -774,6 +774,16 @@ public class Burg {
             code.appendln("}");
         }
         
+        // unconditional jump
+        code.appendln("public AbstractMachineCode genJmp(MCLabel target) {");
+        code.increaseIndent();
+        String uncondJmp = targetName + MC_UNCOND_JUMP.get(0);
+        code.appendStmtln(String.format("%s ret = new %s()", uncondJmp, uncondJmp));
+        code.appendStmtln("ret.setOperand0(target)");
+        code.appendStmtln("return ret");
+        code.decreaseIndent();
+        code.appendln("}");
+        
         // GPRs
         code.appendln();
         code.append("public static final String[] GPR = {");

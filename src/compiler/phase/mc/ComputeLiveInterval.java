@@ -23,6 +23,12 @@ import uvm.mc.LiveInterval.Range;
 import compiler.UVMCompiler;
 import compiler.phase.CompilationPhase;
 
+// TODO this live interval analysis is based on SSA
+// however the machine code is not _strictly_ SSA
+// E.g. 1. phi mc is not SSA
+// ==> as stated in the paper, phi mc is never included in a range, so its fine
+// E.g. 2. "add a, b -> a", which is a X86/64 mc, is not SSA
+// ==>  this may be NOT fine
 public class ComputeLiveInterval extends CompilationPhase {
 
     public ComputeLiveInterval(String name) {
@@ -48,7 +54,8 @@ public class ComputeLiveInterval extends CompilationPhase {
                     MCOperand op = mc.getOperand(i);
                     if (op instanceof uvm.mc.MCRegister && !defined.contains(((uvm.mc.MCRegister) op).REP())) 
                         // if this mc uses a register which is not defined within this basic block, then it is a live-in register
-                        bb.liveIn.add(((MCRegister) op).REP());
+                        if (!bb.liveIn.contains( ((MCRegister)op).REP()))
+                            bb.liveIn.add(((MCRegister) op).REP());
                 }
                 
                 if (mc.getReg() != null) {
@@ -85,7 +92,8 @@ public class ComputeLiveInterval extends CompilationPhase {
                     }
                     
                     // this mc defines a register, so the register has a range that starts with _next_ mc
-                    addRange(cf, bb, mc.getReg().REP(), mc.sequence + 1, UNKNOWN_END);
+                    if (mc.sequence + 1 <= bb.getLast().sequence)
+                        addRange(cf, bb, mc.getReg().REP(), mc.sequence + 1, UNKNOWN_END);
                 }
             }
         }

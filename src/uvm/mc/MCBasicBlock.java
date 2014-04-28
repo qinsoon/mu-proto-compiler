@@ -90,9 +90,15 @@ public class MCBasicBlock {
         this.phi = phi;
     }
     public AbstractMachineCode getFirst() {
+        if (mc.isEmpty())
+            return null;
+        
         return mc.get(0);
     }
     public AbstractMachineCode getLast() {
+        if (mc.isEmpty())
+            return null;
+        
         return mc.get(mc.size() - 1);
     }
     public List<AbstractMachineCode> getMC() {

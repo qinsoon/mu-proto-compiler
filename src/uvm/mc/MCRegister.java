@@ -78,12 +78,17 @@ public class MCRegister extends MCOperand{
             return type;
         else return join.getREPType();
     }
-
     
     @Override
     public String prettyPrint() {
         if (join == this)
             return "%" + name;
         else return "%" + name + "(REP=" + join.prettyPrint() + ")";
+    }
+    
+    public String prettyPrintREPOnly() {
+        if (join == this)
+            return "%" + name;
+        else return join.prettyPrintREPOnly();
     }
 }

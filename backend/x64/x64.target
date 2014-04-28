@@ -24,6 +24,10 @@ stmt : op
 reg : op
 0
 
+op : BRANCH(label)
+> jmp P[0]
+1
+
 op : BRANCH2(value label label)
 // cmp, jcc
 > cmp P[0] $1

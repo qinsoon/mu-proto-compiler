@@ -81,14 +81,19 @@ public class RegisterCoalescing extends CompilationPhase {
             return join(cf, bb, mc, y, x);
         
         // i <- interval[REP(x).n]
-        Range i = cf.intervals.get(x.REP()).getRange(bb);
+        LiveInterval intervalX = cf.intervals.get(x.REP());
+        Range i = intervalX.getRange(bb);
         // j <- interval[REP(x).n]
-        Range j = cf.intervals.get(y.REP()).getRange(bb);
+        LiveInterval intervalY = cf.intervals.get(y.REP());
+        Range j = intervalY.getRange(bb);
         
-        System.out.println(" i=" + (i == null ? "null" : i.prettyPrint()));
-        System.out.println(" j=" + (j == null ? "null" : j.prettyPrint()));
-        
-        boolean overlap = i != null && j != null && i.overlap(j);
+//        System.out.println(" i=" + (i == null ? "null" : i.prettyPrint()));
+//        System.out.println(" j=" + (j == null ? "null" : j.prettyPrint()));
+        System.out.println("x=" + intervalX.prettyPrint());
+        System.out.println("y=" + intervalY.prettyPrint());
+
+//        boolean overlap = i != null && j != null && i.overlap(j);
+        boolean overlap = intervalX != null && intervalY != null && intervalX.overlap(intervalY);
         boolean compatible = compatible(cf, mc, x, y);
         
         System.out.println(" overlap:" + overlap);

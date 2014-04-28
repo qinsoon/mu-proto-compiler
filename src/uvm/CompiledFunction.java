@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Queue;
 
 import compiler.UVMCompiler;
-
+import compiler.util.DotGraph;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.LiveInterval;
 import uvm.mc.MCBasicBlock;
@@ -22,6 +22,8 @@ public class CompiledFunction {
     
     // MC
     public List<AbstractMachineCode> mc = new ArrayList<AbstractMachineCode>();
+    
+    public List<AbstractMachineCode> finalMC = new ArrayList<AbstractMachineCode>();
     
     // MC BB
     public List<MCBasicBlock> BBs = new ArrayList<MCBasicBlock>();
@@ -82,12 +84,49 @@ public class CompiledFunction {
             traversed.add(bb.getName());
             
             for (MCBasicBlock succ : bb.getSuccessor()) {
-                if (!traversed.contains(succ.getName()))
+                if (!traversed.contains(succ.getName()) && !traverse.contains(succ))
                     traverse.add(succ);
             }
         }
         
         return str.toString();
+    }
+    
+    
+    public void printDotFile(String namePostfix) {
+        String name = getOriginFunction().getName() + "_" + namePostfix; 
+        
+        DotGraph graph = new DotGraph(name);
+        
+        Queue<MCBasicBlock> traverse = new LinkedList<MCBasicBlock>();
+        List<String> traversed = new ArrayList<String>();
+        
+        traverse.add(entryBB);
+        
+        while(!traverse.isEmpty()) {
+            MCBasicBlock bb = traverse.poll();
+            System.out.println("visiting " + bb.getName() + ":" + bb.hashCode());
+            traversed.add(bb.getName());
+            
+            List<String> list = new ArrayList<String>();
+            for (AbstractMachineCode mc : bb.getMC()) {
+                list.add(mc.prettyPrintOneline());
+            }
+            
+            graph.newSequencialSubgraph(bb.getName(), list);
+            
+            for (MCBasicBlock succ : bb.getSuccessor()) {
+                if (!traversed.contains(succ.getName()) && !traverse.contains(succ)) {
+                    System.out.println("gonna visit " + succ.getName() + ":" + succ.hashCode());
+                    traverse.add(succ);
+                }
+                
+                if (!succ.getMC().isEmpty() && !bb.getMC().isEmpty())
+                    graph.newEdge(bb.getLast().prettyPrintOneline(), succ.getFirst().prettyPrintOneline());
+            }
+        }
+        
+        graph.output("debug/dot_" + name + ".dot");
     }
     
     public CompiledFunction(Function origin) {

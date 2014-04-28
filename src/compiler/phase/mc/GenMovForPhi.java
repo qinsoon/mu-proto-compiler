@@ -40,6 +40,7 @@ public class GenMovForPhi extends CompilationPhase {
         int genMovRegIndex = 0;
         
         for (CompiledFunction cf : MicroVM.v.compiledFuncs) {
+            cf.printDotFile("beforeGenMov");
             // to avoid concurernt modification on the list, we put new BB here
             // and add them after traversal
             List<MCBasicBlock> newBBs = new ArrayList<MCBasicBlock>();
@@ -48,8 +49,9 @@ public class GenMovForPhi extends CompilationPhase {
                 if (bb.getPhi() == null)
                     continue;
                 
-                for (int j = 0; j < bb.getPredecessors().size(); ) {
-                    MCBasicBlock p = bb.getPredecessors().get(j);
+                List<MCBasicBlock> predecessors = new ArrayList<MCBasicBlock>();
+                predecessors.addAll(bb.getPredecessors());
+                for (MCBasicBlock p : predecessors) {
                     MCBasicBlock n;
                     
                     boolean newBlock = false;
@@ -70,16 +72,15 @@ public class GenMovForPhi extends CompilationPhase {
                         newBBs.add(n);
                         
                         newBlock = true;
-                        
-                        // reset j
-                        j = 0;
+                        System.out.println("Created new block #" + n.getName());
                     } else {
                         n = p;
-                        j++;
                     }
                     
                     for (AbstractMachineCode mc : bb.getMC()) {
                         if (mc.isPhi()) {
+                            System.out.println("examing phi: " + mc.prettyPrintNoLabel());
+                            System.out.println("trying to find value from #" + p.getName());
                             int opdForP = -1;
                             for (int i = 1; i < mc.getNumberOfOperands(); i += 2) {
                                 MCLabel l = (MCLabel) mc.getOperand(i);
@@ -88,6 +89,7 @@ public class GenMovForPhi extends CompilationPhase {
                             }
                             
                             if (opdForP != -1) {
+                                System.out.println("inserted mov");
                                 MCRegister genMovReg = cf.findOrCreateRegister("gen_mov_reg" + genMovRegIndex, MCRegister.OTHER_SYMBOL_REG);
                                 genMovRegIndex++;
                                 
@@ -106,6 +108,8 @@ public class GenMovForPhi extends CompilationPhase {
                                 // i is genMovReg
                                 // phi is mc.getReg()
                                 genMovReg.setREP(mc.getReg());
+                            } else {
+                                System.out.println("didnt insert mov");
                             }
                         }
                     }
@@ -119,6 +123,8 @@ public class GenMovForPhi extends CompilationPhase {
             
             System.out.println("\nAfter gen mov:\n");
             System.out.println(cf.prettyPrint());
+            
+            cf.printDotFile("afterGenMov");
         }
     }
 }

@@ -54,6 +54,14 @@ public abstract class AbstractMachineCode {
         return ret.toString();
     }
     
+    public String prettyPrintOneline() {
+        StringBuilder ret = new StringBuilder();
+        if (label != null)
+            ret.append("#" + label.name + ":");
+        ret.append(prettyPrintNoLabel());
+        return ret.toString();
+    }
+    
     public String prettyPrintNoLabel() {
         StringBuilder ret = new StringBuilder();
         ret.append(name + " ");

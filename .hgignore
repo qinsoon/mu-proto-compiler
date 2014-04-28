@@ -3,6 +3,7 @@ syntax: glob
 *.swp
 .DS_Store
 .ant_targets
+*.s
 *.class
 bin
 resource
@@ -10,4 +11,4 @@ target
 package-list
 parser-generated
 backend/codegengen-gen
-
+debug
