@@ -17,42 +17,60 @@ declare
     |   mcUncondJumpDecl
     |   mcRetDecl
     |   mcMovDecl
+// mc define
+    |   mcDefine
 // regs
     |   gprDecl
     |   gprParamDecl
     |   gprRetDecl
     ;
 
+mcDefine
+    :   '.mc_def' mcOp '=' '{'
+        // emit code
+        formatString (',' mcEmitOperand)* ';'
+        '}'
+    ;
+
+formatString
+    :   '"' idString* '"'
+    ;
+
+mcEmitOperand
+    :   'OP_REG'               # mcEmitRegOp
+    |   'OP[' DIGITS ']'    # mcEmitOp
+    ;
+
 gprDecl
-    :   '.gpr' string+
+    :   '.gpr' idString+
     ;
 
 gprParamDecl
-    :   '.gpr_param' string+
+    :   '.gpr_param' idString+
     ;
 
 gprRetDecl
-    :   '.gpr_ret' string+
+    :   '.gpr_ret' idString+
     ;
 
 mcMovDecl
-    :   '.mc_mov' string+
+    :   '.mc_mov' idString+
     ;
 
 mcRetDecl
-    :   '.mc_ret' string+
+    :   '.mc_ret' idString+
     ;
 
 mcCondJumpDecl
-    :   '.mc_cond_jump' string+
+    :   '.mc_cond_jump' idString+
     ;
 
 mcUncondJumpDecl
-    :   '.mc_uncond_jump' string+
+    :   '.mc_uncond_jump' idString+
     ;
 
 targetDecl
-    :   '.target' string
+    :   '.target' idString
     ;
 
 treerule
@@ -61,7 +79,7 @@ treerule
         DIGITS
     ;
 
-string
+idString
     :   (NONTERM | TERM)
     ;
 
@@ -86,7 +104,7 @@ resOperand
     ;
 
 mcOp
-    :   string
+    :   idString
     ;
 
 mcOperand
@@ -97,11 +115,11 @@ mcOperand
     ;
 
 funcCallRcv
-    :   string
+    :   idString
     ;
 
 funcCall
-    :   string
+    :   idString
     ;
 
 multiIndex
@@ -117,7 +135,7 @@ mcReg
     :   'res_reg'                   # mcOpdResReg
     |   'ret_reg' index             # mcOpdRetReg
     |   'param_reg' index           # mcOpdParamReg
-    |   string                  # mcOpdMachineReg
+    |   idString                  # mcOpdMachineReg
     ;
 
 mcImmediate

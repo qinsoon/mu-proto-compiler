@@ -13,10 +13,10 @@ import uvm.MicroVM;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCRegister;
 
-public class MachineCodeEmission extends CompilationPhase{
+public class MCRepresentationGeneration extends CompilationPhase{
     private static final boolean VERBOSE = false;
     
-    public MachineCodeEmission(String name) {
+    public MCRepresentationGeneration(String name) {
         super(name);
     }
 

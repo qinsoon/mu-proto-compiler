@@ -14,6 +14,7 @@ public abstract class AbstractMachineCode {
     
     protected uvm.mc.MCRegister reg;
     
+    public abstract String emit();
     
     /**
      * this may not always be valid result (when the mc doesnt have a result)

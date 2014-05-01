@@ -9,6 +9,7 @@
 .mc_ret ret
 .mc_mov mov cmovlt cmovgt cmoveq
 
+// registers
 .gpr rax rbx rcx rdx rdi rsi r8 r9 r10 r11 r12 r13 r14 r15
 .gpr_param rdi rsi rdx rcx
 .gpr_ret rax rdx
@@ -125,3 +126,79 @@ reg : REG
 
 label : LABEL
 0
+
+// *******
+// machine code define
+// *******
+
+// mov
+
+.mc_def mov = {
+	"movq WS OP COMMA OP", OP[0], OP_REG;
+}
+
+.mc_def cmovlt = {
+	"cmovltq WS OP COMMA OP", OP[0], OP_REG;
+}
+
+.mc_def cmovgt = {
+	"cmovgtq WS OP COMMA OP", OP[0], OP_REG;
+}
+
+.mc_def cmoveq = {
+	"cmoveqq WS OP COMMA OP", OP[0], OP_REG;
+}
+
+.mc_def cmp = {
+	"cmpq WS OP COMMA OP", OP[1], OP[0];
+}
+
+// branch
+
+.mc_def jmp = {
+	"jmp WS OP", OP[0];
+}
+
+.mc_def je = {
+	"je WS OP", OP[0];
+}
+
+.mc_def jne = {
+	"jne WS OP", OP[0];
+}
+
+.mc_def jl = {
+	"jl WS OP", OP[0];
+}
+
+.mc_def jle = {
+	"jle WS OP", OP[0];
+}
+
+.mc_def jg = {
+	"jg WS OP", OP[0];
+}
+
+.mc_def jge = {
+	"jge WS OP", OP[0];
+}
+
+.mc_def ret = {
+	"ret";
+}
+
+// arithmetic/mul/div
+
+.mc_def idiv = {
+	"idivq WS OP", OP[0];
+}
+
+.mc_def add = {
+	"addq WS OP COMMA OP", OP[1], OP[0];
+}
+
+// misc
+
+.mc_def mcphi = {
+	"";
+}

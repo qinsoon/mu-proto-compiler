@@ -13,7 +13,7 @@ import burm.mc.X64Driver;
 import compiler.phase.DefUseGeneration;
 import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
-import compiler.phase.MachineCodeEmission;
+import compiler.phase.MCRepresentationGeneration;
 import compiler.phase.mc.*;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
@@ -73,18 +73,29 @@ public class UVMCompiler {
             
             // instruction selection
             new InstructionSelection("instsel").execute();
-            new MachineCodeEmission("mcemit").execute();
+            new MCRepresentationGeneration("mcrepgen").execute();
             
-            // mc level
+            /*
+             *  mc level
+             *  
+             *  the parts below with a * implement the paper from CC02: http://dl.acm.org/citation.cfm?id=647478.727924
+             *  
+             *  alternative (more recent works are):
+             *  - Vivek Sarkar's work in CC07: http://dl.acm.org/citation.cfm?id=1759937.1759950
+             *  - Christian Wimmer's work in CGO10: http://doi.acm.org/10.1145/1772954.1772979
+             */
             new BBReconstruction("reconstbb").execute();
-            new GenMovForPhi("genmovforphi").execute();
-            new InstructionNumbering("instnumbering").execute();
+            new GenMovForPhi("genmovforphi").execute();                 //*
+            new InstructionNumbering("instnumbering").execute();        //*
             new AllocateParamRetRegister("allocparamret").execute();
-            new ComputeLiveInterval("compinterval").execute();
-            new RegisterCoalescing("regcoalesc").execute();
-            new LinearScan("linearscan").execute();
+            new ComputeLiveInterval("compinterval").execute();          //*
+            new RegisterCoalescing("regcoalesc").execute();             //*
+            new LinearScan("linearscan").execute();                     //*
             
             new MachineCodeCleanup("mccleanup").execute();
+            
+            // code emission
+            new CodeEmission("codeemit", "emit").execute();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

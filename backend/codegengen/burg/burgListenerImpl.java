@@ -12,42 +12,64 @@ import burg.burgParser.NodeContext;
 public class burgListenerImpl extends burgBaseListener {
     
     @Override public void exitTargetDecl(@NotNull burgParser.TargetDeclContext ctx) {
-        Burg.targetName = ctx.string().getText();
+        Burg.targetName = ctx.idString().getText();
     }
     
     @Override public void exitMcCondJumpDecl(@NotNull burgParser.McCondJumpDeclContext ctx) {
-        for (burgParser.StringContext s : ctx.string())
+        for (burgParser.IdStringContext s : ctx.idString())
             Burg.MC_COND_JUMP.add(s.getText());
     }
     
     @Override public void exitMcUncondJumpDecl(@NotNull burgParser.McUncondJumpDeclContext ctx) {
-        for (burgParser.StringContext s : ctx.string())
+        for (burgParser.IdStringContext s : ctx.idString())
             Burg.MC_UNCOND_JUMP.add(s.getText());
     }
     
     @Override public void exitMcRetDecl(@NotNull burgParser.McRetDeclContext ctx) {
-        for (burgParser.StringContext s : ctx.string())
+        for (burgParser.IdStringContext s : ctx.idString())
             Burg.MC_RET.add(s.getText());
     }
     
     @Override public void exitMcMovDecl(@NotNull burgParser.McMovDeclContext ctx) {
-        for (burgParser.StringContext s : ctx.string())
+        for (burgParser.IdStringContext s : ctx.idString())
             Burg.MC_MOV.add(s.getText());
     }
     
     @Override public void exitGprDecl(@NotNull burgParser.GprDeclContext ctx) {
-        for (burgParser.StringContext s : ctx.string())
+        for (burgParser.IdStringContext s : ctx.idString())
             Burg.REG_GPR.add(s.getText());
     }
     
     @Override public void exitGprParamDecl(@NotNull burgParser.GprParamDeclContext ctx) {
-        for (burgParser.StringContext s : ctx.string())
+        for (burgParser.IdStringContext s : ctx.idString())
             Burg.REG_GPR_PARAM.add(s.getText());
     }
     
     @Override public void exitGprRetDecl(@NotNull burgParser.GprRetDeclContext ctx) {
-        for (burgParser.StringContext s : ctx.string())
+        for (burgParser.IdStringContext s : ctx.idString())
             Burg.REG_GPR_RET.add(s.getText());
+    }
+    
+    @Override public void exitMcDefine(@NotNull burgParser.McDefineContext ctx) {
+        String op = ctx.mcOp().getText();
+        
+        StringBuilder emit = new StringBuilder();
+        
+        String format = ctx.formatString().getText();
+        format = format.replaceAll("OP", "%s");
+        format = format.replaceAll("WS", " ");
+        format = format.replaceAll("COMMA", ",");
+        emit.append(format);
+        for (burgParser.McEmitOperandContext operand : ctx.mcEmitOperand()) {
+            if (operand instanceof burgParser.McEmitRegOpContext) {
+                emit.append(", X64Driver.emitOp(reg)");
+            }
+            else if (operand instanceof burgParser.McEmitOpContext) {
+                emit.append(String.format(", X64Driver.emitOp(operands.get(%d))", Integer.parseInt(((burgParser.McEmitOpContext) operand).DIGITS().getText())));
+            }
+        }
+        
+        Burg.mcEmit.put(op, emit.toString());
     }
     
     List<MCRule> mcEmissionRules = new ArrayList<MCRule>();
@@ -66,8 +88,6 @@ public class burgListenerImpl extends burgBaseListener {
         
         if (!mcEmissionRules.isEmpty())
             rule.setMCEmissionRules(mcEmissionRules);
-        
-        
         
         Burg.newRule(rule);
     }

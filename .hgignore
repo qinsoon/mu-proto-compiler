@@ -6,6 +6,7 @@ syntax: glob
 *.s
 *.class
 bin
+emit
 resource
 target
 package-list

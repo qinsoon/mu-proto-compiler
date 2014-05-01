@@ -92,8 +92,22 @@
 	</target>
 	
 	<target name="build" depends="gen-antlr, generate-BURM">
+		<echo message="Generating uVM compiler..."/>
+		<javac srcdir="parser-generated:src:backend/codegengen-gen"
+			   classpath="${antlr-jar}"
+			   includeantruntime="false"
+			   destdir="bin"/>
 	</target>
 	
 	<target name="build-eclipse" depends="gen-antlr, generate-BURM">
+	</target>
+	
+	<target name="build-and-run-test" depends="build">
+		<java classname="compiler.UVMCompiler" fork="true" failonerror="true">
+			<classpath>
+				<pathelement path="${antlr-jar}"/>
+				<pathelement path="bin"/>
+			</classpath>
+		</java>
 	</target>
 </project>

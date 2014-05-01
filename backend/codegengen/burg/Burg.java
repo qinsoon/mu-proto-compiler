@@ -21,7 +21,10 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import uvm.OpCode;
 import uvm.mc.AbstractMachineCode;
+import uvm.mc.MCIntImmediate;
+import uvm.mc.MCLabel;
 import uvm.mc.MCOperand;
+import uvm.mc.MCRegister;
 
 public class Burg {
     public static final Map<String, Integer> termNames = new HashMap<String, Integer>();
@@ -46,6 +49,8 @@ public class Burg {
     public static final List<String>    REG_GPR = new ArrayList<String>();
     public static final List<String>    REG_GPR_PARAM = new ArrayList<String>();
     public static final List<String>    REG_GPR_RET = new ArrayList<String>();
+    
+    public static final Map<String, String> mcEmit = new HashMap<String, String>();
     
     public static void main(String[] args) {
         for (int i = 0; i < args.length; i++) {
@@ -727,10 +732,21 @@ public class Burg {
         // is mc mov?
         if (MC_MOV.contains(op.name)) {
             code.appendln();
-            code.append("@Override public boolean isMov() {return true;}");
+            code.appendln("@Override public boolean isMov() {return true;}");
+        }
+        
+        // emit code?
+        if (mcEmit.containsKey(op.name)) {
+            code.appendln();
+            code.appendln("@Override public String emit() {");
+            code.increaseIndent();
+            code.appendStmtln("return String.format(" + mcEmit.get(op.name) + ")");
+            code.decreaseIndent();
+            code.appendln("}");
         }
         
         code.decreaseIndent();
+        code.appendln();
         code.appendln("}");
         
         writeTo(output + "mc/" + opFullName + ".java", code.toString());
@@ -825,6 +841,21 @@ public class Burg {
         
         code.appendln("@Override public int getNumberOfGPRRet() {return GPR_RET.length;}");
         code.appendln("@Override public String getGPRRetName(int i) {return GPR_RET[i];}");
+        
+        // MC op emit
+        // TODO this should go to target description file instead of hard coded here
+        code.appendln();
+        code.appendln("public static String emitOp(MCOperand op) {");
+        code.increaseIndent();
+        code.appendln("if (op instanceof MCLabel)");
+        code.appendln("return ((MCLabel) op).getName();");
+        code.appendln("if (op instanceof MCIntImmediate)");
+        code.appendln("return \"$\"+((MCIntImmediate) op).getValue();");
+        code.appendln("if (op instanceof MCRegister)");
+        code.appendln("return \"%\"+((MCRegister) op).REP().getName();");
+        code.appendln("return \"error\";");
+        code.decreaseIndent();
+        code.appendln("}");
         
         // end of class
         code.decreaseIndent();
