@@ -268,6 +268,10 @@ label : LABEL
 	"addq WS OP COMMA OP", OP[1], OP[0];
 }
 
+.mc_def xor = {
+	"xorq WS OP COMMA OP", OP[1], OP[0];
+}
+
 // misc
 
 .mc_def mcphi = {

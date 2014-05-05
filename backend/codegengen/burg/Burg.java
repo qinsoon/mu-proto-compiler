@@ -278,15 +278,31 @@ public class Burg {
         code.appendStmtln("List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>()");
         code.appendln();
         
+        code.appendStmtln("boolean unmatchedNode = true");
+        code.appendln();
+        
         code.appendln("for (int i = 0; i < node.state.cost.length; i++)");
         code.increaseIndent();
-        code.appendln("if (leastCost > node.state.cost[i] && hasCodeEmission[node.state.rule[i]]) {");
+        code.appendln("if (leastCost > node.state.cost[i]) {");
+        code.increaseIndent();
+        code.appendStmtln("unmatchedNode = false");
+        code.appendln("if (hasCodeEmission[node.state.rule[i]]) {");
         code.increaseIndent();
         code.appendStmtln("leastCost = node.state.cost[i]");
         code.appendStmtln("leastCostRuleNo = node.state.rule[i]");
         code.decreaseIndent();
         code.appendln("}");
         code.decreaseIndent();
+        code.appendln("}");
+        code.decreaseIndent();
+        
+        code.appendln();
+        code.appendln("if (unmatchedNode) {");
+        code.increaseIndent();
+        code.appendStmtln("System.out.println(\"node: \" + node.prettyPrint() + \"doesnt have a match in instr selection\")");
+        code.appendStmtln("System.exit(-1)");
+        code.decreaseIndent();
+        code.appendln("}");
         
         code.appendln();
         code.appendln("for (int i = 0; i < node.getArity(); i++) ");
