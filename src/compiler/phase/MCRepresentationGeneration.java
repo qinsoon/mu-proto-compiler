@@ -14,7 +14,7 @@ import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCRegister;
 
 public class MCRepresentationGeneration extends CompilationPhase{
-    private static final boolean VERBOSE = false;
+    private static final boolean VERBOSE = true;
     
     public MCRepresentationGeneration(String name) {
         super(name);

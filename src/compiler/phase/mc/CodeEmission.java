@@ -30,6 +30,13 @@ public class CodeEmission extends CompilationPhase {
                 outFile.getParentFile().mkdirs();
                 writer = new BufferedWriter(new FileWriter(outFile));
                 
+                if (cf.getOriginFunction().getName().equals("main")) {
+                    writer.write("\t.globl _main\n");
+                    writer.write("_main:\n");
+                }
+                
+                writer.write(cf.getOriginFunction().getName() + ":\n");
+                
                 for (AbstractMachineCode mc : cf.finalMC) {
                     if (mc.getLabel() != null) {
                         writer.write(X64Driver.emitOp(mc.getLabel()) + ":");

@@ -418,12 +418,23 @@ public class Burg {
                         ((OpdRegister) operand).name, 
                         ((OpdRegister) operand).type);
                 break;
-            case uvm.mc.MCRegister.RES_REG:
+            case OpdRegister.RES_REG:
                 newOperandStr = String.format(
                         "MCRegister.findOrCreate(\"%s\"+%s, %d)", 
                         ((OpdRegister) operand).name,
                         "node.getId()",
                         ((OpdRegister) operand).type);
+                break;
+                
+            // temp registers are also indexed
+            case OpdRegister.TMP_REG:
+                newOperandStr = String.format(
+                        "MCRegister.findOrCreate(\"%s%s_\"+%s, %d)", 
+                        ((OpdRegister) operand).name,
+                        getCompileTimeOperand(((OpdRegister) operand).index),
+                        "node.getId()",
+                        MCRegister.OTHER_SYMBOL_REG
+                        );
                 break;
             
             // these two can be indexed
@@ -582,6 +593,7 @@ public class Burg {
         public static final int PARAM_REG   = 2;
         public static final int MACHINE_REG = 3;
         public static final int OTHER_SYMBOL_REG  = 4;
+        public static final int TMP_REG     = 5;
         
         int type;
         String name;

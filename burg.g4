@@ -135,7 +135,8 @@ mcReg
     :   'res_reg'                   # mcOpdResReg
     |   'ret_reg' index             # mcOpdRetReg
     |   'param_reg' index           # mcOpdParamReg
-    |   idString                  # mcOpdMachineReg
+    |   'tmp_reg' index             # mcOpdTmpReg
+    |   idString                    # mcOpdMachineReg
     ;
 
 mcImmediate

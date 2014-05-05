@@ -102,12 +102,16 @@
 	<target name="build-eclipse" depends="gen-antlr, generate-BURM">
 	</target>
 	
-	<target name="build-and-run-test" depends="build">
+	<target name="run-test">
 		<java classname="compiler.UVMCompiler" fork="true" failonerror="true">
 			<classpath>
 				<pathelement path="${antlr-jar}"/>
 				<pathelement path="bin"/>
 			</classpath>
 		</java>
+	</target>
+	
+	<target name="build-and-run-test" depends="build">
+		<antcall target="run-test"/>
 	</target>
 </project>

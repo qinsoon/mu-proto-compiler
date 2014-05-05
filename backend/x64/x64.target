@@ -31,7 +31,7 @@ op : BRANCH(label)
 
 op : BRANCH2(value label label)
 // cmp, jcc
-> cmp P[0] $1
+> test P[0] $1
 > je  P[1]
 > jne P[2]
 2
@@ -42,10 +42,20 @@ op : BRANCH2(cmpSltRes label label)
 > jge P[2]
 1
 
+op : BRANCH2(cmpSleRes label label)
+> jle P[1]
+> jg P[2]
+1
+
 op : BRANCH2(cmpSgtRes label label)
 // cmp, jcc
 > jg  P[1]
 > jle P[2]
+1
+
+op : BRANCH2(cmpSgeRes label label)
+> jge P[1]
+> jl P[2]
 1
 
 op : BRANCH2(cmpEqRes label label)
@@ -54,38 +64,86 @@ op : BRANCH2(cmpEqRes label label)
 > jne P[2]
 1
 
-cmpSltRes : SLT(value value)
+// *** SLT ***
+
+// 2nd op should always be reg
+cmpSltRes : SLT(reg imm)
+> cmp P[1] P[0]
+1
+
+cmpSgeRes : SLT(imm reg)
 > cmp P[0] P[1]
 1
 
-cmpSgtRes : SGT(value value)
+cmpSltRes : SLT(reg reg)
+> cmp P[1] P[0]
+1
+
+cmpSltRes : SLT(imm imm)
+> mov P[0] -> %tmp_reg[0]
+> cmp P[1] %tmp_reg[0]
+2
+
+// *** SGT ***
+
+cmpSgtRes : SGT(reg imm)
+> cmp P[1] P[0]
+1
+
+cmpSleRes : SGT(imm reg)
 > cmp P[0] P[1]
 1
 
-cmpEqRes: EQ(value value)
+cmpSgtRes : SGT(reg reg)
+> cmp P[1] P[0]
+1
+
+cmpSgtRes : SGT(imm imm)
+> mov P[0] -> %tmp_reg[0]
+> cmp P[1] %tmp_reg[0]
+2
+
+// *** EQ ***
+
+cmpEqRes: EQ(reg reg)
 > cmp P[0] P[1]
 1
 
-op : SLT(value value)
-// mov cmp cmov
-> mov $0 -> %res_reg
+cmpEqRes: EQ(imm reg)
 > cmp P[0] P[1]
-> cmovlt $1 -> %res_reg
-3
+1
 
-op : SGT(value value)
-// mov cmp cmov
-> mov $0 -> %res_reg
-> cmp P[0] P[1]
-> cmovgt $1 -> %res_reg
-3
+cmpEqRes: EQ(reg imm)
+> cmp P[1] P[0]
+1
 
-op : EQ(value value)
+cmpEqRes: EQ(imm imm)
+> mov P[1] -> %tmp_reg[0]
+> cmp P[0] %tmp_reg[0]
+2
+
+// *** conditional move ***
+
+//op : SLT(value value)
 // mov cmp cmov
-> mov $0 -> %res_reg
-> cmp P[0] P[1]
-> cmoveq $0 -> %res_reg
-3
+//> mov $0 -> %res_reg
+//> cmp P[0] P[1]
+//> cmovlt $1 -> %res_reg
+//3
+
+//op : SGT(value value)
+// mov cmp cmov
+//> mov $0 -> %res_reg
+//> cmp P[0] P[1]
+//> cmovgt $1 -> %res_reg
+//3
+
+//op : EQ(value value)
+// mov cmp cmov
+//> mov $0 -> %res_reg
+//> cmp P[0] P[1]
+//> cmoveq $0 -> %res_reg
+//3
 
 op : RET2(value)
 // mov, ret
@@ -100,10 +158,11 @@ op : PARAM
 
 op : SREM(value value)
 // mov, div, mov
+> xor %rdx %rdx -> %rdx
 > mov P[0] -> %rax
 > idiv P[1] -> %rdx
 > mov %rdx -> %res_reg
-3
+4
 
 op : PHI(value label value label)
 > mcphi P[0] P[1] P[2] P[3] -> %res_reg
@@ -119,6 +178,12 @@ value : reg
 0
 
 value : INT_IMM
+0
+
+imm : INT_IMM
+0
+
+value : imm
 0
 
 reg : REG
@@ -149,8 +214,14 @@ label : LABEL
 	"cmoveqq WS OP COMMA OP", OP[0], OP_REG;
 }
 
+// comparison
+
 .mc_def cmp = {
-	"cmpq WS OP COMMA OP", OP[1], OP[0];
+	"cmpq WS OP COMMA OP", OP[0], OP[1];
+}
+
+.mc_def test = {
+	"testq WS OP COMMA OP", OP[0], OP[1];
 }
 
 // branch

@@ -169,6 +169,12 @@ public class burgListenerImpl extends burgBaseListener {
                 tRet.setIndex(index);
                 ret = tRet;
             }
+            else if (mcRegCtx instanceof burgParser.McOpdTmpRegContext) {
+                OpdRegister tRet = OpdRegister.findOrCreate("tmp_reg", OpdRegister.TMP_REG);
+                CCTOperand index = getIndex(((burgParser.McOpdTmpRegContext) mcRegCtx).index());
+                tRet.setIndex(index);
+                ret = tRet;
+            }
             else if (mcRegCtx instanceof burgParser.McOpdMachineRegContext) {
                 ret = OpdRegister.findOrCreate(mcRegCtx.getText(), OpdRegister.MACHINE_REG);
             }
