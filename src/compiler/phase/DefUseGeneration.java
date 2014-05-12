@@ -8,7 +8,7 @@ import uvm.MicroVM;
 import uvm.Register;
 import uvm.Value;
 
-public class DefUseGeneration extends CompilationPhase{
+public class DefUseGeneration extends AbstractCompilationPhase{
     static final boolean VERBOSE = false;
 
     public DefUseGeneration(String name) {

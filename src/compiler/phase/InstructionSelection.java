@@ -8,7 +8,7 @@ import uvm.MicroVM;
 import burm.BURM_GENERATED;
 import burm.BurmState;
 
-public class InstructionSelection extends CompilationPhase{
+public class InstructionSelection extends AbstractCompilationPhase{
     static final boolean VERBOSE = true;
     
     public InstructionSelection(String name) {

@@ -10,7 +10,7 @@ import uvm.mc.MCBasicBlock;
 import uvm.mc.MCLabel;
 import uvm.mc.MCRegister;
 import compiler.UVMCompiler;
-import compiler.phase.CompilationPhase;
+import compiler.phase.AbstractCompilationPhase;
 
 /**
  * 1. remove redundant mov and phi instruction
@@ -19,101 +19,99 @@ import compiler.phase.CompilationPhase;
  * @author Yi
  * 
  */
-public class MachineCodeCleanup extends CompilationPhase {
+public class MachineCodeCleanup extends AbstractMCCompilationPhase {
 
     public MachineCodeCleanup(String name) {
         super(name);
     }
 
     @Override
-    public void execute() {
-        for (CompiledFunction cf : MicroVM.v.compiledFuncs) {
-            System.out.println("\n======Machine Code Cleanup======");
+    protected void visitCompiledFunction(CompiledFunction cf) {
+        System.out.println("\n======Machine Code Cleanup======");
+        
+        LinkedList<MCBasicBlock> unvisited = new LinkedList<MCBasicBlock>();
+        unvisited.addAll(cf.BBs);
+        
+        MCBasicBlock cur = cf.entryBB;
+        MCLabel delayingLabel = null;
+        
+        while (cur != null) {
+            System.out.println("dealing with BB #" + cur.getName());
+            unvisited.remove(cur);
             
-            LinkedList<MCBasicBlock> unvisited = new LinkedList<MCBasicBlock>();
-            unvisited.addAll(cf.BBs);
+            for (AbstractMachineCode mc : cur.getMC()) {
+                // if this mc is not redundant, add to finalMC
+                if (!isRedundant(mc)) {
+                    cf.finalMC.add(mc);
+                    
+                    // whenever we adding a mc, we check if we have any delaying label
+                    // if so, attach delaying label to the mc, and clear delayingLabel
+                    // this code also appears once more later
+                    if (checkDelayingLabel(mc, delayingLabel))
+                        delayingLabel = null;
+                }
+                else {
+                    // this mc will get deleted, but if it has a label, we will keep the label
+                    if (mc.getLabel() != null) {
+                        if (delayingLabel != null) {
+                            UVMCompiler.error("we have a delaying label #" + delayingLabel.getName() + " but trying to adding another label #" + mc.getLabel().getName());
+                        }
+                        delayingLabel = mc.getLabel();
+                    }
+                }
+                    
+            }
             
-            MCBasicBlock cur = cf.entryBB;
-            MCLabel delayingLabel = null;
+            // find next block
+            // if a block is a successor but it is not the jump target
+            // then it is next block (fallthrough)
             
-            while (cur != null) {
-                System.out.println("dealing with BB #" + cur.getName());
-                unvisited.remove(cur);
-                
-                for (AbstractMachineCode mc : cur.getMC()) {
-                    // if this mc is not redundant, add to finalMC
-                    if (!isRedundant(mc)) {
-                        cf.finalMC.add(mc);
+            MCBasicBlock oldCur = cur;
+            cur = null;
+            
+            for (MCBasicBlock succ : oldCur.getSuccessor()) {
+                if (isFallthrough(oldCur, succ)) {
+                    // succ is a fallthrough successor from oldCur
+                    
+                    if (unvisited.contains(succ)) {
+                        // if we havent visited yet, visit it (append it to finalMC)
+                        cur = succ;
+                        System.out.println(" has a fallthrough successor #" + cur.getName());
+                    } else {
+                        // we have added code in succ in final MC.
+                        // then we need to add one jump inst to branch to succ
+                        AbstractMachineCode jmp = UVMCompiler.MCDriver.genJmp(succ.getLabel());
                         
-                        // whenever we adding a mc, we check if we have any delaying label
-                        // if so, attach delaying label to the mc, and clear delayingLabel
-                        // this code also appears once more later
-                        if (checkDelayingLabel(mc, delayingLabel))
+                        cf.finalMC.add(jmp);
+                        
+                        // whenever we add a code to finalMC, we check label
+                        // see comments above
+                        if (checkDelayingLabel(jmp, delayingLabel))
                             delayingLabel = null;
-                    }
-                    else {
-                        // this mc will get deleted, but if it has a label, we will keep the label
-                        if (mc.getLabel() != null) {
-                            if (delayingLabel != null) {
-                                UVMCompiler.error("we have a delaying label #" + delayingLabel.getName() + " but trying to adding another label #" + mc.getLabel().getName());
-                            }
-                            delayingLabel = mc.getLabel();
-                        }
-                    }
                         
-                }
-                
-                // find next block
-                // if a block is a successor but it is not the jump target
-                // then it is next block (fallthrough)
-                
-                MCBasicBlock oldCur = cur;
-                cur = null;
-                
-                for (MCBasicBlock succ : oldCur.getSuccessor()) {
-                    if (isFallthrough(oldCur, succ)) {
-                        // succ is a fallthrough successor from oldCur
-                        
-                        if (unvisited.contains(succ)) {
-                            // if we havent visited yet, visit it (append it to finalMC)
-                            cur = succ;
-                            System.out.println(" has a fallthrough successor #" + cur.getName());
-                        } else {
-                            // we have added code in succ in final MC.
-                            // then we need to add one jump inst to branch to succ
-                            AbstractMachineCode jmp = UVMCompiler.MCDriver.genJmp(succ.getLabel());
-                            
-                            cf.finalMC.add(jmp);
-                            
-                            // whenever we add a code to finalMC, we check label
-                            // see comments above
-                            if (checkDelayingLabel(jmp, delayingLabel))
-                                delayingLabel = null;
-                            
-                            System.out.print(" has a visited fallthrough successor #" + succ.getName());
-                            System.out.println(" adding jmp");
-                        }
+                        System.out.print(" has a visited fallthrough successor #" + succ.getName());
+                        System.out.println(" adding jmp");
                     }
-                }
-                
-                if (cur == null) {
-                    for (int i = 0; i < unvisited.size(); i++)
-                        if (!isFallthroughBlock(unvisited.get(i))) {
-                            cur = unvisited.get(i);
-                            System.out.println(" picking a random non-fallthrough BB #" + cur.getName());
-                            break;
-                        }
-                }
-                
-                if (cur == null && !unvisited.isEmpty()) {
-                    UVMCompiler.error("cannot find next block, but tmp is not empty");
                 }
             }
             
-            System.out.println("\nAfter MC cleanup, final code for " + cf.getOriginFunction().getName());
-            for (AbstractMachineCode mc : cf.finalMC)
-                System.out.println(mc.prettyPrint());
+            if (cur == null) {
+                for (int i = 0; i < unvisited.size(); i++)
+                    if (!isFallthroughBlock(unvisited.get(i))) {
+                        cur = unvisited.get(i);
+                        System.out.println(" picking a random non-fallthrough BB #" + cur.getName());
+                        break;
+                    }
+            }
+            
+            if (cur == null && !unvisited.isEmpty()) {
+                UVMCompiler.error("cannot find next block, but tmp is not empty");
+            }
         }
+        
+        System.out.println("\nAfter MC cleanup, final code for " + cf.getOriginFunction().getName());
+        for (AbstractMachineCode mc : cf.finalMC)
+            System.out.println(mc.prettyPrint());
     }
     
     /**

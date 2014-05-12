@@ -10,46 +10,44 @@ import uvm.CompiledFunction;
 import uvm.MicroVM;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
-import compiler.phase.CompilationPhase;
+import compiler.phase.AbstractCompilationPhase;
 
-public class InstructionNumbering extends CompilationPhase {
+public class InstructionNumbering extends AbstractMCCompilationPhase {
 
     public InstructionNumbering(String name) {
         super(name);
     }
 
-    public void execute() {        
-        for (CompiledFunction cf : MicroVM.v.compiledFuncs) {
-            
-            HashMap<MCBasicBlock, Integer> dfsIndex = new HashMap<MCBasicBlock, Integer>();
-            ArrayList<MCBasicBlock> topologicalOrder = new ArrayList<MCBasicBlock>();
-            int index = 0;
+    @Override
+    protected void visitCompiledFunction(CompiledFunction cf) {
+        HashMap<MCBasicBlock, Integer> dfsIndex = new HashMap<MCBasicBlock, Integer>();
+        ArrayList<MCBasicBlock> topologicalOrder = new ArrayList<MCBasicBlock>();
+        int index = 0;
 
-            Stack<MCBasicBlock> dfs = new Stack<MCBasicBlock>();
-            dfs.push(cf.entryBB);
+        Stack<MCBasicBlock> dfs = new Stack<MCBasicBlock>();
+        dfs.push(cf.entryBB);
+        
+        while (!dfs.isEmpty()) {
+            MCBasicBlock cur = dfs.pop();
+            dfsIndex.put(cur, index);
+            topologicalOrder.add(cur);
             
-            while (!dfs.isEmpty()) {
-                MCBasicBlock cur = dfs.pop();
-                dfsIndex.put(cur, index);
-                topologicalOrder.add(cur);
-                
-                index++;
-                
-                for (MCBasicBlock succ : cur.getSuccessor()) {
-                    if (dfsIndex.get(succ) == null)
-                        dfs.push(succ);
-                }
+            index++;
+            
+            for (MCBasicBlock succ : cur.getSuccessor()) {
+                if (dfsIndex.get(succ) == null)
+                    dfs.push(succ);
             }
-            
-            System.out.println("\ninstruction numbering:\n");
-            int sequence = 0;
-            for (MCBasicBlock cur : topologicalOrder) {
-                cf.topoloticalBBs.add(cur);
-                for (AbstractMachineCode mc : cur.getMC()) {
-                    System.out.println(sequence + ": " + mc.prettyPrint());
-                    mc.sequence = sequence;
-                    sequence ++;
-                }
+        }
+        
+        System.out.println("\ninstruction numbering:\n");
+        int sequence = 0;
+        for (MCBasicBlock cur : topologicalOrder) {
+            cf.topologicalBBs.add(cur);
+            for (AbstractMachineCode mc : cur.getMC()) {
+                System.out.println(sequence + ": " + mc.prettyPrint());
+                mc.sequence = sequence;
+                sequence ++;
             }
         }
     }

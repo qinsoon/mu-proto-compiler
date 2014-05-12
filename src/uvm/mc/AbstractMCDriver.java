@@ -5,6 +5,8 @@ public abstract class AbstractMCDriver {
     
     public abstract AbstractMachineCode genJmp(MCLabel target);
     
+    public abstract AbstractMachineCode genRet();
+    
     public abstract int getNumberOfGPR();
     public abstract String getGPRName(int i);
     public abstract int getNumberOfGPRParam();

@@ -28,7 +28,7 @@ public class CompiledFunction {
     // MC BB
     public List<MCBasicBlock> BBs = new ArrayList<MCBasicBlock>();
     public MCBasicBlock entryBB;
-    public List<MCBasicBlock> topoloticalBBs = new ArrayList<MCBasicBlock>();
+    public List<MCBasicBlock> topologicalBBs = new ArrayList<MCBasicBlock>();
     
     // register live interval
     public HashMap<MCRegister, LiveInterval> intervals = new HashMap<MCRegister, LiveInterval>();

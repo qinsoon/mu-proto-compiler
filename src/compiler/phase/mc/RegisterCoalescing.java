@@ -9,62 +9,60 @@ import uvm.mc.LiveInterval;
 import uvm.mc.LiveInterval.Range;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCRegister;
-import compiler.phase.CompilationPhase;
+import compiler.phase.AbstractCompilationPhase;
 
-public class RegisterCoalescing extends CompilationPhase {
+public class RegisterCoalescing extends AbstractMCCompilationPhase {
 
     public RegisterCoalescing(String name) {
         super(name);
     }
 
     @Override
-    public void execute() {
-        for (CompiledFunction cf : MicroVM.v.compiledFuncs) {
-            System.out.println("=========Register Coalescing for function " + cf.getOriginFunction().getName() + "=========\n");
-            for (MCBasicBlock bb : cf.topoloticalBBs) {
-//                ArrayList<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
-                
-                for (AbstractMachineCode mc : bb.getMC()) {                    
-                    System.out.println("-check mc " + mc.prettyPrintNoLabel());
-                    boolean remove = false;
-                    if (mc.isMov()) {
-                        // try join
-                        if (mc.getOperand(0) instanceof MCRegister &&
-                                join(cf, bb,  mc, ((MCRegister) mc.getOperand(0)).REP(), mc.getReg().REP())) {
-                            // remove this mov mc
-                            remove = true;
-                        }
-                    } 
-                    // join phi during 'GenMovForPhi'
-//                    else if (mc.isPhi()) {
-//                        // try join
-//                        if (mc.getOperand(0) instanceof MCRegister &&
-//                            mc.getOperand(2) instanceof MCRegister &&
-//                            join(cf, bb, mc, (MCRegister) mc.getOperand(0), mc.getReg()) &&
-//                            join(cf, bb, mc, (MCRegister) mc.getOperand(2), mc.getReg())) {
-//                            // remove this phi mc
-//                            remove = true;                            
-//                        }
+    protected void visitCompiledFunction(CompiledFunction cf) {
+        System.out.println("=========Register Coalescing for function " + cf.getOriginFunction().getName() + "=========\n");
+        for (MCBasicBlock bb : cf.topologicalBBs) {
+//            ArrayList<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
+            
+            for (AbstractMachineCode mc : bb.getMC()) {                    
+                System.out.println("-check mc " + mc.prettyPrintNoLabel());
+                boolean remove = false;
+                if (mc.isMov()) {
+                    // try join
+                    if (mc.getOperand(0) instanceof MCRegister &&
+                            join(cf, bb,  mc, ((MCRegister) mc.getOperand(0)).REP(), mc.getReg().REP())) {
+                        // remove this mov mc
+                        remove = true;
+                    }
+                } 
+                // join phi during 'GenMovForPhi'
+//                else if (mc.isPhi()) {
+//                    // try join
+//                    if (mc.getOperand(0) instanceof MCRegister &&
+//                        mc.getOperand(2) instanceof MCRegister &&
+//                        join(cf, bb, mc, (MCRegister) mc.getOperand(0), mc.getReg()) &&
+//                        join(cf, bb, mc, (MCRegister) mc.getOperand(2), mc.getReg())) {
+//                        // remove this phi mc
+//                        remove = true;                            
 //                    }
-                    
-                    if (remove) {
-                        System.out.println("->joined");
-//                        cf.getMachineCode().remove(mc);
-                    }
-                    
-                    if (!remove) {
-                        System.out.println("->cant join");
-//                        newMC.add(mc);
-                    }
+//                }
+                
+                if (remove) {
+                    System.out.println("->joined");
+//                    cf.getMachineCode().remove(mc);
                 }
                 
-//                bb.setMC(newMC);
+                if (!remove) {
+                    System.out.println("->cant join");
+//                    newMC.add(mc);
+                }
             }
             
-            System.out.println("\nAfter register coalescing");
-            cf.printInterval();
-            System.out.println(cf.prettyPrint());
+//            bb.setMC(newMC);
         }
+        
+        System.out.println("\nAfter register coalescing");
+        cf.printInterval();
+        System.out.println(cf.prettyPrint());
     }
     
     /**

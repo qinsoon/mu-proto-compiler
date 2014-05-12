@@ -13,7 +13,7 @@ import uvm.Register;
 import uvm.Value;
 import uvm.inst.*;
 
-public class IRTreeGeneration extends CompilationPhase{
+public class IRTreeGeneration extends AbstractCompilationPhase{
     public IRTreeGeneration(String name) {
         super(name);
     }

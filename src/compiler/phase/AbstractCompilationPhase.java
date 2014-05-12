@@ -6,10 +6,10 @@ import uvm.IRTreeNode;
 import uvm.Instruction;
 import uvm.MicroVM;
 
-public abstract class CompilationPhase {
+public abstract class AbstractCompilationPhase {
     String name;
     
-    public CompilationPhase(String name) {
+    public AbstractCompilationPhase(String name) {
         this.name = name;
     }
     

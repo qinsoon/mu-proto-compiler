@@ -828,6 +828,15 @@ public class Burg {
         code.decreaseIndent();
         code.appendln("}");
         
+        // ret
+        code.appendln("@Override public AbstractMachineCode genRet() {");
+        code.increaseIndent();
+        String retMC = targetName + MC_RET.get(0);
+        code.appendStmtln(String.format("%s ret = new %s()", retMC, retMC));
+        code.appendStmtln("return ret");
+        code.decreaseIndent();
+        code.appendln("}");
+        
         // GPRs
         code.appendln();
         code.append("public static final String[] GPR = {");

@@ -21,7 +21,7 @@ import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
 import uvm.mc.LiveInterval.Range;
 import compiler.UVMCompiler;
-import compiler.phase.CompilationPhase;
+import compiler.phase.AbstractCompilationPhase;
 
 // TODO this live interval analysis is based on SSA
 // however the machine code is not _strictly_ SSA
@@ -29,20 +29,18 @@ import compiler.phase.CompilationPhase;
 // ==> as stated in the paper, phi mc is never included in a range, so its fine
 // E.g. 2. "add a, b -> a", which is a X86/64 mc, is not SSA
 // ==>  this may be NOT fine
-public class ComputeLiveInterval extends CompilationPhase {
+public class ComputeLiveInterval extends AbstractMCCompilationPhase {
 
     public ComputeLiveInterval(String name) {
         super(name);
     }
     
     @Override
-    public void execute() {
-        for (CompiledFunction cf : MicroVM.v.compiledFuncs) {
-            buildLiveIn(cf);
-            buildIntervals(cf);
-            
-            cf.printInterval();;
-        }
+    protected void visitCompiledFunction(CompiledFunction cf) {
+        buildLiveIn(cf);
+        buildIntervals(cf);
+        
+        cf.printInterval();;
     }
     
     public void buildLiveIn(CompiledFunction cf) {
@@ -133,6 +131,4 @@ public class ComputeLiveInterval extends CompilationPhase {
             cf.intervals.put(reg, l);
         }
     }
-    
-
 }

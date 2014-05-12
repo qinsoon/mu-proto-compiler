@@ -13,7 +13,7 @@ import uvm.MicroVM;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCRegister;
 
-public class MCRepresentationGeneration extends CompilationPhase{
+public class MCRepresentationGeneration extends AbstractCompilationPhase{
     private static final boolean VERBOSE = true;
     
     public MCRepresentationGeneration(String name) {

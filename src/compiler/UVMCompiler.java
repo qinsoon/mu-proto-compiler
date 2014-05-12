@@ -67,16 +67,26 @@ public class UVMCompiler {
                 System.out.println();
             }
             
-            // generating IR tree
+            /*
+             *  generating IR tree
+             */
             new DefUseGeneration("defusegen").execute();            
             new IRTreeGeneration("treegen").execute();
             
-            // instruction selection
+            /*
+             *  instruction selection (use BURM)
+             */
             new InstructionSelection("instsel").execute();
             new MCRepresentationGeneration("mcrepgen").execute();
             
             /*
-             *  mc level
+             *  mc code transform
+             */
+            new CombineReturns("combineret").execute();
+            new BBReconstruction("reconstbb").execute();
+            
+            /*
+             *  register allocation
              *  
              *  the parts below with a * implement the paper from CC02: http://dl.acm.org/citation.cfm?id=647478.727924
              *  
@@ -84,7 +94,6 @@ public class UVMCompiler {
              *  - Vivek Sarkar's work in CC07: http://dl.acm.org/citation.cfm?id=1759937.1759950
              *  - Christian Wimmer's work in CGO10: http://doi.acm.org/10.1145/1772954.1772979
              */
-            new BBReconstruction("reconstbb").execute();
             new GenMovForPhi("genmovforphi").execute();                 //*
             new InstructionNumbering("instnumbering").execute();        //*
             new AllocateParamRetRegister("allocparamret").execute();
@@ -92,9 +101,11 @@ public class UVMCompiler {
             new RegisterCoalescing("regcoalesc").execute();             //*
             new LinearScan("linearscan").execute();                     //*
             
+            /*
+             *  code emission
+             */
+            new SimpleBranchAlignment("tracesched").execute();
             new MachineCodeCleanup("mccleanup").execute();
-            
-            // code emission
             new CodeEmission("codeemit", "emit").execute();
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
