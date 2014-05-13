@@ -45,6 +45,7 @@ public class Burg {
     public static final String          MC_PHI = "mcphi";
     public static final List<String>    MC_RET = new ArrayList<String>();
     public static final List<String>    MC_MOV = new ArrayList<String>();
+    public static final List<String>    MC_NOP = new ArrayList<String>();
     
     public static final List<String>    REG_GPR = new ArrayList<String>();
     public static final List<String>    REG_GPR_PARAM = new ArrayList<String>();
@@ -833,6 +834,39 @@ public class Burg {
         code.increaseIndent();
         String retMC = targetName + MC_RET.get(0);
         code.appendStmtln(String.format("%s ret = new %s()", retMC, retMC));
+        code.appendStmtln("return ret");
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        // nop
+        code.appendln("@Override public AbstractMachineCode genNop() {");
+        code.increaseIndent();
+        String nopMC = targetName + MC_NOP.get(0);
+        code.appendStmtln(String.format("%s ret = new %s()", nopMC, nopMC));
+        code.appendStmtln("return ret");
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        // opposite jmp
+        code.appendln("@Override public AbstractMachineCode genOppositeCondJump(AbstractMachineCode orig) {");
+        code.increaseIndent();
+        code.appendStmtln("String name = orig.getName()");
+        code.appendStmtln("AbstractMachineCode ret = null;");
+        code.appendln();
+        for (int i = 0; i < MC_COND_JUMP.size() - 1; i += 2) {
+            String jmp1 = MC_COND_JUMP.get(i);
+            String jmp2 = MC_COND_JUMP.get(i + 1);
+            
+            String elseStr = i == 0 ? "" : "else ";
+            code.appendln(
+                    String.format("%sif (name.equals(\"%s\")) ret = new %s%s();", 
+                            elseStr,
+                            jmp1, targetName, jmp2));
+            code.appendln(String.format("else if (name.equals(\"%s\")) ret = new %s%s();",
+                            jmp2, targetName, jmp1));
+        }
+        code.appendln();
+        code.appendStmtln("ret.setOperand(0, orig.getOperand(0))");
         code.appendStmtln("return ret");
         code.decreaseIndent();
         code.appendln("}");

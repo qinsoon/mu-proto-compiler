@@ -17,6 +17,7 @@ declare
     |   mcUncondJumpDecl
     |   mcRetDecl
     |   mcMovDecl
+    |   mcNopDecl
 // mc define
     |   mcDefine
 // regs
@@ -53,6 +54,10 @@ gprRetDecl
     :   '.gpr_ret' idString+
     ;
 
+mcNopDecl
+    :   '.mc_nop' idString
+    ;
+
 mcMovDecl
     :   '.mc_mov' idString+
     ;
@@ -62,7 +67,7 @@ mcRetDecl
     ;
 
 mcCondJumpDecl
-    :   '.mc_cond_jump' idString+
+    :   '.mc_cond_jump' ('{' idString idString '}')+
     ;
 
 mcUncondJumpDecl

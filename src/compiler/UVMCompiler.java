@@ -104,7 +104,7 @@ public class UVMCompiler {
             /*
              *  code emission
              */
-            new SimpleBranchAlignment("tracesched").execute();
+            new SimpleBranchAlignment("simplebralign").execute();
             new MachineCodeCleanup("mccleanup").execute();
             new CodeEmission("codeemit", "emit").execute();
         } catch (FileNotFoundException e) {

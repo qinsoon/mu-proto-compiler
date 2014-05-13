@@ -33,6 +33,7 @@ public class BBReconstruction extends AbstractMCCompilationPhase{
                     curBB = new MCBasicBlock(mc.getLabel());
                 } else {
                     curBB = new MCBasicBlock(bbName + bbIndex);
+                    mc.setLabel(curBB.getLabel());
                     bbIndex ++;
                 }
                 

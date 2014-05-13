@@ -35,6 +35,10 @@ public class burgListenerImpl extends burgBaseListener {
             Burg.MC_MOV.add(s.getText());
     }
     
+    @Override public void exitMcNopDecl(@NotNull burgParser.McNopDeclContext ctx) {
+        Burg.MC_NOP.add(ctx.idString().getText());
+    }
+    
     @Override public void exitGprDecl(@NotNull burgParser.GprDeclContext ctx) {
         for (burgParser.IdStringContext s : ctx.idString())
             Burg.REG_GPR.add(s.getText());

@@ -7,6 +7,10 @@ public abstract class AbstractMCDriver {
     
     public abstract AbstractMachineCode genRet();
     
+    public abstract AbstractMachineCode genNop();
+    
+    public abstract AbstractMachineCode genOppositeCondJump(AbstractMachineCode orig);
+    
     public abstract int getNumberOfGPR();
     public abstract String getGPRName(int i);
     public abstract int getNumberOfGPRParam();

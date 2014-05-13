@@ -119,6 +119,7 @@ public abstract class OpCode {
     public static final int INT_IMM = 0xF0;
     public static final int REG     = 0xF1;
     public static final int LABEL   = 0xF2;
+    public static final int NOP     = 0xFF;
     
     public static final HashMap<Integer, String> names = new HashMap<Integer, String>();
     

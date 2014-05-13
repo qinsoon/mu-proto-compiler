@@ -16,6 +16,16 @@ public abstract class AbstractMachineCode {
     
     public abstract String emit();
     
+    public String getName() {
+        return name;
+    }
+    
+    public static void replaceMC(AbstractMachineCode oldMC, AbstractMachineCode newMC) {
+        newMC.sequence = oldMC.sequence;
+        newMC.node     = oldMC.node;        
+        newMC.label    = oldMC.label;
+    }
+    
     /**
      * this may not always be valid result (when the mc doesnt have a result)
      */

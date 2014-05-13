@@ -4,15 +4,20 @@
 // as prefix of generated MC nodes
 .target X64
 
-.mc_cond_jump je jne jl jge jle jg
+.mc_cond_jump {je jne} {jl jge} {jle jg}
 .mc_uncond_jump jmp
 .mc_ret ret
 .mc_mov mov cmovlt cmovgt cmoveq
+.mc_nop nop
 
 // registers
 .gpr rax rbx rcx rdx rdi rsi r8 r9 r10 r11 r12 r13 r14 r15
 .gpr_param rdi rsi rdx rcx
 .gpr_ret rax rdx
+
+stmt : NOP
+> nop
+0
 
 stmt : PSEUDO_ASSIGN(reg op)
 // mov
@@ -33,35 +38,35 @@ op : BRANCH2(value label label)
 // cmp, jcc
 > test P[0] $1
 > je  P[1]
-> jne P[2]
+> jmp P[2]
 2
 
 op : BRANCH2(cmpSltRes label label)
 // cmp, jcc
 > jl  P[1]
-> jge P[2]
+> jmp P[2]
 1
 
 op : BRANCH2(cmpSleRes label label)
 > jle P[1]
-> jg P[2]
+> jmp P[2]
 1
 
 op : BRANCH2(cmpSgtRes label label)
 // cmp, jcc
 > jg  P[1]
-> jle P[2]
+> jmp P[2]
 1
 
 op : BRANCH2(cmpSgeRes label label)
 > jge P[1]
-> jl P[2]
+> jmp P[2]
 1
 
 op : BRANCH2(cmpEqRes label label)
 // jcc
 > je  P[1]
-> jne P[2]
+> jmp P[2]
 1
 
 // *** SLT ***
@@ -273,6 +278,10 @@ label : LABEL
 }
 
 // misc
+
+.mc_def nop = {
+	"nop";
+}
 
 .mc_def mcphi = {
 	"";
