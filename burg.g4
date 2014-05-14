@@ -28,9 +28,26 @@ declare
 
 mcDefine
     :   '.mc_def' mcOp '=' '{'
+        // operand type
+        operandTypeDefine ?
         // emit code
         formatString (',' mcEmitOperand)* ';'
         '}'
+    ;
+
+operandTypeDefine
+    :   resultOperandType ? mcOperandType+ ';'
+    ;
+
+resultOperandType
+    :   (mcOperandType '=') ?
+    ;
+
+mcOperandType
+    :   'DP'            # mcOperandDP
+    |   'SP'            # mcOperandSP
+    |   'GPR'           # mcOperandGPR
+    |   'MEM'           # mcOperandMem
     ;
 
 formatString

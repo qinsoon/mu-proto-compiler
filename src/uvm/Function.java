@@ -47,8 +47,7 @@ public class Function {
         Label ret = new Label(name);
         labels.put(name, ret);
         return ret;
-    }
-    
+    }    
 
     public void resolveLabels() {
         for (BasicBlock bb : BBs) {

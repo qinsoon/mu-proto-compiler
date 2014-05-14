@@ -15,6 +15,7 @@ import parser.uIRParser.InstContext;
 import parser.uIRParser.IntImmediateContext;
 import parser.uIRParser.TypeConstructorContext;
 import parser.uIRParser.TypeContext;
+import uvm.FPImmediate;
 import uvm.Function;
 import uvm.FunctionSignature;
 import uvm.IRTreeNode;
@@ -28,9 +29,14 @@ import uvm.inst.InstAdd;
 import uvm.inst.InstBranch;
 import uvm.inst.InstBranch2;
 import uvm.inst.InstEq;
+import uvm.inst.InstFAdd;
+import uvm.inst.InstFDiv;
+import uvm.inst.InstFOlt;
+import uvm.inst.InstFPToSI;
 import uvm.inst.InstParam;
 import uvm.inst.InstPhi;
 import uvm.inst.InstRet;
+import uvm.inst.InstSIToFP;
 import uvm.inst.InstSgt;
 import uvm.inst.InstShl;
 import uvm.inst.InstSlt;
@@ -82,7 +88,10 @@ public abstract class ASTHelper {
                 int size = Integer.parseInt(
                         ((parser.uIRParser.IntTypeContext) ctx).intImmediate().getText());
                 return Int.findOrCreate(size);
-            } else {
+            } else if (ctx instanceof parser.uIRParser.DoubleTypeContext) {
+                return uvm.type.Double.DOUBLE;
+            }            
+            else {
                 throw new ASTParsingException("Missing implementation on " + ctx.getClass().toString());
             }
         } else {
@@ -119,27 +128,45 @@ public abstract class ASTHelper {
         
         InstBodyContext inst = ctx.instBody();
         
+        /*
+         * pseudo inst
+         */
         if (inst instanceof parser.uIRParser.InstParamContext) {
             Instruction node = new InstParam((int)getIntImmediateValue(((parser.uIRParser.InstParamContext) inst).intImmediate()));
             node.setDefReg(def);
             return node;
-        } else if (inst instanceof parser.uIRParser.InstBranchContext) {
+        } 
+        
+        /*
+         * branch inst
+         */
+        else if (inst instanceof parser.uIRParser.InstBranchContext) {
             String target = getIdentifierName(((parser.uIRParser.InstBranchContext) inst).IDENTIFIER(), false);
             return new InstBranch(f.findOrCreateLabel(target));
-        } else if (inst instanceof parser.uIRParser.InstBranch2Context) {
+        } 
+        else if (inst instanceof parser.uIRParser.InstBranch2Context) {
             parser.uIRParser.ValueContext condContext = ((parser.uIRParser.InstBranch2Context) inst).value();
             
-            Value cond = getValue(f, condContext);            
+            Type int1Type = uvm.type.Int.findOrCreate(1);
+            Value cond = getValue(f, condContext, int1Type);            
             Label ifTrue = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstBranch2Context) inst).IDENTIFIER(0), false));
             Label ifFalse = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstBranch2Context) inst).IDENTIFIER(1), false));
             
             return new InstBranch2(cond, ifTrue, ifFalse);
-        } else if (inst instanceof parser.uIRParser.InstPhiContext) {
+        } 
+        else if (inst instanceof parser.uIRParser.InstRetContext) {
+            Type t = getType(((parser.uIRParser.InstRetContext) inst).type());
+            Value v = getValue(f, ((parser.uIRParser.InstRetContext) inst).value(), t);
+            Instruction node = new InstRet(v);
+            return node;
+        } 
+        
+        else if (inst instanceof parser.uIRParser.InstPhiContext) {
             Type t = getType(((parser.uIRParser.InstPhiContext) inst).type());
             
             HashMap<Label, Value> values = new HashMap<Label, Value>();
             for (int i = 0; i < ((parser.uIRParser.InstPhiContext) inst).IDENTIFIER().size(); i++) {
-                Value v = getValue(f, ((parser.uIRParser.InstPhiContext) inst).value(i));
+                Value v = getValue(f, ((parser.uIRParser.InstPhiContext) inst).value(i), t);
                 Label l = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstPhiContext) inst).IDENTIFIER(i), false));
                 values.put(l, v);
             }
@@ -148,16 +175,14 @@ public abstract class ASTHelper {
             
             node.setDefReg(def);
             return node;
-        } else if (inst instanceof parser.uIRParser.InstRetContext) {
-            Value v = getValue(f, ((parser.uIRParser.InstRetContext) inst).value());
-            Instruction node = new InstRet(v);
-            return node;
         } 
-        // bin op
+        /*
+         * bin op
+         */
         else if (inst instanceof parser.uIRParser.InstBinOpContext) {
             Type t = getType(((parser.uIRParser.InstBinOpContext) inst).type());
-            Value op1 = getValue(f, ((parser.uIRParser.InstBinOpContext) inst).value(0));
-            Value op2 = getValue(f, ((parser.uIRParser.InstBinOpContext) inst).value(1));
+            Value op1 = getValue(f, ((parser.uIRParser.InstBinOpContext) inst).value(0), t);
+            Value op2 = getValue(f, ((parser.uIRParser.InstBinOpContext) inst).value(1), t);
             
             parser.uIRParser.BinOpsContext binOp = ((parser.uIRParser.InstBinOpContext) inst).binOps();
 
@@ -174,17 +199,26 @@ public abstract class ASTHelper {
                     UVMCompiler.error("incomplete implementation of i binops: " + inst.getText());
                 }
             } else if (binOp.fBinOps() != null) {
-                UVMCompiler.error("havent implemented f binops");
+                parser.uIRParser.FBinOpsContext fBinOp = binOp.fBinOps();
+                if (fBinOp instanceof parser.uIRParser.InstFAddContext) {
+                    node = new InstFAdd(t, op1, op2);
+                } else if (fBinOp instanceof parser.uIRParser.InstFDivContext) {
+                    node = new InstFDiv(t, op1, op2);
+                } else {
+                    UVMCompiler.error("incomplete implementation of f binops: " + inst.getText());
+                }
             }
             
             node.setDefReg(def);
             return node;
         }
-        // cmp
+        /*
+         * comparison
+         */
         else if (inst instanceof parser.uIRParser.InstCmpContext) {
             Type t = getType(((parser.uIRParser.InstCmpContext) inst).type());
-            Value op1 = getValue(f, ((parser.uIRParser.InstCmpContext) inst).value(0));
-            Value op2 = getValue(f, ((parser.uIRParser.InstCmpContext) inst).value(1));
+            Value op1 = getValue(f, ((parser.uIRParser.InstCmpContext) inst).value(0), t);
+            Value op2 = getValue(f, ((parser.uIRParser.InstCmpContext) inst).value(1), t);
             
             parser.uIRParser.CmpOpsContext cmpOp = ((parser.uIRParser.InstCmpContext) inst).cmpOps();
             
@@ -201,7 +235,35 @@ public abstract class ASTHelper {
                     UVMCompiler.error("incomplete implementation of i cmp op: " + inst.getText());
                 }
             } else if (cmpOp.fCmpOps() != null) {
-                UVMCompiler.error("havent implemented f cmp ops");
+                parser.uIRParser.FCmpOpsContext fCmpOp = cmpOp.fCmpOps();
+                if (fCmpOp instanceof parser.uIRParser.InstFOltContext) {
+                    node = new InstFOlt(t, op1, op2);
+                } else {
+                    UVMCompiler.error("incomplete implementation of f cmp op: " + inst.getText());
+                }
+            }
+            
+            node.setDefReg(def);
+            return node;
+        }
+        /*
+         * conversion
+         */
+        else if (inst instanceof parser.uIRParser.InstConversionContext) {
+            parser.uIRParser.InstConversionContext convCtx = (parser.uIRParser.InstConversionContext) inst;
+            Type fromType = getType(convCtx.type(0));
+            Type toType = getType(convCtx.type(1));
+            Value op = getValue(f, convCtx.value(), fromType);
+            
+            parser.uIRParser.ConvOpsContext convOp = convCtx.convOps();
+            
+            Instruction node = null;
+            if (convOp instanceof parser.uIRParser.InstSIToFPContext) {
+                node = new InstSIToFP(fromType, toType, op);
+            } else if (convOp instanceof parser.uIRParser.InstFPToSIContext) {
+                node = new InstFPToSI(fromType, toType, op);
+            } else {
+                UVMCompiler.error("incomplete implementation of conversion inst: " + convOp.getClass().getName());
             }
             
             node.setDefReg(def);
@@ -214,14 +276,18 @@ public abstract class ASTHelper {
         return null;
     }
     
-    private static Value getValue(Function f, parser.uIRParser.ValueContext ctx) throws ASTParsingException {
+    private static Value getValue(Function f, parser.uIRParser.ValueContext ctx, uvm.Type type) throws ASTParsingException {
         Value ret = null;
         
         if (ctx.immediate() != null) {
-            if (ctx.immediate().intImmediate() != null)
-                ret = new IntImmediate(getIntImmediateValue(ctx.immediate().intImmediate()));
+            if (ctx.immediate().intImmediate() != null) {
+                ret = new IntImmediate(type, getIntImmediateValue(ctx.immediate().intImmediate()));
+            }
+            else if (ctx.immediate().fpImmediate() != null) {
+                ret = new FPImmediate(type, getFPImmediateValue(ctx.immediate().fpImmediate()));
+            }
             else {
-                UVMCompiler.error("Missing implementation for fp immediate");
+                UVMCompiler.error("Missing implementation on immediate values (shouldn't happen, we implemented fp/int both)");
             }
         } else {
             String id = getIdentifierName(ctx.IDENTIFIER(), false);
@@ -233,5 +299,9 @@ public abstract class ASTHelper {
 
     private static long getIntImmediateValue(IntImmediateContext intImmediate) {
         return Long.parseLong(intImmediate.getText());
+    }
+    
+    private static double getFPImmediateValue(parser.uIRParser.FpImmediateContext fpImmediate) {
+        return Double.parseDouble(fpImmediate.getText());
     }
 }

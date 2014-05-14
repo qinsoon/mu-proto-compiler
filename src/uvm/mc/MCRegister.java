@@ -9,14 +9,21 @@ public class MCRegister extends MCOperand{
     public static final int MACHINE_REG = 3;
     public static final int OTHER_SYMBOL_REG  = 4;
     
+    public static final int DATA_DP = 100;
+    public static final int DATA_SP = 101;
+    public static final int DATA_GPR = 102;
+    public static final int DATA_MEM = 103;
+    
     int type;
+    int dataType;
     String name;
     
     MCRegister join;
     
-    public MCRegister(String name, int type) {
+    public MCRegister(String name, int type, int dataType) {
         this.name = name;
         this.type = type;
+        this.dataType = dataType;
         
         this.join = this;
     }
@@ -48,11 +55,11 @@ public class MCRegister extends MCOperand{
      * @param type
      * @return
      */
-    public static MCRegister findOrCreate(String name, int type) {
+    public static MCRegister findOrCreate(String name, int type, int dataType) {
         if (temps.containsKey(name))
             return temps.get(name);
         
-        MCRegister ret = new MCRegister(name, type);
+        MCRegister ret = new MCRegister(name, type, dataType);
         temps.put(name, ret);
         return ret;
     }
@@ -90,5 +97,13 @@ public class MCRegister extends MCOperand{
         if (join == this)
             return "%" + name;
         else return join.prettyPrintREPOnly();
+    }
+
+    public int getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(int dataType) {
+        this.dataType = dataType;
     }
 }

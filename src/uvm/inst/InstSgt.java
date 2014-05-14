@@ -4,7 +4,7 @@ import uvm.OpCode;
 import uvm.Type;
 import uvm.Value;
 
-public class InstSgt extends InstTypedBinop {
+public class InstSgt extends AbstractTypedBinop {
 
     public InstSgt(Type type, Value op1, Value op2) {
         super(type, op1, op2);

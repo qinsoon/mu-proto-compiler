@@ -36,11 +36,11 @@ public class CompiledFunction {
     // register
     private HashMap<String, MCRegister> regs = new HashMap<String, MCRegister>();
     
-    public MCRegister findOrCreateRegister(String name, int type) {
+    public MCRegister findOrCreateRegister(String name, int type, int dataType) {
         if (regs.containsKey(name))
             return regs.get(name);
         
-        MCRegister ret = new MCRegister(name, type);
+        MCRegister ret = new MCRegister(name, type, dataType);
         regs.put(name, ret);
         return ret;
     }

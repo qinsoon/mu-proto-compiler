@@ -6,7 +6,7 @@ import uvm.OpCode;
 import uvm.Type;
 import uvm.Value;
 
-public class InstSlt extends InstTypedBinop {
+public class InstSlt extends AbstractTypedBinop {
 
     public InstSlt(Type type, Value op1, Value op2) {
         super(type, op1, op2);

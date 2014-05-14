@@ -187,7 +187,11 @@ iBinOps
     ;
     
 fBinOps
-    : 'FADD' | 'FSUB' | 'FMUL' | 'FDIV' | 'FREM'
+    : 'FADD'                                            # InstFAdd
+    | 'FSUB'                                            # InstFSub
+    | 'FMUL'                                            # InstFMul
+    | 'FDIV'                                            # InstFDiv
+    | 'FREM'                                            # InstFRem
     ;
 
 cmpOps : iCmpOps | fCmpOps ;
@@ -206,15 +210,37 @@ iCmpOps
     ;
 
 fCmpOps
-    : 'FTRUE' | 'FFALSE' 
-    | 'FUNO' | 'FUEQ' | 'FUNE' | 'FUGT' | 'FULT' | 'FUGE' | 'FULE'
-    | 'FORD' | 'FOEQ' | 'FONE' | 'FOGT' | 'FOLT' | 'FOGE' | 'FOLE'
+    : 'FTRUE'                                           # InstFTrue
+    | 'FFALSE'                                          # InstFFalse
+    | 'FUNO'                                            # InstFUno
+    | 'FUEQ'                                            # InstFUeq
+    | 'FUNE'                                            # InstFUne
+    | 'FUGT'                                            # InstFUgt
+    | 'FULT'                                            # InstFUlt
+    | 'FUGE'                                            # InstFUge
+    | 'FULE'                                            # InstFUle
+    | 'FORD'                                            # InstFOrd
+    | 'FOEQ'                                            # InstFOeq
+    | 'FONE'                                            # InstFOne
+    | 'FOGT'                                            # InstFOgt
+    | 'FOLT'                                            # InstFOlt
+    | 'FOGE'                                            # InstFOge
+    | 'FOLE'                                            # InstFOle
     ;
     
 convOps
-    : 'TRUNC' | 'ZEXT' | 'SEXT' | 'FPTRUNC' | 'FPEXT'
-    | 'FPTOUI' | 'FPTOSI' | 'UITOFP' | 'SITOFP' | 'BITCAST'
-    | 'REFCAST' | 'IREFCAST'
+    : 'TRUNC'                                           # InstTrunc
+    | 'ZEXT'                                            # InstZExt
+    | 'SEXT'                                            # InstSExt
+    | 'FPTRUNC'                                         # InstFPTrunc
+    | 'FPEXT'                                           # InstFPExt
+    | 'FPTOUI'                                          # InstFPToUI
+    | 'FPTOSI'                                          # InstFPToSI
+    | 'UITOFP'                                          # InstUIToFP
+    | 'SITOFP'                                          # InstSIToFP
+    | 'BITCAST'                                         # InstBitcast
+    | 'REFCAST'                                         # InstRefcast
+    | 'IREFCAST'                                        # InstIRefcast
     ;
 
 atomicDecl
@@ -236,8 +262,12 @@ intImmediate
     ;
 
 fpImmediate
-    :   ('+'|'-')? DIGITS 'e' ('+'|'-')? DIGITS
-    |   ('+'|'-')? DIGITS '.' DIGITS
+    :   ('+'|'-')? decimalFP 'e' ('+'|'-')? DIGITS      # exponentFPImm
+    |   decimalFP                                       # decimalFPImm
+    ;
+
+decimalFP
+    :   ('+'|'-')? DIGITS '.' DIGITS
     ;
 
 // LEXER

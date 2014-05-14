@@ -7,13 +7,20 @@
 .mc_cond_jump {je jne} {jl jge} {jle jg}
 .mc_uncond_jump jmp
 .mc_ret ret
-.mc_mov mov cmovlt cmovgt cmoveq
+.mc_mov mov cmovlt cmovgt cmoveq movsd
 .mc_nop nop
 
 // registers
 .gpr rax rbx rcx rdx rdi rsi r8 r9 r10 r11 r12 r13 r14 r15
 .gpr_param rdi rsi rdx rcx
 .gpr_ret rax rdx
+
+// _|_|_|_|  _|      _|  _|_|_|  _|_|_|_|_|      _|_|_|    _|    _|  _|        _|_|_|_|    _|_|_|
+// _|        _|_|  _|_|    _|        _|          _|    _|  _|    _|  _|        _|        _|      
+// _|_|_|    _|  _|  _|    _|        _|          _|_|_|    _|    _|  _|        _|_|_|      _|_|  
+// _|        _|      _|    _|        _|          _|    _|  _|    _|  _|        _|              _|
+// _|_|_|_|  _|      _|  _|_|_|      _|          _|    _|    _|_|    _|_|_|_|  _|_|_|_|  _|_|_|  
+// generated from http://www.kammerl.de/ascii/AsciiSignature.php
 
 stmt : NOP
 > nop
@@ -69,7 +76,14 @@ op : BRANCH2(cmpEqRes label label)
 > jmp P[2]
 1
 
-// *** SLT ***
+op : BRANCH2(cmpFoltRes label label)
+> jb P[1]
+> jmp P[2]
+1
+
+// ********************************
+// SLT 
+// ********************************
 
 // 2nd op should always be reg
 cmpSltRes : SLT(reg imm)
@@ -89,7 +103,30 @@ cmpSltRes : SLT(imm imm)
 > cmp P[1] %tmp_reg[0]
 2
 
-// *** SGT ***
+// ********************************
+// FOLT
+// ********************************
+
+cmpFoltRes : FOLT(reg imm)
+> comisd P[1] P[0]
+1
+
+cmpFogeRes : FOLT(imm reg)
+> comisd P[0] P[1]
+1
+
+cmpFoltRes : FOLT(reg reg)
+> comisd P[1] P[0]
+1
+
+cmpFoltRes : FOLT(imm imm)
+> movsd P[0] -> %tmp_reg[0]
+> comisd P[1] %tmp_reg[0]
+2
+
+// ********************************
+// SGT
+// ********************************
 
 cmpSgtRes : SGT(reg imm)
 > cmp P[1] P[0]
@@ -108,7 +145,9 @@ cmpSgtRes : SGT(imm imm)
 > cmp P[1] %tmp_reg[0]
 2
 
-// *** EQ ***
+// ********************************
+// EQ 
+// ********************************
 
 cmpEqRes: EQ(reg reg)
 > cmp P[0] P[1]
@@ -127,39 +166,28 @@ cmpEqRes: EQ(imm imm)
 > cmp P[0] %tmp_reg[0]
 2
 
-// *** conditional move ***
-
-//op : SLT(value value)
-// mov cmp cmov
-//> mov $0 -> %res_reg
-//> cmp P[0] P[1]
-//> cmovlt $1 -> %res_reg
-//3
-
-//op : SGT(value value)
-// mov cmp cmov
-//> mov $0 -> %res_reg
-//> cmp P[0] P[1]
-//> cmovgt $1 -> %res_reg
-//3
-
-//op : EQ(value value)
-// mov cmp cmov
-//> mov $0 -> %res_reg
-//> cmp P[0] P[1]
-//> cmoveq $0 -> %res_reg
-//3
-
 op : RET2(value)
 // mov, ret
 > mov P[0] -> %ret_reg[0]
 > ret
 2
 
+// ********************************
+// PSEUDO OP 
+// ********************************
+
 op : PARAM
 // mov
 > mov %param_reg[P(InstParam).getIndex()] -> %res_reg
 1
+
+op : PHI(value label value label)
+> mcphi P[0] P[1] P[2] P[3] -> %res_reg
+1
+
+// ********************************
+// BIN OP 
+// ********************************
 
 op : SREM(value value)
 // mov, div, mov
@@ -169,23 +197,48 @@ op : SREM(value value)
 > mov %rdx -> %res_reg
 4
 
-op : PHI(value label value label)
-> mcphi P[0] P[1] P[2] P[3] -> %res_reg
-1
-
 op : ADD(value value)
 // add
 > mov P[0] -> %res_reg
 > add %res_reg P[1] -> %res_reg
 2
 
+// ********************************
+// FLOATING POINT
+// ********************************
+
+op : FADD(value value)
+> movsd P[0] -> %res_reg
+> addsd %res_reg P[1] -> %res_reg
+2
+
+op : FDIV(value value)
+> movsd P[0] -> %res_reg
+> divsd %res_reg P[1] -> %res_reg
+2
+
+op : SITOFP(value)
+> cvtpi2pd P[0] -> %res_reg
+1
+
+op : FPTOSI(value)
+> cvtpd2pi P[0] -> %res_reg
+1
+
+// ********************************
+// NON-EMIT RULEs
+// ********************************
+
 value : reg
 0
 
-value : INT_IMM
+reg : op
 0
 
 imm : INT_IMM
+0
+
+imm : FP_IMM
 0
 
 value : imm
@@ -197,39 +250,53 @@ reg : REG
 label : LABEL
 0
 
-// *******
-// machine code define
-// *******
+// _|      _|    _|_|_|      _|_|_|    _|_|_|_|  _|_|_|_|  _|_|_|  _|      _|  _|_|_|_|
+// _|_|  _|_|  _|            _|    _|  _|        _|          _|    _|_|    _|  _|      
+// _|  _|  _|  _|            _|    _|  _|_|_|    _|_|_|      _|    _|  _|  _|  _|_|_|  
+// _|      _|  _|            _|    _|  _|        _|          _|    _|    _|_|  _|      
+// _|      _|    _|_|_|      _|_|_|    _|_|_|_|  _|        _|_|_|  _|      _|  _|_|_|_|
 
-// mov
+// ********************************
+// MOV
+// ********************************
 
 .mc_def mov = {
+	GPR = GPR;
 	"movq WS OP COMMA OP", OP[0], OP_REG;
 }
 
 .mc_def cmovlt = {
+	GPR = GPR;
 	"cmovltq WS OP COMMA OP", OP[0], OP_REG;
 }
 
 .mc_def cmovgt = {
+	GPR = GPR;
 	"cmovgtq WS OP COMMA OP", OP[0], OP_REG;
 }
 
 .mc_def cmoveq = {
+	GPR = GPR;
 	"cmoveqq WS OP COMMA OP", OP[0], OP_REG;
 }
 
-// comparison
+// ********************************
+// COMPARISON
+// ********************************
 
 .mc_def cmp = {
+	GPR GPR;
 	"cmpq WS OP COMMA OP", OP[0], OP[1];
 }
 
 .mc_def test = {
+	GPR GPR;
 	"testq WS OP COMMA OP", OP[0], OP[1];
 }
 
-// branch
+// ********************************
+// BRANCH
+// ********************************
 
 .mc_def jmp = {
 	"jmp WS OP", OP[0];
@@ -259,22 +326,65 @@ label : LABEL
 	"jge WS OP", OP[0];
 }
 
+.mc_def jb = {
+	"jb WS OP", OP[0];
+}
+
 .mc_def ret = {
 	"ret";
 }
 
-// arithmetic/mul/div
+// ********************************
+// BIN OP
+// ********************************
 
 .mc_def idiv = {
+	GPR;
 	"idivq WS OP", OP[0];
 }
 
 .mc_def add = {
+	GPR = GPR GPR;
 	"addq WS OP COMMA OP", OP[1], OP[0];
 }
 
 .mc_def xor = {
+	GPR = GPR GPR;
 	"xorq WS OP COMMA OP", OP[1], OP[0];
+}
+
+// ********************************
+// FLOATING POINT
+// ********************************
+
+.mc_def movsd = {
+	DP = DP;
+	"movsd WS OP COMMA OP", OP[0], OP_REG;
+}
+
+.mc_def addsd = {
+	DP = DP DP;
+	"addsd WS OP COMMA OP", OP[1], OP[0];
+}
+
+.mc_def divsd = {
+	DP = DP DP;
+	"divsd WS OP COMMA OP", OP[1], OP[0];
+}
+
+.mc_def cvtpi2pd = {
+	DP = GPR;
+	"cvtpi2pd WS OP COMMA OP", OP[0], OP_REG;
+}
+
+.mc_def cvtpd2pi = {
+	GPR = DP;
+	"cvtpd2pi WS OP COMMA OP", OP[0], OP_REG;
+}
+
+.mc_def comisd = {
+	DP DP;
+	"comisd WS OP COMMA OP", OP[0], OP[1];
 }
 
 // misc

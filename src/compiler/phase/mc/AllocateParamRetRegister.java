@@ -27,7 +27,7 @@ public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
                 if (paramTypes.get(i).fitsInGPR() == 1) {
                     // we need to set param_regi to the ith of GPR Param
                     MCRegister symbolParamReg = cf.findRegister("param_reg"+i, MCRegister.PARAM_REG);
-                    MCRegister realParamReg = cf.findOrCreateRegister(UVMCompiler.MCDriver.getGPRParamName(usedGPRParamReg), MCRegister.MACHINE_REG);
+                    MCRegister realParamReg = cf.findOrCreateRegister(UVMCompiler.MCDriver.getGPRParamName(usedGPRParamReg), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
                     usedGPRParamReg++;
                     
                     symbolParamReg.setREP(realParamReg);
@@ -52,7 +52,7 @@ public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
             if (returnType.fitsInGPR() == 1) {
                 // set ret_reg0 to the 0th of return register
                 MCRegister symbolRetReg = cf.findRegister("ret_reg0", MCRegister.RET_REG);
-                MCRegister realRetReg = cf.findOrCreateRegister(UVMCompiler.MCDriver.getGPRRetName(0), MCRegister.MACHINE_REG);
+                MCRegister realRetReg = cf.findOrCreateRegister(UVMCompiler.MCDriver.getGPRRetName(0), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
                 
                 symbolRetReg.setREP(realRetReg);
             } else {

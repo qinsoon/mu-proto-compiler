@@ -1,0 +1,20 @@
+// div-intensive
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+  BRANCH %while.body
+  
+  .label %while.body:
+  %n.04 = PHI <int<32>> {%entry: 0; %while.body: %inc;}
+  %sum.03 = PHI <double> {%entry: 0.000000e+00; %while.body: %add;}
+  %inc = ADD <int<32>> %n.04 1
+  %conv = SITOFP <int<32> double> %inc
+  %div = FDIV <double> 1.000000e+00 %conv
+  %add = FADD <double> %sum.03 %div
+  %cmp = FOLT <double> %add 2.000000e+01
+  BRANCH2 %cmp %while.body %while.end
+  
+  .label %while.end:
+  %res = FPTOSI <double int<32>> %add
+  RET <int<32>> %res
+}

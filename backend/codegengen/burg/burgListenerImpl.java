@@ -54,9 +54,50 @@ public class burgListenerImpl extends burgBaseListener {
             Burg.REG_GPR_RET.add(s.getText());
     }
     
+    private static int getDataType(burgParser.McOperandTypeContext typeCtx) {
+        if (typeCtx instanceof burgParser.McOperandDPContext)
+            return Burg.OpdRegister.DATA_DP;
+        else if (typeCtx instanceof burgParser.McOperandSPContext)
+            return Burg.OpdRegister.DATA_SP;
+        else if (typeCtx instanceof burgParser.McOperandGPRContext)
+            return Burg.OpdRegister.DATA_GPR;
+        else if (typeCtx instanceof burgParser.McOperandMemContext)
+            return Burg.OpdRegister.DATA_MEM;
+        return -1;
+    }
+    
     @Override public void exitMcDefine(@NotNull burgParser.McDefineContext ctx) {
         String op = ctx.mcOp().getText();
         
+        Burg.MCOp define = Burg.mcOps.get(op);
+        
+        if (define == null) {
+            define = new Burg.MCOp();
+            Burg.mcOps.put(op, define);
+        }
+        
+        // op
+        define.name = op;
+        
+        // data type
+        if (ctx.operandTypeDefine() != null) {
+            burgParser.OperandTypeDefineContext typedef = ctx.operandTypeDefine();
+            
+            // res type
+            if (typedef.resultOperandType() != null) {
+                define.resDataType = getDataType(typedef.resultOperandType().mcOperandType());
+            } else define.resDataType = Burg.OpdRegister.DATA_GPR;
+            
+            // operands type
+            int operands = typedef.mcOperandType().size();
+            define.operands = operands;
+            define.opDataType = new int[operands];
+            for (int i = 0; i < define.opDataType.length; i++) {
+                define.opDataType[i] = getDataType(typedef.mcOperandType(i));
+            }
+        }
+        
+        // code emit        
         StringBuilder emit = new StringBuilder();
         
         String format = ctx.formatString().getText();
@@ -73,7 +114,9 @@ public class burgListenerImpl extends burgBaseListener {
             }
         }
         
-        Burg.mcEmit.put(op, emit.toString());
+        define.emit = emit.toString();
+        
+        define.defined = true;
     }
     
     List<MCRule> mcEmissionRules = new ArrayList<MCRule>();

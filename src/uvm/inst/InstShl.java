@@ -4,7 +4,7 @@ import uvm.OpCode;
 import uvm.Type;
 import uvm.Value;
 
-public class InstShl extends InstTypedBinop {
+public class InstShl extends AbstractTypedBinop {
 
     public InstShl(Type type, Value op1, Value op2) {
         super(type, op1, op2);

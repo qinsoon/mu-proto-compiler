@@ -3,6 +3,7 @@ package uvm.type;
 import uvm.Type;
 
 public class Double extends Type {
+    public static final Double DOUBLE = new Double();
     
     protected Double() {
         super();

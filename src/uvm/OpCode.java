@@ -117,6 +117,7 @@ public abstract class OpCode {
     
     // non-op terms
     public static final int INT_IMM = 0xF0;
+    public static final int FP_IMM  = 0xF3;
     public static final int REG     = 0xF1;
     public static final int LABEL   = 0xF2;
     public static final int NOP     = 0xFF;

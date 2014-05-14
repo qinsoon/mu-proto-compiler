@@ -25,14 +25,16 @@ import uvm.MicroVM;
 import uvm.mc.AbstractMCDriver;
 
 public class UVMCompiler {
-    
-    public static final String file = "tests/micro-bm/int-prime-number/prime-number.uir";
-    
+
     public static AbstractMCDriver MCDriver = new X64Driver();
     public static final int MC_REG_SIZE = 64;
     
     public static void main(String[] args) {
-
+        if (args.length == 0)
+            UVMCompiler.error("Missing source file name in arguments");
+        
+        String file = args[0];
+        
         try {
             // create a CharStream that reads from standard input
             ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(file));

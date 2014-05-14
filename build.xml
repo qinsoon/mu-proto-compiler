@@ -108,6 +108,7 @@
 				<pathelement path="${antlr-jar}"/>
 				<pathelement path="bin"/>
 			</classpath>
+			<arg value="tests/micro-bm/int-prime-number/prime-number.uir"/>
 		</java>
 	</target>
 	

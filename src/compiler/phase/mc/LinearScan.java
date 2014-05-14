@@ -35,7 +35,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
             MCRegister reg = cf.findRegister(regName, MCRegister.MACHINE_REG); 
             if (reg == null) {
                 // its a free register
-                reg = cf.findOrCreateRegister(regName, MCRegister.MACHINE_REG);
+                reg = cf.findOrCreateRegister(regName, MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
                 free.add(reg);
             } else {
                 // this register is used by certain mc

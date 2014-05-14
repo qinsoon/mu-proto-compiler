@@ -51,7 +51,8 @@ public class Burg {
     public static final List<String>    REG_GPR_PARAM = new ArrayList<String>();
     public static final List<String>    REG_GPR_RET = new ArrayList<String>();
     
-    public static final Map<String, String> mcEmit = new HashMap<String, String>();
+//    public static final Map<String, MCDefine> mcDefines = new HashMap<String, MCDefine>();
+//    public static final Map<String, String> mcEmit = new HashMap<String, String>();
     
     public static void main(String[] args) {
         for (int i = 0; i < args.length; i++) {
@@ -122,6 +123,12 @@ public class Burg {
     public static void checkCorrectness() {
         if (MC_MOV.isEmpty())
             error("need to define mov instruction by using .mc_mov in .target file. ");
+        
+        for (MCOp op : mcOps.values()) {
+            if (!op.defined) {
+                error("undefined mc op: " + op.name);
+            }
+        }
     }
     
     public static String targetName = null;
@@ -342,6 +349,7 @@ public class Burg {
             if (rule.mcEmissionRules != null && !rule.mcEmissionRules.isEmpty()) {
                 for (int i = 0; i < rule.mcEmissionRules.size(); i++) {
                     MCRule mc = rule.mcEmissionRules.get(i);
+                    System.out.println("emit " + mc.op.name);
                     String opClass = targetName + mc.op.name;
                     String var = "mc" + rule.ruleno + "_" + i;
                     code.appendStmtln(String.format(
@@ -349,7 +357,10 @@ public class Burg {
                     
                     for (int j = 0; j < mc.operands.size(); j++) {
                         CCTOperand operand = mc.operands.get(j);
-                        String newOperandStr = getOperandCreation(operand);
+                        String newOperandStr;
+                        if (mc.op.opDataType != null)
+                            newOperandStr = getOperandCreation(operand, mc.op.opDataType[j]);
+                        else newOperandStr = getOperandCreation(operand, -1);   // -1 will be ignored
                         
                         code.appendStmtln(String.format(
                                 "%s.setOperand%d(%s)", var, j, newOperandStr));
@@ -358,7 +369,7 @@ public class Burg {
                     code.appendStmtln(String.format("%s.setNodeIndex(node.getId())", var));
                     
                     if (mc.reg != null)
-                        code.appendStmtln(String.format("%s.setReg((MCRegister)%s)", var, getOperandCreation(mc.reg)));
+                        code.appendStmtln(String.format("%s.setReg((MCRegister)%s)", var, getOperandCreation(mc.reg, mc.op.resDataType)));
                     
                     code.appendStmtln(String.format(
                             "ret.add(%s)", var));
@@ -386,7 +397,7 @@ public class Burg {
          * operandFromNode()
          */
         code.appendln(String.format(
-                "public static MCOperand operandFromNode(%s node) {", IR_NODE_TYPE));
+                "public static MCOperand operandFromNode(%s node, int dataType) {", IR_NODE_TYPE));
         code.increaseIndent();
         code.appendln("switch(node.getOpcode()) {");
         code.appendln("case OpCode.INT_IMM:");
@@ -395,7 +406,7 @@ public class Burg {
         code.decreaseIndent();
         code.appendln("case OpCode.REG:");
         code.increaseIndent();
-        code.appendln("return uvm.mc.MCRegister.findOrCreate(((uvm.Register)node).getName(), uvm.mc.MCRegister.OTHER_SYMBOL_REG);");
+        code.appendln("return uvm.mc.MCRegister.findOrCreate(((uvm.Register)node).getName(), uvm.mc.MCRegister.OTHER_SYMBOL_REG, dataType);");
         code.decreaseIndent();
         code.appendln("case OpCode.LABEL:");
         code.increaseIndent();
@@ -403,7 +414,7 @@ public class Burg {
         code.decreaseIndent();
         code.appendln("default:");
         code.increaseIndent();
-        code.appendln("return uvm.mc.MCRegister.findOrCreate(\"res_reg\"+node.getId(), uvm.mc.MCRegister.RES_REG);");
+        code.appendln("return uvm.mc.MCRegister.findOrCreate(\"res_reg\"+node.getId(), uvm.mc.MCRegister.RES_REG, dataType);");
         code.decreaseIndent();
         code.appendln("}");
         code.decreaseIndent();
@@ -419,7 +430,7 @@ public class Burg {
         writeTo(output + BURM_FILE, code.toString());
     }
     
-    public static String getOperandCreation(CCTOperand operand) {
+    public static String getOperandCreation(CCTOperand operand, int dataType) {
         String newOperandStr = null;
                 
         if (operand instanceof OpdIntImmediate) {
@@ -431,26 +442,29 @@ public class Burg {
             case OpdRegister.MACHINE_REG:
             case OpdRegister.OTHER_SYMBOL_REG:
                 newOperandStr = String.format(
-                        "MCRegister.findOrCreate(\"%s\", %d)",  
+                        "MCRegister.findOrCreate(\"%s\", %d, %d)",  
                         ((OpdRegister) operand).name, 
-                        ((OpdRegister) operand).type);
+                        ((OpdRegister) operand).type,
+                        dataType);
                 break;
             case OpdRegister.RES_REG:
                 newOperandStr = String.format(
-                        "MCRegister.findOrCreate(\"%s\"+%s, %d)", 
+                        "MCRegister.findOrCreate(\"%s\"+%s, %d, %d)", 
                         ((OpdRegister) operand).name,
                         "node.getId()",
-                        ((OpdRegister) operand).type);
+                        ((OpdRegister) operand).type,
+                        dataType);
                 break;
                 
             // temp registers are also indexed
             case OpdRegister.TMP_REG:
                 newOperandStr = String.format(
-                        "MCRegister.findOrCreate(\"%s%s_\"+%s, %d)", 
+                        "MCRegister.findOrCreate(\"%s%s_\"+%s, %d, %d)", 
                         ((OpdRegister) operand).name,
-                        getCompileTimeOperand(((OpdRegister) operand).index),
+                        getCompileTimeOperand(((OpdRegister) operand).index, dataType),
                         "node.getId()",
-                        MCRegister.OTHER_SYMBOL_REG
+                        MCRegister.OTHER_SYMBOL_REG,
+                        dataType
                         );
                 break;
             
@@ -458,29 +472,30 @@ public class Burg {
             case OpdRegister.PARAM_REG:
             case OpdRegister.RET_REG:
                 newOperandStr = String.format(
-                        "MCRegister.findOrCreate(\"%s\"+%s, %d)",
+                        "MCRegister.findOrCreate(\"%s\"+%s, %d, %d)",
                         ((OpdRegister) operand).name,
-                        getCompileTimeOperand(((OpdRegister) operand).index),
-                        ((OpdRegister) operand).type);
+                        getCompileTimeOperand(((OpdRegister) operand).index, dataType),
+                        ((OpdRegister) operand).type,
+                        dataType);
                 break;
             }
         } else {
-            newOperandStr = getCompileTimeOperand(operand);
+            newOperandStr = getCompileTimeOperand(operand, dataType);
         }
         
         return newOperandStr;
     }
     
-    public static String getCompileTimeOperand(CCTOperand operand) {
+    public static String getCompileTimeOperand(CCTOperand operand, int dataType) {
         if (operand instanceof OpdIntImmediate)
             return Long.toString(((OpdIntImmediate) operand).value);
         else if (operand instanceof OpdNode) {
             StringBuilder ret = new StringBuilder();
             ret.append("operandFromNode(node");
             for (CCTOperand i : ((OpdNode) operand).index) {
-                ret.append(".getChild(" + getCompileTimeOperand(i) + ")");
+                ret.append(".getChild(" + getCompileTimeOperand(i, dataType) + ")");
             }
-            ret.append(")");
+            ret.append(", " + dataType + ")");
             return ret.toString();
         } else if (operand instanceof OpdNodeFunc) {
             if (((OpdNodeFunc) operand).receiver == null)
@@ -542,7 +557,6 @@ public class Burg {
     }
     
     public static void genChainCost(CodeBuilder code, NonTerminal nt, String cost) {
-        System.out.println("genChainCost(" + nt.prettyPrint() + ", " + cost + ")");
         for (Rule rule : rules) {
             if (rule.rhs instanceof NonTerminal && rule.rhs.id == nt.id) {
                 String chainCost = cost + "+" + rule.cost;
@@ -563,6 +577,10 @@ public class Burg {
     static class MCOp {
         String name;
         int operands;
+        String emit;
+        int resDataType;
+        int[] opDataType;
+        boolean defined = false;
     }
     
     public static final HashMap<String, MCOp> mcOps = new HashMap<String, MCOp>();
@@ -612,14 +630,21 @@ public class Burg {
         public static final int OTHER_SYMBOL_REG  = 4;
         public static final int TMP_REG     = 5;
         
+        public static final int DATA_DP = 100;
+        public static final int DATA_SP = 101;
+        public static final int DATA_GPR = 102;
+        public static final int DATA_MEM = 103;
+        
         int type;
+        int dataType;
         String name;
         
         CCTOperand index;
         
-        private OpdRegister(String name, int type) {
+        private OpdRegister(String name, int type, int dataType) {
             this.name = name;
             this.type = type;
+            this.dataType = dataType;
         }
         
         public void setIndex(CCTOperand index) {
@@ -633,10 +658,14 @@ public class Burg {
         static final HashMap<String, OpdRegister> regs = new HashMap<String, OpdRegister>();
         
         public static OpdRegister findOrCreate(String name, int type) {
+            return findOrCreate(name, type, DATA_GPR);
+        }
+        
+        public static OpdRegister findOrCreate(String name, int type, int dataType) {
             if (regs.containsKey(name))
                 return regs.get(name);
             
-            OpdRegister ret = new OpdRegister(name, type);
+            OpdRegister ret = new OpdRegister(name, type, dataType);
             regs.put(name, ret);
             return ret;
         }
@@ -765,11 +794,11 @@ public class Burg {
         }
         
         // emit code?
-        if (mcEmit.containsKey(op.name)) {
+        if (mcOps.containsKey(op.name)) {
             code.appendln();
             code.appendln("@Override public String emit() {");
             code.increaseIndent();
-            code.appendStmtln("return String.format(" + mcEmit.get(op.name) + ")");
+            code.appendStmtln("return String.format(" + mcOps.get(op.name).emit + ")");
             code.decreaseIndent();
             code.appendln("}");
         }

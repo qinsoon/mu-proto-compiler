@@ -10,6 +10,7 @@ import uvm.mc.AbstractMCDriver;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCLabel;
+import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
 import compiler.UVMCompiler;
 import compiler.phase.AbstractCompilationPhase;
@@ -89,7 +90,16 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                         
                         if (opdForP != -1) {
                             System.out.println("inserted mov");
-                            MCRegister genMovReg = cf.findOrCreateRegister("gen_mov_reg" + genMovRegIndex, MCRegister.OTHER_SYMBOL_REG);
+                            MCOperand opd = mc.getOperand(opdForP);
+                            int opdDataType = -1;
+                            if (opd instanceof MCRegister) {
+                                opdDataType = ((MCRegister) opd).getDataType();
+                            } else if (opd instanceof uvm.mc.MCIntImmediate) {
+                                opdDataType = MCRegister.DATA_GPR;
+                            } else {
+                                UVMCompiler.error("genmov for unimplemented opd type: " + opd.getClass().toString());
+                            }
+                            MCRegister genMovReg = cf.findOrCreateRegister("gen_mov_reg" + genMovRegIndex, MCRegister.OTHER_SYMBOL_REG, opdDataType);
                             genMovRegIndex++;
                             
                             // i <- new RegMov(phi.opd(p))
