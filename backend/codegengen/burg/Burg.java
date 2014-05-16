@@ -53,6 +53,10 @@ public class Burg {
     public static final List<String>    REG_GPR_PARAM = new ArrayList<String>();
     public static final List<String>    REG_GPR_RET = new ArrayList<String>();
     
+    public static final List<String>    REG_FP = new ArrayList<String>();
+    public static final List<String>    REG_FP_PARAM = new ArrayList<String>();
+    public static final List<String>    REG_FP_RET = new ArrayList<String>();
+    
 //    public static final Map<String, MCDefine> mcDefines = new HashMap<String, MCDefine>();
 //    public static final Map<String, String> mcEmit = new HashMap<String, String>();
     
@@ -980,6 +984,48 @@ public class Burg {
         code.appendln("@Override public int getNumberOfGPRRet() {return GPR_RET.length;}");
         code.appendln("@Override public String getGPRRetName(int i) {return GPR_RET[i];}");
         
+        // FP reg
+        code.appendln();
+        code.append("public static final String[] FP_REG = {");
+        for (int i = 0; i < Burg.REG_FP.size(); i++) {
+            String s = Burg.REG_FP.get(i);
+            code.appendNoIndent(String.format("\"%s\"", s));
+            if (i != Burg.REG_FP.size() - 1)
+                code.appendNoIndent(",");
+        }
+        code.appendlnNoIndent("};");
+        
+        code.appendln("@Override public int getNumberOfFPR() {return FP_REG.length;}");
+        code.appendln("@Override public String getFPRName(int i) {return FP_REG[i];}");
+        
+        // FP param reg
+        code.appendln();
+        code.append("public static final String[] FP_REG_PARAM = {");
+        for (int i = 0; i < Burg.REG_FP_PARAM.size(); i++) {
+            String s = Burg.REG_FP_PARAM.get(i);
+            code.appendNoIndent(String.format("\"%s\"", s));
+            if (i != Burg.REG_FP_PARAM.size() - 1)
+                code.appendNoIndent(",");
+        }
+        code.appendlnNoIndent("};");
+        
+        code.appendln("@Override public int getNumberOfFPRParam() {return FP_REG_PARAM.length;}");
+        code.appendln("@Override public String getFPRParamName(int i) {return FP_REG_PARAM[i];}");
+        
+        // FP ret reg
+        code.appendln();
+        code.append("public static final String[] FP_REG_RET = {");
+        for (int i = 0; i < Burg.REG_FP_RET.size(); i++) {
+            String s = Burg.REG_FP_RET.get(i);
+            code.appendNoIndent(String.format("\"%s\"", s));
+            if (i != Burg.REG_FP_RET.size() - 1)
+                code.appendNoIndent(",");
+        }
+        code.appendlnNoIndent("};");
+        
+        code.appendln("@Override public int getNumberOfFPRRet() {return FP_REG_RET.length;}");
+        code.appendln("@Override public String getFPRRetName(int i) {return FP_REG_RET[i];}");
+        
         // MC op emit
         // TODO this should go to target description file instead of hard coded here
         code.appendln();
@@ -989,6 +1035,10 @@ public class Burg {
         code.appendln("return ((MCLabel) op).getName();");
         code.appendln("if (op instanceof MCIntImmediate)");
         code.appendln("return \"$\"+((MCIntImmediate) op).getValue();");
+        code.appendln("if (op instanceof MCDPImmediate)");
+        code.appendln("return \"$\"+((MCDPImmediate) op).getValue();");
+        code.appendln("if (op instanceof MCSPImmediate)");
+        code.appendln("return \"$\"+((MCSPImmediate) op).getValue();");
         code.appendln("if (op instanceof MCRegister)");
         code.appendln("return \"%\"+((MCRegister) op).REP().getName();");
         code.appendln("return \"error\";");

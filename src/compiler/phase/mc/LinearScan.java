@@ -27,7 +27,8 @@ public class LinearScan extends AbstractMCCompilationPhase {
         LinkedList<LiveInterval> inactive = new LinkedList<LiveInterval>();
         LinkedList<LiveInterval> handled = new LinkedList<LiveInterval>();
         
-        LinkedList<MCRegister> free = new LinkedList<MCRegister>();
+        LinkedList<MCRegister> freeGPRs = new LinkedList<MCRegister>();
+        LinkedList<MCRegister> freeFPRs = new LinkedList<MCRegister>();
         
         // init free registers
         for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfGPR(); i++) {
@@ -36,7 +37,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
             if (reg == null) {
                 // its a free register
                 reg = cf.findOrCreateRegister(regName, MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
-                free.add(reg);
+                freeGPRs.add(reg);
             } else {
                 // this register is used by certain mc
                 // TODO problem here: if a register is used by a certain mc, its in 'inactive' set.
@@ -47,8 +48,24 @@ public class LinearScan extends AbstractMCCompilationPhase {
             }
         }
         
-        System.out.print("free registers:");
-        for (MCRegister reg : free)
+        for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfFPR(); i++) {
+            String regName = UVMCompiler.MCDriver.getFPRName(i);
+            MCRegister reg = cf.findRegister(regName, MCRegister.MACHINE_REG);
+            if (reg == null) {
+                reg = cf.findOrCreateRegister(regName, MCRegister.MACHINE_REG, MCRegister.DATA_DP);
+                freeFPRs.add(reg);
+            } else {
+                LiveInterval interval = cf.intervals.get(reg);
+                inactive.add(interval);
+            }
+        }
+        
+        System.out.print("free GPRs:");
+        for (MCRegister reg : freeGPRs)
+            System.out.print(reg.prettyPrint() + " ");
+        System.out.println();
+        System.out.print("free FPRs:");
+        for (MCRegister reg : freeFPRs)
             System.out.print(reg.prettyPrint() + " ");
         System.out.println();
         
@@ -65,7 +82,10 @@ public class LinearScan extends AbstractMCCompilationPhase {
                     active.remove(li);
                     handled.add(li);
                     
-                    free.add(li.getReg());
+                    MCRegister becomeFree = li.getReg();
+                    if (becomeFree.getDataType() == MCRegister.DATA_GPR)
+                        freeGPRs.add(becomeFree);
+                    else freeFPRs.add(becomeFree);
                     
                     continue;
                 } else if (li.overlap(cur.getBegin())) {
@@ -73,7 +93,10 @@ public class LinearScan extends AbstractMCCompilationPhase {
                     active.remove(li);
                     inactive.add(li);
                     
-                    free.add(li.getReg());
+                    MCRegister becomeFree = li.getReg();
+                    if (becomeFree.getDataType() == MCRegister.DATA_GPR)
+                        freeGPRs.add(becomeFree);
+                    else freeFPRs.add(becomeFree);
                     
                     continue;
                 } else i++;                
@@ -93,7 +116,10 @@ public class LinearScan extends AbstractMCCompilationPhase {
                     inactive.remove(li);
                     active.add(li);
                     
-                    free.remove(li.getReg());
+                    MCRegister remove = li.getReg();
+                    if (remove.getDataType() == MCRegister.DATA_GPR)
+                        freeGPRs.remove(remove);
+                    else freeFPRs.remove(remove);
                     
                     continue;
                 } else i++;
@@ -108,7 +134,9 @@ public class LinearScan extends AbstractMCCompilationPhase {
             
             // f <- free
             LinkedList<MCRegister> f = new LinkedList<MCRegister>();
-            f.addAll(free);
+            if (cur.getReg().REP().getDataType() == MCRegister.DATA_GPR)
+                f.addAll(freeGPRs);
+            else f.addAll(freeFPRs);
             
             // for each interval i in inactive that overlaps cur
             // do f <- f - {i.reg}
@@ -140,7 +168,9 @@ public class LinearScan extends AbstractMCCompilationPhase {
                 cur.getReg().REP().setREP(freeReg);
                 
                 // free <- free - {cur.reg}
-                free.remove(freeReg);
+                if (freeReg.getDataType() == MCRegister.DATA_GPR)
+                    freeGPRs.remove(freeReg);
+                else freeFPRs.remove(freeReg);
                 
                 // move cur to active
                 active.add(cur);

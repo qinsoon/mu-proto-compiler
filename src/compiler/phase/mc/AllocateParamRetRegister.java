@@ -20,8 +20,13 @@ public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
         // set param_regi to the ith of param registers if suitable
         
         int usedGPRParamReg = 0;
+        int usedFPRParamReg = 0;
+        
         List<Type> paramTypes = cf.getOriginFunction().getSig().getParamTypes();
-        for (int i = 0; i < paramTypes.size() && usedGPRParamReg < UVMCompiler.MCDriver.getNumberOfGPRParam(); i++) {
+        for (int i = 0; 
+                i < paramTypes.size() && 
+                (usedGPRParamReg < UVMCompiler.MCDriver.getNumberOfGPRParam() || usedFPRParamReg < UVMCompiler.MCDriver.getNumberOfFPRParam());
+                i++) {
             Type paramType = paramTypes.get(i);
             if (paramType.fitsInGPR() > 0) {
                 if (paramTypes.get(i).fitsInGPR() == 1) {
@@ -36,7 +41,16 @@ public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
                     UVMCompiler.error("a param fits in several GPRs, unimplemented");
                 }
             } else if (paramType.fitsInFPR() > 0) {
-                UVMCompiler.error("a param fits in FPRs, unimplemented");
+                if (paramTypes.get(i).fitsInFPR() == 2) {
+                    // double precision
+                    MCRegister symbolParamReg = cf.findRegister("param_reg"+i, MCRegister.PARAM_REG);
+                    MCRegister realParamReg = cf.findOrCreateRegister(UVMCompiler.MCDriver.getFPRParamName(usedFPRParamReg), MCRegister.MACHINE_REG, MCRegister.DATA_DP);
+                    usedFPRParamReg++;
+                    
+                    symbolParamReg.setREP(realParamReg);
+                } else {
+                    UVMCompiler.error("a param fits in single-precision FPRs, unimplemented");                    
+                }
             } else if (paramType.fitsInGPR() == 0 && paramType.fitsInFPR() == 0) {
                 UVMCompiler.error("a param doesnt fit in registers, and passed on stack. unimplemented");
             } else {
@@ -59,7 +73,14 @@ public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
                 UVMCompiler.error("a return value fits in several GPRs, unimplemented");
             }
         } else if (returnType.fitsInFPR() > 0) {
-            UVMCompiler.error("a return value fits in FPRs, unimplemented");
+            if (returnType.fitsInFPR() == 2) {
+                MCRegister symbolRetReg = cf.findRegister("ret_reg0", MCRegister.RET_REG);
+                MCRegister realRetReg = cf.findOrCreateRegister(UVMCompiler.MCDriver.getFPRRetName(0), MCRegister.MACHINE_REG, MCRegister.DATA_DP);
+                
+                symbolRetReg.setREP(realRetReg);
+            } else {
+                UVMCompiler.error("a return value fits in single-precision FPRs, unimplemented");
+            }
         } else if (returnType.fitsInGPR() == 0 && returnType.fitsInFPR() == 0) {
             if (returnType instanceof uvm.type.Void) {
                 // we dont need to do anything

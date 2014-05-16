@@ -129,6 +129,10 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
     }
     
     private static boolean compatible(CompiledFunction cf, AbstractMachineCode mc, MCRegister x, MCRegister y) {
+        // both GPR or FPU reg
+        if (x.getDataType() != y.getDataType()) 
+            return false;
+        
         // both do not have to be in specific registers
         if (!isSpecificRegister(x) && !isSpecificRegister(y))
             return true;

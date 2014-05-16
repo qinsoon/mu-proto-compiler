@@ -69,6 +69,21 @@ public class burgListenerImpl extends burgBaseListener {
             Burg.REG_GPR_RET.add(s.getText());
     }
     
+    @Override public void exitFpRegDecl(@NotNull burgParser.FpRegDeclContext ctx) {
+        for (burgParser.IdStringContext s : ctx.idString())
+            Burg.REG_FP.add(s.getText());
+    }
+    
+    @Override public void exitFpRegParamDecl(@NotNull burgParser.FpRegParamDeclContext ctx) {
+        for (burgParser.IdStringContext s : ctx.idString())
+            Burg.REG_FP_PARAM.add(s.getText());
+    }
+    
+    @Override public void exitFpRegRetDecl(@NotNull burgParser.FpRegRetDeclContext ctx) {
+        for (burgParser.IdStringContext s : ctx.idString())
+            Burg.REG_FP_RET.add(s.getText());
+    }
+    
     private static int getDataType(burgParser.McOperandTypeContext typeCtx) {
         if (typeCtx instanceof burgParser.McOperandDPContext)
             return Burg.OpdRegister.DATA_DP;

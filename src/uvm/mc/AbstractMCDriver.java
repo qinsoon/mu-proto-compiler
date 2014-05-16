@@ -19,4 +19,11 @@ public abstract class AbstractMCDriver {
     public abstract String getGPRParamName(int i);
     public abstract int getNumberOfGPRRet();
     public abstract String getGPRRetName(int i);
+    
+    public abstract int getNumberOfFPR();
+    public abstract String getFPRName(int i);
+    public abstract int getNumberOfFPRParam();
+    public abstract String getFPRParamName(int i);
+    public abstract int getNumberOfFPRRet();
+    public abstract String getFPRRetName(int i);
 }

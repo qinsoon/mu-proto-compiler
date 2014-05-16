@@ -27,6 +27,9 @@ declare
     |   gprDecl
     |   gprParamDecl
     |   gprRetDecl
+    |   fpRegDecl
+    |   fpRegParamDecl
+    |   fpRegRetDecl
     ;
 
 mcDefine
@@ -73,6 +76,18 @@ gprParamDecl
 
 gprRetDecl
     :   '.gpr_ret' idString+
+    ;
+
+fpRegDecl
+    :   '.fp_reg' idString+
+    ;
+
+fpRegParamDecl
+    :   '.fp_reg_param' idString+
+    ;
+
+fpRegRetDecl
+    :   '.fp_reg_ret' idString+
     ;
 
 mcNopDecl
