@@ -17,6 +17,9 @@ declare
     |   mcUncondJumpDecl
     |   mcRetDecl
     |   mcMovDecl
+    |   mcDPMovDecl
+    |   mcSPMovDecl
+    |   mcPhiDecl
     |   mcNopDecl
 // mc define
     |   mcDefine
@@ -48,6 +51,7 @@ mcOperandType
     |   'SP'            # mcOperandSP
     |   'GPR'           # mcOperandGPR
     |   'MEM'           # mcOperandMem
+    |   'OTH'           # mcOperandOther
     ;
 
 formatString
@@ -75,8 +79,20 @@ mcNopDecl
     :   '.mc_nop' idString
     ;
 
+mcPhiDecl
+    :   '.mc_phi' idString+
+    ;
+
 mcMovDecl
     :   '.mc_mov' idString+
+    ;
+
+mcDPMovDecl
+    :   '.mc_dpmov' idString+
+    ;
+
+mcSPMovDecl
+    :   '.mc_spmov' idString+
     ;
 
 mcRetDecl

@@ -96,24 +96,38 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                                 opdDataType = ((MCRegister) opd).getDataType();
                             } else if (opd instanceof uvm.mc.MCIntImmediate) {
                                 opdDataType = MCRegister.DATA_GPR;
+                            } else if (opd instanceof uvm.mc.MCDPImmediate) {
+                                opdDataType = MCRegister.DATA_DP;
+                            } else if (opd instanceof uvm.mc.MCSPImmediate) {
+                                opdDataType = MCRegister.DATA_SP;
                             } else {
                                 UVMCompiler.error("genmov for unimplemented opd type: " + opd.getClass().toString());
                             }
+                            
                             MCRegister genMovReg = cf.findOrCreateRegister("gen_mov_reg" + genMovRegIndex, MCRegister.OTHER_SYMBOL_REG, opdDataType);
                             genMovRegIndex++;
                             
                             // i <- new RegMov(phi.opd(p))
-                            AbstractMachineCode i = UVMCompiler.MCDriver.genMove(genMovReg, mc.getOperand(opdForP));
+                            AbstractMachineCode mov = null;
+                            
+                            if (opdDataType == MCRegister.DATA_GPR)
+                                mov = UVMCompiler.MCDriver.genMove(genMovReg, mc.getOperand(opdForP));
+                            else if (opdDataType == MCRegister.DATA_DP)
+                                mov = UVMCompiler.MCDriver.genDPMove(genMovReg, mc.getOperand(opdForP));
+                            else if (opdDataType == MCRegister.DATA_SP)
+                                mov = UVMCompiler.MCDriver.genSPMove(genMovReg, mc.getOperand(opdForP));
+                            else UVMCompiler.error("unknown data type, cant pick a mov instruction: " + opdDataType);
+                            
                             if (newBlock)
-                                i.setLabel(n.getLabel());
+                                mov.setLabel(n.getLabel());
                             // phi.opd(p) <- i
                             mc.setOperand(opdForP, genMovReg);
                             mc.setOperand(opdForP + 1, n.getLabel());
                             // append i to n
-                            n.addMC(i);
+                            n.addMC(mov);
                             // this is arbitrary order
-                            cf.addMachineCode(i);
-                            // TODO join i with phi
+                            cf.addMachineCode(mov);
+                            // join i with phi
                             // i is genMovReg
                             // phi is mc.getReg()
                             genMovReg.setREP(mc.getReg());

@@ -28,10 +28,10 @@ public class Function {
     
     public HashMap<String, Register> registers = new HashMap<String, Register>();
     
-    public Register findOrCreateRegister(String name) {
+    public Register findOrCreateRegister(String name, uvm.Type type) {
         Register ret = registers.get(name);
         if (ret == null) {
-            ret = new Register(name);
+            ret = new Register(name, type);
             registers.put(name, ret);
         }
         

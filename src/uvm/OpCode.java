@@ -116,11 +116,19 @@ public abstract class OpCode {
     public static final int PARAM   = 0xA4;
     
     // non-op terms
-    public static final int INT_IMM = 0xF0;
-    public static final int FP_IMM  = 0xF3;
-    public static final int REG     = 0xF1;
+    public static final int INT_IMM   = 0xF0;
+//    public static final int REG     = 0xF1;
     public static final int LABEL   = 0xF2;
     public static final int NOP     = 0xFF;
+    public static final int REG_I1  = 0xF3;
+    public static final int REG_I8  = 0xF4;
+    public static final int REG_I16 = 0xF5;
+    public static final int REG_I32 = 0xF6;
+    public static final int REG_I64 = 0xF7;
+    public static final int REG_SP  = 0xF8;
+    public static final int REG_DP  = 0xF9;
+    public static final int FP_SP_IMM = 0xFA;
+    public static final int FP_DP_IMM = 0xFB;
     
     public static final HashMap<Integer, String> names = new HashMap<Integer, String>();
     

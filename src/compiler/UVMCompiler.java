@@ -56,7 +56,7 @@ public class UVMCompiler {
             walker.walk(new uIRListenerImpl(), tree);
             System.out.println(); // print a \n after translation
             
-            // see the tree
+            // see the IR
             for (Function f : MicroVM.v.funcs.values()) {
                 System.out.println("function " + f.getName() + " of " + f.getSig());
                 for (BasicBlock bb : f.getBBs()) {

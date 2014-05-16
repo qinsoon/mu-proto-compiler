@@ -30,9 +30,24 @@ public class burgListenerImpl extends burgBaseListener {
             Burg.MC_RET.add(s.getText());
     }
     
+    @Override public void exitMcPhiDecl(@NotNull burgParser.McPhiDeclContext ctx) {
+        for (burgParser.IdStringContext s : ctx.idString())
+            Burg.MC_PHI.add(s.getText());
+    }
+    
     @Override public void exitMcMovDecl(@NotNull burgParser.McMovDeclContext ctx) {
         for (burgParser.IdStringContext s : ctx.idString())
             Burg.MC_MOV.add(s.getText());
+    }
+    
+    @Override public void exitMcDPMovDecl(@NotNull burgParser.McDPMovDeclContext ctx) {
+        for (burgParser.IdStringContext s : ctx.idString())
+            Burg.MC_DPMOV.add(s.getText());
+    }
+    
+    @Override public void exitMcSPMovDecl(@NotNull burgParser.McSPMovDeclContext ctx) {
+        for (burgParser.IdStringContext s : ctx.idString())
+            Burg.MC_SPMOV.add(s.getText());
     }
     
     @Override public void exitMcNopDecl(@NotNull burgParser.McNopDeclContext ctx) {

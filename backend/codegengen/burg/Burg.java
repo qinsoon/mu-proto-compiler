@@ -42,10 +42,12 @@ public class Burg {
     
     public static final List<String>    MC_COND_JUMP = new ArrayList<String>();
     public static final List<String>    MC_UNCOND_JUMP = new ArrayList<String>();
-    public static final String          MC_PHI = "mcphi";
+    public static final List<String>    MC_PHI = new ArrayList<String>();
     public static final List<String>    MC_RET = new ArrayList<String>();
     public static final List<String>    MC_MOV = new ArrayList<String>();
     public static final List<String>    MC_NOP = new ArrayList<String>();
+    public static final List<String>    MC_DPMOV = new ArrayList<String>();
+    public static final List<String>    MC_SPMOV = new ArrayList<String>();
     
     public static final List<String>    REG_GPR = new ArrayList<String>();
     public static final List<String>    REG_GPR_PARAM = new ArrayList<String>();
@@ -123,6 +125,9 @@ public class Burg {
     public static void checkCorrectness() {
         if (MC_MOV.isEmpty())
             error("need to define mov instruction by using .mc_mov in .target file. ");
+        
+        if (MC_DPMOV.isEmpty() || MC_SPMOV.isEmpty())
+            error("need to define double/single-precition fp mov instruction by using .mc_dpmov/.mc_spmov in .target file");
         
         for (MCOp op : mcOps.values()) {
             if (!op.defined) {
@@ -394,6 +399,7 @@ public class Burg {
         code.appendln("}");
         
         /*
+         * TODO shouldnt hard-code it here
          * operandFromNode()
          */
         code.appendln(String.format(
@@ -404,7 +410,19 @@ public class Burg {
         code.increaseIndent();
         code.appendln("return new uvm.mc.MCIntImmediate(((uvm.IntImmediate)node).getValue());");
         code.decreaseIndent();
-        code.appendln("case OpCode.REG:");
+        code.appendln("case OpCode.FP_SP_IMM:");
+        code.increaseIndent();
+        code.appendln("return new uvm.mc.MCSPImmediate(((uvm.FPImmediate)node).getFloat());");
+        code.decreaseIndent();
+        code.appendln("case OpCode.FP_DP_IMM:");
+        code.increaseIndent();
+        code.appendln("return new uvm.mc.MCDPImmediate(((uvm.FPImmediate)node).getDouble());");
+        code.decreaseIndent();
+        code.appendln("case OpCode.REG_I1:");
+        code.appendln("case OpCode.REG_I8:");
+        code.appendln("case OpCode.REG_I16:");
+        code.appendln("case OpCode.REG_I32:");
+        code.appendln("case OpCode.REG_I64:");
         code.increaseIndent();
         code.appendln("return uvm.mc.MCRegister.findOrCreate(((uvm.Register)node).getName(), uvm.mc.MCRegister.OTHER_SYMBOL_REG, dataType);");
         code.decreaseIndent();
@@ -765,7 +783,7 @@ public class Burg {
         }
         
         // is mc phi?
-        if (op.name.equals(MC_PHI)) {
+        if (MC_PHI.contains(op.name)) {
             code.appendln();
             code.appendln("@Override public boolean isPhi() {return true; }");
         }
@@ -821,15 +839,35 @@ public class Burg {
         code.increaseIndent();
         
         // mov
-        code.appendln("public AbstractMachineCode genMove(MCRegister dest, MCOperand src) {");
-        code.increaseIndent();
-        
+        code.appendln("@Override public AbstractMachineCode genMove(MCRegister dest, MCOperand src) {");
+        code.increaseIndent();        
         String mov = targetName + MC_MOV.get(0);
         code.appendStmtln(String.format("%s ret = new %s()", mov, mov));
         code.appendStmtln("ret.setOperand0(src)");
         code.appendStmtln("ret.setReg(dest)");
-        code.appendStmtln("return ret");
+        code.appendStmtln("return ret");        
+        code.decreaseIndent();
+        code.appendln("}");
         
+        // dp mov
+        code.appendln("@Override public AbstractMachineCode genDPMove(MCRegister dest, MCOperand src) {");
+        code.increaseIndent();
+        String dpmov = targetName + MC_DPMOV.get(0);
+        code.appendStmtln(String.format("%s ret = new %s()", dpmov, dpmov));
+        code.appendStmtln("ret.setOperand0(src)");
+        code.appendStmtln("ret.setReg(dest)");
+        code.appendStmtln("return ret");
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        // sp mov
+        code.appendln("@Override public AbstractMachineCode genSPMove(MCRegister dest, MCOperand src) {");
+        code.increaseIndent();
+        String spmov = targetName + MC_SPMOV.get(0);
+        code.appendStmtln(String.format("%s ret = new %s()", spmov, spmov));
+        code.appendStmtln("ret.setOperand0(src)");
+        code.appendStmtln("ret.setReg(dest)");
+        code.appendStmtln("return ret");
         code.decreaseIndent();
         code.appendln("}");
         
@@ -1136,6 +1174,7 @@ public class Burg {
         
         String prettyPrint() {
             StringBuilder builder = new StringBuilder();
+            builder.append(ruleno + " - ");
             builder.append(lhs.prettyPrint() + " := " + rhs.prettyPrint() + 
                     " (cost:" + cost + ", ruleno:" + ruleno + ")");
             

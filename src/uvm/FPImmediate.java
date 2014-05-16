@@ -7,7 +7,9 @@ public class FPImmediate extends ImmediateValue {
     public FPImmediate(Type type, double value) {
         this.value = value;
         this.type = type;
-        this.opcode = OpCode.FP_IMM;
+        if (type.fitsInFPR() == 1)
+            this.opcode = OpCode.FP_SP_IMM;
+        else this.opcode = OpCode.FP_DP_IMM;
     }
     
     @Override
@@ -17,5 +19,9 @@ public class FPImmediate extends ImmediateValue {
 
     public double getDouble() {
         return value;
+    }
+    
+    public float getFloat() {
+        return (float) value;
     }
 }

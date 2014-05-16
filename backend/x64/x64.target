@@ -4,10 +4,13 @@
 // as prefix of generated MC nodes
 .target X64
 
-.mc_cond_jump {je jne} {jl jge} {jle jg}
+.mc_cond_jump {je jne} {jl jge} {jle jg} {jb jae}
 .mc_uncond_jump jmp
 .mc_ret ret
-.mc_mov mov cmovlt cmovgt cmoveq movsd
+.mc_mov mov cmovlt cmovgt cmoveq movsd movss
+.mc_dpmov movsd
+.mc_spmov movss
+.mc_phi imcphi dpmcphi spmcphi
 .mc_nop nop
 
 // registers
@@ -26,22 +29,49 @@ stmt : NOP
 > nop
 0
 
-stmt : PSEUDO_ASSIGN(reg op)
+// ********************************
+// PSEUDO OP 
+// ********************************
+
+// TODO: we need to know if PARAM is fp or int
+op : PARAM
+// mov
+> mov %param_reg[P(InstParam).getIndex()] -> %res_reg
+1
+
+ireg : PHI(ivalue label ivalue label)
+> imcphi P[0] P[1] P[2] P[3] -> %res_reg
+1
+
+dpreg : PHI(dpvalue label dpvalue label)
+> dpmcphi P[0] P[1] P[2] P[3] -> %res_reg
+1
+
+spreg : PHI(spvalue label spvalue label)
+> spmcphi P[0] P[1] P[2] P[3] -> %res_reg
+1
+
+stmt : PSEUDO_ASSIGN(ireg op)
 // mov
 > mov P[1] -> P[0]
+1
+
+stmt : PSEUDO_ASSIGN(REG_DP op)
+> movsd P[1] -> P[0]
 1
 
 stmt : op
 0
 
-reg : op
-0
+// ********************************
+// BRANCH CODE
+// ********************************
 
 op : BRANCH(label)
 > jmp P[0]
 1
 
-op : BRANCH2(value label label)
+op : BRANCH2(ivalue label label)
 // cmp, jcc
 > test P[0] $1
 > je  P[1]
@@ -81,24 +111,30 @@ op : BRANCH2(cmpFoltRes label label)
 > jmp P[2]
 1
 
+op : RET2(ivalue)
+// mov, ret
+> mov P[0] -> %ret_reg[0]
+> ret
+2
+
 // ********************************
 // SLT 
 // ********************************
 
 // 2nd op should always be reg
-cmpSltRes : SLT(reg imm)
+cmpSltRes : SLT(ireg iimm)
 > cmp P[1] P[0]
 1
 
-cmpSgeRes : SLT(imm reg)
+cmpSgeRes : SLT(iimm ireg)
 > cmp P[0] P[1]
 1
 
-cmpSltRes : SLT(reg reg)
+cmpSltRes : SLT(ireg ireg)
 > cmp P[1] P[0]
 1
 
-cmpSltRes : SLT(imm imm)
+cmpSltRes : SLT(iimm iimm)
 > mov P[0] -> %tmp_reg[0]
 > cmp P[1] %tmp_reg[0]
 2
@@ -107,19 +143,19 @@ cmpSltRes : SLT(imm imm)
 // FOLT
 // ********************************
 
-cmpFoltRes : FOLT(reg imm)
+cmpFoltRes : FOLT(REG_DP FP_DP_IMM)
 > comisd P[1] P[0]
 1
 
-cmpFogeRes : FOLT(imm reg)
+cmpFogeRes : FOLT(FP_DP_IMM REG_DP)
 > comisd P[0] P[1]
 1
 
-cmpFoltRes : FOLT(reg reg)
+cmpFoltRes : FOLT(REG_DP REG_DP)
 > comisd P[1] P[0]
 1
 
-cmpFoltRes : FOLT(imm imm)
+cmpFoltRes : FOLT(FP_DP_IMM FP_DP_IMM)
 > movsd P[0] -> %tmp_reg[0]
 > comisd P[1] %tmp_reg[0]
 2
@@ -128,19 +164,19 @@ cmpFoltRes : FOLT(imm imm)
 // SGT
 // ********************************
 
-cmpSgtRes : SGT(reg imm)
+cmpSgtRes : SGT(ireg iimm)
 > cmp P[1] P[0]
 1
 
-cmpSleRes : SGT(imm reg)
+cmpSleRes : SGT(iimm ireg)
 > cmp P[0] P[1]
 1
 
-cmpSgtRes : SGT(reg reg)
+cmpSgtRes : SGT(ireg ireg)
 > cmp P[1] P[0]
 1
 
-cmpSgtRes : SGT(imm imm)
+cmpSgtRes : SGT(iimm iimm)
 > mov P[0] -> %tmp_reg[0]
 > cmp P[1] %tmp_reg[0]
 2
@@ -149,47 +185,28 @@ cmpSgtRes : SGT(imm imm)
 // EQ 
 // ********************************
 
-cmpEqRes: EQ(reg reg)
+cmpEqRes: EQ(ireg ireg)
 > cmp P[0] P[1]
 1
 
-cmpEqRes: EQ(imm reg)
+cmpEqRes: EQ(iimm ireg)
 > cmp P[0] P[1]
 1
 
-cmpEqRes: EQ(reg imm)
+cmpEqRes: EQ(ireg iimm)
 > cmp P[1] P[0]
 1
 
-cmpEqRes: EQ(imm imm)
+cmpEqRes: EQ(iimm iimm)
 > mov P[1] -> %tmp_reg[0]
 > cmp P[0] %tmp_reg[0]
 2
-
-op : RET2(value)
-// mov, ret
-> mov P[0] -> %ret_reg[0]
-> ret
-2
-
-// ********************************
-// PSEUDO OP 
-// ********************************
-
-op : PARAM
-// mov
-> mov %param_reg[P(InstParam).getIndex()] -> %res_reg
-1
-
-op : PHI(value label value label)
-> mcphi P[0] P[1] P[2] P[3] -> %res_reg
-1
 
 // ********************************
 // BIN OP 
 // ********************************
 
-op : SREM(value value)
+ireg : SREM(ivalue ivalue)
 // mov, div, mov
 > xor %rdx %rdx -> %rdx
 > mov P[0] -> %rax
@@ -197,7 +214,7 @@ op : SREM(value value)
 > mov %rdx -> %res_reg
 4
 
-op : ADD(value value)
+ireg : ADD(ivalue ivalue)
 // add
 > mov P[0] -> %res_reg
 > add %res_reg P[1] -> %res_reg
@@ -207,21 +224,21 @@ op : ADD(value value)
 // FLOATING POINT
 // ********************************
 
-op : FADD(value value)
+dpreg : FADD(dpvalue dpvalue)
 > movsd P[0] -> %res_reg
 > addsd %res_reg P[1] -> %res_reg
 2
 
-op : FDIV(value value)
+dpreg : FDIV(dpvalue dpvalue)
 > movsd P[0] -> %res_reg
 > divsd %res_reg P[1] -> %res_reg
 2
 
-op : SITOFP(value)
+dpreg : SITOFP(ivalue)
 > cvtpi2pd P[0] -> %res_reg
 1
 
-op : FPTOSI(value)
+ireg : FPTOSI(dpvalue)
 > cvtpd2pi P[0] -> %res_reg
 1
 
@@ -232,19 +249,79 @@ op : FPTOSI(value)
 value : reg
 0
 
-reg : op
-0
-
-imm : INT_IMM
-0
-
-imm : FP_IMM
-0
-
 value : imm
 0
 
-reg : REG
+value : ivalue
+0
+
+value : spvalue
+0
+
+value :dpvalue
+0
+
+ivalue : ireg
+0
+
+ivalue : INT_IMM
+0
+
+spvalue : spreg
+0
+
+spvalue : FP_SP_IMM
+0
+
+dpvalue : dpreg
+0
+
+dpvalue : FP_DP_IMM
+0
+
+op : reg
+0
+
+reg : ireg
+0
+
+reg: spreg
+0
+
+reg : dpreg
+0
+
+imm : iimm
+0
+
+imm : FP_SP_IMM
+0
+
+imm : FP_DP_IMM
+0
+
+iimm : INT_IMM
+0
+
+ireg : REG_I1
+0
+
+ireg : REG_I8
+0
+
+ireg : REG_I16
+0
+
+ireg : REG_I32
+0
+
+ireg : REG_I64
+0
+
+spreg : REG_SP
+0
+
+dpreg : REG_DP
 0
 
 label : LABEL
@@ -330,6 +407,10 @@ label : LABEL
 	"jb WS OP", OP[0];
 }
 
+.mc_def jae = {
+	"jae WS OP", OP[0];
+}
+
 .mc_def ret = {
 	"ret";
 }
@@ -360,6 +441,11 @@ label : LABEL
 .mc_def movsd = {
 	DP = DP;
 	"movsd WS OP COMMA OP", OP[0], OP_REG;
+}
+
+.mc_def movss = {
+	SP = SP;
+	"movss WS OP COMMA OP", OP[0], OP_REG;
 }
 
 .mc_def addsd = {
@@ -393,6 +479,17 @@ label : LABEL
 	"nop";
 }
 
-.mc_def mcphi = {
-	"";
+.mc_def imcphi = {
+	GPR = GPR OTH GPR OTH;
+	"shouldnt emit";
+}
+
+.mc_def dpmcphi = {
+	DP = DP OTH DP OTH;
+	"shouldnt emit";
+}
+
+.mc_def spmcphi = {
+	SP = SP OTH SP OTH;
+	"shouldnt emit";
 }

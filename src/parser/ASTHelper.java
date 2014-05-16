@@ -122,9 +122,9 @@ public abstract class ASTHelper {
     }
     
     public static Instruction getInstruction(Function f, InstContext ctx) throws ASTParsingException {
-        Register def = null;
-        if (ctx.IDENTIFIER() != null)
-            def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false));
+//        Register def = null;
+//        if (ctx.IDENTIFIER() != null)
+//            def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false));
         
         InstBodyContext inst = ctx.instBody();
         
@@ -132,7 +132,10 @@ public abstract class ASTHelper {
          * pseudo inst
          */
         if (inst instanceof parser.uIRParser.InstParamContext) {
-            Instruction node = new InstParam((int)getIntImmediateValue(((parser.uIRParser.InstParamContext) inst).intImmediate()));
+            int paramIndex = (int)getIntImmediateValue(((parser.uIRParser.InstParamContext) inst).intImmediate());
+            Instruction node = new InstParam(paramIndex);
+            Type t = f.getSig().getParamTypes().get(paramIndex);
+            Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), t);
             node.setDefReg(def);
             return node;
         } 
@@ -173,6 +176,7 @@ public abstract class ASTHelper {
             
             Instruction node = new InstPhi(t, values);
             
+            Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), t);
             node.setDefReg(def);
             return node;
         } 
@@ -209,6 +213,7 @@ public abstract class ASTHelper {
                 }
             }
             
+            Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), t);
             node.setDefReg(def);
             return node;
         }
@@ -243,6 +248,7 @@ public abstract class ASTHelper {
                 }
             }
             
+            Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), t);
             node.setDefReg(def);
             return node;
         }
@@ -266,6 +272,7 @@ public abstract class ASTHelper {
                 UVMCompiler.error("incomplete implementation of conversion inst: " + convOp.getClass().getName());
             }
             
+            Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), toType);
             node.setDefReg(def);
             return node;
         }
@@ -291,7 +298,7 @@ public abstract class ASTHelper {
             }
         } else {
             String id = getIdentifierName(ctx.IDENTIFIER(), false);
-            ret = f.findOrCreateRegister(id);
+            ret = f.findOrCreateRegister(id, type);
         }
         
         return ret;

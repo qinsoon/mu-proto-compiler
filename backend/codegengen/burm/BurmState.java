@@ -36,6 +36,8 @@ public class BurmState {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
         for (int i = 0; i < cost.length; i++) {
+            if (rule[i] == -1 && cost[i] == INFINITE)
+                continue;
             builder.append("rule" + rule[i] + "=" + cost[i]);
             if (i != cost.length - 1)
                 builder.append(",");
