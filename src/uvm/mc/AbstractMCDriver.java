@@ -26,4 +26,6 @@ public abstract class AbstractMCDriver {
     public abstract String getFPRParamName(int i);
     public abstract int getNumberOfFPRRet();
     public abstract String getFPRRetName(int i);
+    
+    public abstract String emitOp(MCOperand op);
 }

@@ -1,6 +1,6 @@
 package uvm.mc;
 
-public class MCDPImmediate extends MCOperand {
+public class MCDPImmediate extends AbstractMCImmediate {
     double value;
     
     public MCDPImmediate(double value) {

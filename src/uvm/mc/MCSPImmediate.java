@@ -1,7 +1,8 @@
 package uvm.mc;
 
-public class MCSPImmediate extends MCOperand {
+public class MCSPImmediate extends AbstractMCImmediate {
     float value;
+    MCMemoryOperand inMem;
 
     public MCSPImmediate(float value) {
         this.value = value;

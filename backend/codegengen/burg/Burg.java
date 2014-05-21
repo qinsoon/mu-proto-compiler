@@ -127,6 +127,9 @@ public class Burg {
     }
     
     public static void checkCorrectness() {
+        if (targetName == null)
+            error("need to define target name using .target");
+        
         if (MC_MOV.isEmpty())
             error("need to define mov instruction by using .mc_mov in .target file. ");
         
@@ -520,17 +523,26 @@ public class Burg {
             ret.append(", " + dataType + ")");
             return ret.toString();
         } else if (operand instanceof OpdNodeFunc) {
-            if (((OpdNodeFunc) operand).receiver == null)
-                return "node." + ((OpdNodeFunc)operand).funcName + "()";
-            else
-                return String.format(
-                        "((%s)node).%s()", 
-                        ((OpdNodeFunc) operand).receiver, 
-                        ((OpdNodeFunc) operand).funcName);
+            return genChainCallFromOpdNodeFunc((OpdNodeFunc) operand);
         } else {
             error("illegal compile-time operand: " + operand.getClass().toString());
             return null;
         }
+    }
+
+    private static String genChainCallFromOpdNodeFunc(OpdNodeFunc operand) {
+        String chainedCalls = "";
+        for (String f : ((OpdNodeFunc)operand).funcName) {
+            chainedCalls += "." + f + "()";
+        }
+        
+        if (((OpdNodeFunc) operand).receiver == null)
+            return "node" + chainedCalls;
+        else
+            return String.format(
+                    "((%s)node)%s", 
+                    ((OpdNodeFunc) operand).receiver, 
+                    chainedCalls);
     }
     
     public static void writeTo(String file, String code) {
@@ -604,6 +616,14 @@ public class Burg {
         int[] opDataType;
         boolean defined = false;
     }
+    
+    static class OperandEmit {
+        String operandName;
+        String format;
+        List<OpdNodeFunc> funcCalls = new ArrayList<OpdNodeFunc>();
+    }
+    
+    public static final HashMap<String, OperandEmit> operandEmit = new HashMap<String, OperandEmit>();
     
     public static final HashMap<String, MCOp> mcOps = new HashMap<String, MCOp>();
     
@@ -711,14 +731,14 @@ public class Burg {
     }
     
     static class OpdNodeFunc extends CCTOperand {
-        String funcName;
+        List<String> funcName;
         String receiver;
         
-        OpdNodeFunc(String name) {
+        OpdNodeFunc(List<String> name) {
             this.funcName = name;
         }
         
-        OpdNodeFunc(String name, String receiver) {
+        OpdNodeFunc(List<String> name, String receiver) {
             this.funcName = name;
             this.receiver = receiver;
         }
@@ -842,6 +862,10 @@ public class Burg {
         code.appendln(String.format("public class %s extends AbstractMCDriver {", driver));
         code.increaseIndent();
         
+        // an instance
+        code.appendStmtln(String.format("public static %s v = new %s()", driver, driver));
+        code.appendln();
+        
         // mov
         code.appendln("@Override public AbstractMachineCode genMove(MCRegister dest, MCOperand src) {");
         code.increaseIndent();        
@@ -922,7 +946,7 @@ public class Burg {
         code.appendln("@Override public AbstractMachineCode genOppositeCondJump(AbstractMachineCode orig) {");
         code.increaseIndent();
         code.appendStmtln("String name = orig.getName()");
-        code.appendStmtln("AbstractMachineCode ret = null;");
+        code.appendStmtln("AbstractMachineCode ret = null");
         code.appendln();
         for (int i = 0; i < MC_COND_JUMP.size() - 1; i += 2) {
             String jmp1 = MC_COND_JUMP.get(i);
@@ -1027,23 +1051,48 @@ public class Burg {
         code.appendln("@Override public String getFPRRetName(int i) {return FP_REG_RET[i];}");
         
         // MC op emit
-        // TODO this should go to target description file instead of hard coded here
         code.appendln();
-        code.appendln("public static String emitOp(MCOperand op) {");
+        code.appendln("@Override public String emitOp(MCOperand node) {");
         code.increaseIndent();
-        code.appendln("if (op instanceof MCLabel)");
-        code.appendln("return ((MCLabel) op).getName();");
-        code.appendln("if (op instanceof MCIntImmediate)");
-        code.appendln("return \"$\"+((MCIntImmediate) op).getValue();");
-        code.appendln("if (op instanceof MCDPImmediate)");
-        code.appendln("return \"$\"+((MCDPImmediate) op).getValue();");
-        code.appendln("if (op instanceof MCSPImmediate)");
-        code.appendln("return \"$\"+((MCSPImmediate) op).getValue();");
-        code.appendln("if (op instanceof MCRegister)");
-        code.appendln("return \"%\"+((MCRegister) op).REP().getName();");
-        code.appendln("return \"error\";");
+        for (String op : operandEmit.keySet()) {
+            OperandEmit operand = operandEmit.get(op);
+            
+
+            code.appendln("if (node instanceof " + operand.operandName + ")");
+            
+            StringBuilder str = new StringBuilder();
+            str.append("return String.format(");
+            str.append(operand.format);
+            
+            for (OpdNodeFunc funcNode : operand.funcCalls) {
+                str.append(',');
+                str.append(genChainCallFromOpdNodeFunc(funcNode));
+            }
+            
+            str.append(");");
+            
+            code.appendln(str.toString());
+        }
+        code.appendStmtln("return \"error\"");
         code.decreaseIndent();
         code.appendln("}");
+        
+//        code.appendln();
+//        code.appendln("public static String emitOp(MCOperand op) {");
+//        code.increaseIndent();
+//        code.appendln("if (op instanceof MCLabel)");
+//        code.appendln("return ((MCLabel) op).getName();");
+//        code.appendln("if (op instanceof MCIntImmediate)");
+//        code.appendln("return \"$\"+((MCIntImmediate) op).getValue();");
+//        code.appendln("if (op instanceof MCDPImmediate)");
+//        code.appendln("return \"$\"+((MCDPImmediate) op).getValue();");
+//        code.appendln("if (op instanceof MCSPImmediate)");
+//        code.appendln("return \"$\"+((MCSPImmediate) op).getValue();");
+//        code.appendln("if (op instanceof MCRegister)");
+//        code.appendln("return \"%\"+((MCRegister) op).REP().getName();");
+//        code.appendln("return \"error\";");
+//        code.decreaseIndent();
+//        code.appendln("}");
         
         // end of class
         code.decreaseIndent();

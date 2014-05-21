@@ -96,6 +96,18 @@ public class burgListenerImpl extends burgBaseListener {
         return -1;
     }
     
+    @Override public void exitOpEmitRule(@NotNull burgParser.OpEmitRuleContext ctx) {
+        Burg.OperandEmit opEmit = new Burg.OperandEmit();
+        
+        opEmit.operandName = ctx.opClass().getText();
+        opEmit.format = ctx.formatString().getText();        
+        for (burg.burgParser.SingleNodeFuncCallContext nodeFunc : ctx.singleNodeFuncCall()) {
+            opEmit.funcCalls.add(fromOpdNodeFunc(nodeFunc));
+        }
+        
+        Burg.operandEmit.put(opEmit.operandName, opEmit);
+    }
+    
     @Override public void exitMcDefine(@NotNull burgParser.McDefineContext ctx) {
         String op = ctx.mcOp().getText();
         
@@ -131,16 +143,16 @@ public class burgListenerImpl extends burgBaseListener {
         StringBuilder emit = new StringBuilder();
         
         String format = ctx.formatString().getText();
-        format = format.replaceAll("OP", "%s");
-        format = format.replaceAll("WS", " ");
-        format = format.replaceAll("COMMA", ",");
+//        format = format.replaceAll("OP", "%s");
+//        format = format.replaceAll("WS", " ");
+//        format = format.replaceAll("COMMA", ",");
         emit.append(format);
         for (burgParser.McEmitOperandContext operand : ctx.mcEmitOperand()) {
             if (operand instanceof burgParser.McEmitRegOpContext) {
-                emit.append(", X64Driver.emitOp(reg)");
+                emit.append(", " + Burg.targetName + "Driver.v.emitOp(reg)");
             }
             else if (operand instanceof burgParser.McEmitOpContext) {
-                emit.append(String.format(", X64Driver.emitOp(operands.get(%d))", Integer.parseInt(((burgParser.McEmitOpContext) operand).DIGITS().getText())));
+                emit.append(String.format(", " + Burg.targetName + "Driver.v.emitOp(operands.get(%d))", Integer.parseInt(((burgParser.McEmitOpContext) operand).DIGITS().getText())));
             }
         }
         
@@ -218,13 +230,8 @@ public class burgListenerImpl extends burgBaseListener {
             
             ret = new Burg.OpdNode(indices);
         } else if (operandCtx instanceof burgParser.McOpdNodeFuncContext) {
-            String funcName = ((burgParser.McOpdNodeFuncContext) operandCtx).funcCall().getText();
-            if (((burgParser.McOpdNodeFuncContext) operandCtx).funcCallRcv() == null) {
-                ret = new Burg.OpdNodeFunc(funcName);
-            } else {
-                String receiverName = ((burgParser.McOpdNodeFuncContext) operandCtx).funcCallRcv().getText();
-                ret = new Burg.OpdNodeFunc(funcName, receiverName);
-            }
+            burgParser.SingleNodeFuncCallContext funcCallNode = ((burgParser.McOpdNodeFuncContext) operandCtx).singleNodeFuncCall();
+            ret = fromOpdNodeFunc(funcCallNode);
         } else if (operandCtx instanceof burgParser.McOpdImmContext) {
             if (((burgParser.McOpdImmContext) operandCtx).mcImmediate().mcIntImmediate() != null)
                 ret = new Burg.OpdIntImmediate(Long.parseLong(((burgParser.McOpdImmContext) operandCtx).mcImmediate().mcIntImmediate().getText()));
@@ -257,6 +264,22 @@ public class burgListenerImpl extends burgBaseListener {
             }
         }
         
+        return ret;
+    }
+
+    private Burg.OpdNodeFunc fromOpdNodeFunc(
+            burg.burgParser.SingleNodeFuncCallContext funcCallNode) {
+        Burg.OpdNodeFunc ret;
+        List<String> funcName = new ArrayList<String>();
+        for (burgParser.FuncCallContext callCtx : funcCallNode.funcCall()) {
+            funcName.add(callCtx.getText());
+        }
+        if (funcCallNode.funcCallRcv() == null) {
+            ret = new Burg.OpdNodeFunc(funcName);
+        } else {
+            String receiverName = funcCallNode.funcCallRcv().getText();
+            ret = new Burg.OpdNodeFunc(funcName, receiverName);
+        }
         return ret;
     }
     

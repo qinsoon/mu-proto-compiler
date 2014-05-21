@@ -39,7 +39,7 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             
             for (AbstractMachineCode mc : cf.finalMC) {
                 if (mc.getLabel() != null) {
-                    writer.write(X64Driver.emitOp(mc.getLabel()) + ":");
+                    writer.write(UVMCompiler.MCDriver.emitOp(mc.getLabel()) + ":");
                     writer.write('\n');
                 }
                 writer.write('\t');

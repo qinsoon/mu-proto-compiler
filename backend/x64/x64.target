@@ -336,6 +336,32 @@ dpreg : REG_DP
 label : LABEL
 0
 
+//  _|_|_|_|   _|      _|   _|_|_|   _|_|_|_|_|         _|_|     _|_|_|  
+//  _|         _|_|  _|_|     _|         _|           _|    _|   _|    _|
+//  _|_|_|     _|  _|  _|     _|         _|           _|    _|   _|_|_|  
+//  _|         _|      _|     _|         _|           _|    _|   _|      
+//  _|_|_|_|   _|      _|   _|_|_|       _|             _|_|     _|      
+
+.emit_op MCLabel = {
+	"%s", P(MCLabel).getName();
+}
+
+.emit_op MCIntImmediate = {
+	"$%s", P(MCIntImmediate).getValue();
+}
+
+.emit_op MCDPImmediate = {
+	"$%s", P(MCDPImmediate).getValue();
+}
+
+.emit_op MCSPImmediate = {
+	"$%s", P(MCSPImmediate).getValue();
+}
+
+.emit_op MCRegister = {
+	"%%%s", P(MCRegister).REP().getName();
+}
+
 // _|      _|    _|_|_|      _|_|_|    _|_|_|_|  _|_|_|_|  _|_|_|  _|      _|  _|_|_|_|
 // _|_|  _|_|  _|            _|    _|  _|        _|          _|    _|_|    _|  _|      
 // _|  _|  _|  _|            _|    _|  _|_|_|    _|_|_|      _|    _|  _|  _|  _|_|_|  
@@ -348,22 +374,22 @@ label : LABEL
 
 .mc_def mov = {
 	GPR = GPR;
-	"movq WS OP COMMA OP", OP[0], OP_REG;
+	"movq %s,%s", OP[0], OP_REG;
 }
 
 .mc_def cmovlt = {
 	GPR = GPR;
-	"cmovltq WS OP COMMA OP", OP[0], OP_REG;
+	"cmovltq %s,%s", OP[0], OP_REG;
 }
 
 .mc_def cmovgt = {
 	GPR = GPR;
-	"cmovgtq WS OP COMMA OP", OP[0], OP_REG;
+	"cmovgtq %s,%s", OP[0], OP_REG;
 }
 
 .mc_def cmoveq = {
 	GPR = GPR;
-	"cmoveqq WS OP COMMA OP", OP[0], OP_REG;
+	"cmoveqq %s,%s", OP[0], OP_REG;
 }
 
 // ********************************
@@ -372,12 +398,12 @@ label : LABEL
 
 .mc_def cmp = {
 	GPR GPR;
-	"cmpq WS OP COMMA OP", OP[0], OP[1];
+	"cmpq %s,%s", OP[0], OP[1];
 }
 
 .mc_def test = {
 	GPR GPR;
-	"testq WS OP COMMA OP", OP[0], OP[1];
+	"testq %s,%s", OP[0], OP[1];
 }
 
 // ********************************
@@ -385,39 +411,39 @@ label : LABEL
 // ********************************
 
 .mc_def jmp = {
-	"jmp WS OP", OP[0];
+	"jmp %s", OP[0];
 }
 
 .mc_def je = {
-	"je WS OP", OP[0];
+	"je %s", OP[0];
 }
 
 .mc_def jne = {
-	"jne WS OP", OP[0];
+	"jne %s", OP[0];
 }
 
 .mc_def jl = {
-	"jl WS OP", OP[0];
+	"jl %s", OP[0];
 }
 
 .mc_def jle = {
-	"jle WS OP", OP[0];
+	"jle %s", OP[0];
 }
 
 .mc_def jg = {
-	"jg WS OP", OP[0];
+	"jg %s", OP[0];
 }
 
 .mc_def jge = {
-	"jge WS OP", OP[0];
+	"jge %s", OP[0];
 }
 
 .mc_def jb = {
-	"jb WS OP", OP[0];
+	"jb %s", OP[0];
 }
 
 .mc_def jae = {
-	"jae WS OP", OP[0];
+	"jae %s", OP[0];
 }
 
 .mc_def ret = {
@@ -430,17 +456,17 @@ label : LABEL
 
 .mc_def idiv = {
 	GPR;
-	"idivq WS OP", OP[0];
+	"idivq %s", OP[0];
 }
 
 .mc_def add = {
 	GPR = GPR GPR;
-	"addq WS OP COMMA OP", OP[1], OP[0];
+	"addq %s,%s", OP[1], OP[0];
 }
 
 .mc_def xor = {
 	GPR = GPR GPR;
-	"xorq WS OP COMMA OP", OP[1], OP[0];
+	"xorq %s,%s", OP[1], OP[0];
 }
 
 // ********************************
@@ -449,37 +475,37 @@ label : LABEL
 
 .mc_def movsd = {
 	DP = DP;
-	"movsd WS OP COMMA OP", OP[0], OP_REG;
+	"movsd %s,%s", OP[0], OP_REG;
 }
 
 .mc_def movss = {
 	SP = SP;
-	"movss WS OP COMMA OP", OP[0], OP_REG;
+	"movss %s,%s", OP[0], OP_REG;
 }
 
 .mc_def addsd = {
 	DP = DP DP;
-	"addsd WS OP COMMA OP", OP[1], OP[0];
+	"addsd %s,%s", OP[1], OP[0];
 }
 
 .mc_def divsd = {
 	DP = DP DP;
-	"divsd WS OP COMMA OP", OP[1], OP[0];
+	"divsd %s,%s", OP[1], OP[0];
 }
 
 .mc_def cvtsi2sd = {
 	DP = GPR;
-	"cvtsi2sd WS OP COMMA OP", OP[0], OP_REG;
+	"cvtsi2sd %s,%s", OP[0], OP_REG;
 }
 
 .mc_def cvtsd2si = {
 	GPR = DP;
-	"cvtsd2si WS OP COMMA OP", OP[0], OP_REG;
+	"cvtsd2si %s,%s", OP[0], OP_REG;
 }
 
 .mc_def comisd = {
 	DP DP;
-	"comisd WS OP COMMA OP", OP[0], OP[1];
+	"comisd %s,%s", OP[0], OP[1];
 }
 
 // misc
@@ -502,3 +528,4 @@ label : LABEL
 	SP = SP OTH SP OTH;
 	"shouldnt emit";
 }
+

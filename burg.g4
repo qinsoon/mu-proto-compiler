@@ -21,6 +21,8 @@ declare
     |   mcSPMovDecl
     |   mcPhiDecl
     |   mcNopDecl
+// op emit
+    |   opEmitRule
 // mc define
     |   mcDefine
 // regs
@@ -30,6 +32,16 @@ declare
     |   fpRegDecl
     |   fpRegParamDecl
     |   fpRegRetDecl
+    ;
+
+opEmitRule
+    :   '.emit_op' opClass '=' '{'
+        formatString (',' singleNodeFuncCall)* ';'
+        '}'
+    ;
+
+opClass
+    :   idString
     ;
 
 mcDefine
@@ -58,7 +70,7 @@ mcOperandType
     ;
 
 formatString
-    :   '"' idString* '"'
+    :   QUOTED_STRING
     ;
 
 mcEmitOperand
@@ -162,9 +174,13 @@ mcOp
 
 mcOperand
     :   'P' multiIndex          # mcOpdNodeChild
-    |   'P(' funcCallRcv ').' funcCall '()'      # mcOpdNodeFunc
+    |   singleNodeFuncCall      # mcOpdNodeFunc
     |   '$' mcImmediate         # mcOpdImm
     |   '%' mcReg               # mcOpdReg
+    ;
+
+singleNodeFuncCall
+    :   'P(' funcCallRcv ')' ('.' funcCall '()')+
     ;
 
 funcCallRcv
@@ -209,6 +225,9 @@ mcFpImmediate
 /*
  * terminals
  */
+
+fragment ESCAPED_QUOTE : '\\"';
+QUOTED_STRING :   '"' ( ESCAPED_QUOTE | ~('\n'|'\r') )*? '"';
 
 DIGITS
     :   DIGIT+
