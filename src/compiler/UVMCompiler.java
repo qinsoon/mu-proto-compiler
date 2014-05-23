@@ -108,12 +108,15 @@ public class UVMCompiler {
              */
             new SimpleBranchAlignment("simplebralign").execute();
             new MachineCodeCleanup("mccleanup").execute();
+            
+            /*
+             * machine dependent transformation
+             */
+            new compiler.phase.mc.x64.SpillConstantsToMemory("spillconstant").execute();
             new CodeEmission("codeemit", "emit").execute();
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 

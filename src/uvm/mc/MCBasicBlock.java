@@ -65,7 +65,7 @@ public class MCBasicBlock {
         StringBuilder ret = new StringBuilder();
         ret.append("#" + label.name + ": {\n");
         for (AbstractMachineCode c : mc) {
-            ret.append("  " + c.prettyPrintNoLabel() + "\n");
+            ret.append("  " + c.prettyPrintOneline() + "\n");
         }
         ret.append("}");
         return ret.toString();

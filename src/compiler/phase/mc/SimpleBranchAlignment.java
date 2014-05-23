@@ -48,8 +48,6 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
             // check the last mc (branching)
             AbstractMachineCode lastMC = cur.getLast();
             
-            MCBasicBlock mustFallThrough = hasMustFallThroughSucc(cur);
-            
             // for unconditional jump, we simply lay its successor after this BB
             if (lastMC.isUncondJump()) {
                 if (cur.getSuccessor().size() != 1) {
@@ -159,11 +157,6 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
             System.out.println(mc.prettyPrintOneline());
         
         cf.finalMC.addAll(finalMC);
-    }
-    
-    private MCBasicBlock hasMustFallThroughSucc(MCBasicBlock cur) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     private Set<MCBasicBlock> visited = new HashSet<MCBasicBlock>();

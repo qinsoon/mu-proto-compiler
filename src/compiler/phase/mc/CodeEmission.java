@@ -30,6 +30,20 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             outFile.getParentFile().mkdirs();
             writer = new BufferedWriter(new FileWriter(outFile));
             
+            for (MCConstant c : MCConstant.constants) {
+                writer.write(UVMCompiler.MCDriver.emitOp(c.getLabel()) + ":");
+                writer.write('\n');
+                writer.write('\t');
+                if (c.getValue().length == 1) {
+                    // quad word
+                    writer.write(".quad ");
+                    writer.write(Long.toString(c.getValue()[0]));
+                } else {
+                    UVMCompiler.error("unimplemented constant emission for byte length: " + c.getValue().length);
+                }
+                writer.write('\n');
+            }
+            
             if (cf.getOriginFunction().getName().equals("main")) {
                 writer.write("\t.globl _main\n");
                 writer.write("_main:\n");
