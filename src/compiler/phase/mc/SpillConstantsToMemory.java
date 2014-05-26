@@ -1,9 +1,8 @@
-package compiler.phase.mc.x64;
+package compiler.phase.mc;
 
 import uvm.CompiledFunction;
 import uvm.mc.*;
 import compiler.UVMCompiler;
-import compiler.phase.mc.AbstractMCCompilationPhase;
 
 public class SpillConstantsToMemory extends AbstractMCCompilationPhase {
 
@@ -34,7 +33,7 @@ public class SpillConstantsToMemory extends AbstractMCCompilationPhase {
                     
                     // this constant will be referred to as a memory op
                     MCMemoryOperand memOp = new MCMemoryOperand();
-                    memOp.setBase(cf.findOrCreateRegister("rip", MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
+                    memOp.setBase(cf.findOrCreateRegister(UVMCompiler.MCDriver.getInstPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
                     memOp.setDispLabel(constant.getLabel());
                     memOp.setSize((byte) 8);
                     

@@ -54,7 +54,7 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
             for (MCBasicBlock p : predecessors) {
                 MCBasicBlock n;
                 
-                boolean newBlock = false;
+                boolean addingLabelForNewBlock = false;
                 
                 if (bb.getPredecessors().size() > 1 && p.getSuccessor().size() > 1) {
                     // insert new bb between p and bb
@@ -71,7 +71,7 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                     
                     newBBs.add(n);
                     
-                    newBlock = true;
+                    addingLabelForNewBlock = true;
                     System.out.println("Created new block #" + n.getName());
                 } else {
                     n = p;
@@ -118,15 +118,34 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                                 mov = UVMCompiler.MCDriver.genSPMove(genMovReg, mc.getOperand(opdForP));
                             else UVMCompiler.error("unknown data type, cant pick a mov instruction: " + opdDataType);
                             
-                            if (newBlock)
+                            if (addingLabelForNewBlock) {
                                 mov.setLabel(n.getLabel());
+                                addingLabelForNewBlock = false;
+                            }
                             // phi.opd(p) <- i
                             mc.setOperand(opdForP, genMovReg);
                             mc.setOperand(opdForP + 1, n.getLabel());
                             // append i to n
-                            n.addMC(mov);
+                            if (n.getLast() != null 
+                                && n.getLast().isJump() 
+                                && ((MCLabel)n.getLast().getOperand(0)).getName().equals(bb.getName())) {
+                                // BB n jumps to this block
+                                //so we need to put the mov instruction before the jump code
+                                AbstractMachineCode jmp = n.getLast();
+                                n.getMC().remove(jmp);
+                                if (jmp.getLabel() != null) {
+                                    mov.setLabel(jmp.getLabel());
+                                    jmp.setLabel(null);
+                                }
+                                n.addMC(mov);
+                                n.addMC(jmp);
+                            } else
+                                // otherwise we simply add mov to n
+                                n.addMC(mov);
+                            
                             // this is arbitrary order
                             cf.addMachineCode(mov);
+                            
                             // join i with phi
                             // i is genMovReg
                             // phi is mc.getReg()

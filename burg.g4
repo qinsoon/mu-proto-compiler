@@ -21,6 +21,7 @@ declare
     |   mcSPMovDecl
     |   mcPhiDecl
     |   mcNopDecl
+    |   mcInstPtrDecl
 // op emit
     |   opEmitRule
 // mc define
@@ -76,6 +77,10 @@ formatString
 mcEmitOperand
     :   'OP_REG'               # mcEmitRegOp
     |   'OP[' DIGITS ']'    # mcEmitOp
+    ;
+
+mcInstPtrDecl
+    :   '.inst_ptr' idString
     ;
 
 gprDecl

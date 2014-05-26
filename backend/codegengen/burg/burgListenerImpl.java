@@ -15,6 +15,10 @@ public class burgListenerImpl extends burgBaseListener {
         Burg.targetName = ctx.idString().getText();
     }
     
+    @Override public void exitMcInstPtrDecl(@NotNull burgParser.McInstPtrDeclContext ctx) {
+        Burg.INST_PTR = ctx.idString().getText();
+    }
+    
     @Override public void exitMcCondJumpDecl(@NotNull burgParser.McCondJumpDeclContext ctx) {
         for (burgParser.IdStringContext s : ctx.idString())
             Burg.MC_COND_JUMP.add(s.getText());

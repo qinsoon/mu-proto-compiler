@@ -7,4 +7,5 @@ int main(void) {
     n++;
     sum += 1.0 / n;
   }
+  return (int) sum;
 }

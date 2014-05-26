@@ -48,6 +48,7 @@ public class Burg {
     public static final List<String>    MC_NOP = new ArrayList<String>();
     public static final List<String>    MC_DPMOV = new ArrayList<String>();
     public static final List<String>    MC_SPMOV = new ArrayList<String>();
+    public static String                INST_PTR;
     
     public static final List<String>    REG_GPR = new ArrayList<String>();
     public static final List<String>    REG_GPR_PARAM = new ArrayList<String>();
@@ -129,6 +130,9 @@ public class Burg {
     public static void checkCorrectness() {
         if (targetName == null)
             error("need to define target name using .target");
+        
+        if (INST_PTR == null)
+            error("need to declare instruction pointer register for the target");
         
         if (MC_MOV.isEmpty())
             error("need to define mov instruction by using .mc_mov in .target file. ");
@@ -966,6 +970,14 @@ public class Burg {
         code.decreaseIndent();
         code.appendln("}");
         
+        // inst ptr
+        code.appendln();
+        code.appendln("@Override public String getInstPtrReg() {");
+        code.increaseIndent();
+        code.appendStmtln("return \"" + INST_PTR + "\"");
+        code.decreaseIndent();
+        code.appendln("}");
+        
         // GPRs
         code.appendln();
         code.append("public static final String[] GPR = {");
@@ -1076,23 +1088,6 @@ public class Burg {
         code.appendStmtln("return \"error\"");
         code.decreaseIndent();
         code.appendln("}");
-        
-//        code.appendln();
-//        code.appendln("public static String emitOp(MCOperand op) {");
-//        code.increaseIndent();
-//        code.appendln("if (op instanceof MCLabel)");
-//        code.appendln("return ((MCLabel) op).getName();");
-//        code.appendln("if (op instanceof MCIntImmediate)");
-//        code.appendln("return \"$\"+((MCIntImmediate) op).getValue();");
-//        code.appendln("if (op instanceof MCDPImmediate)");
-//        code.appendln("return \"$\"+((MCDPImmediate) op).getValue();");
-//        code.appendln("if (op instanceof MCSPImmediate)");
-//        code.appendln("return \"$\"+((MCSPImmediate) op).getValue();");
-//        code.appendln("if (op instanceof MCRegister)");
-//        code.appendln("return \"%\"+((MCRegister) op).REP().getName();");
-//        code.appendln("return \"error\";");
-//        code.decreaseIndent();
-//        code.appendln("}");
         
         // end of class
         code.decreaseIndent();

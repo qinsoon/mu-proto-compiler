@@ -112,7 +112,7 @@ public class UVMCompiler {
             /*
              * machine dependent transformation
              */
-            new compiler.phase.mc.x64.SpillConstantsToMemory("spillconstant").execute();
+            new compiler.phase.mc.SpillConstantsToMemory("spillconstant").execute();
             new CodeEmission("codeemit", "emit").execute();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
