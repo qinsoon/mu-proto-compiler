@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -12,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -20,10 +18,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import uvm.OpCode;
-import uvm.mc.AbstractMachineCode;
-import uvm.mc.MCIntImmediate;
-import uvm.mc.MCLabel;
-import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
 
 public class Burg {
@@ -49,6 +43,7 @@ public class Burg {
     public static final List<String>    MC_DPMOV = new ArrayList<String>();
     public static final List<String>    MC_SPMOV = new ArrayList<String>();
     public static String                INST_PTR;
+    public static final List<String>    MC_CALL = new ArrayList<String>();
     
     public static final List<String>    REG_GPR = new ArrayList<String>();
     public static final List<String>    REG_GPR_PARAM = new ArrayList<String>();
@@ -57,6 +52,8 @@ public class Burg {
     public static final List<String>    REG_FP = new ArrayList<String>();
     public static final List<String>    REG_FP_PARAM = new ArrayList<String>();
     public static final List<String>    REG_FP_RET = new ArrayList<String>();
+    
+    public static final List<String>    REG_CALLEE_SAVE = new ArrayList<String>();
     
 //    public static final Map<String, MCDefine> mcDefines = new HashMap<String, MCDefine>();
 //    public static final Map<String, String> mcEmit = new HashMap<String, String>();
@@ -416,18 +413,19 @@ public class Burg {
         code.appendln(String.format(
                 "public static MCOperand operandFromNode(%s node, int dataType) {", IR_NODE_TYPE));
         code.increaseIndent();
+        code.appendln("MCOperand ret;");
         code.appendln("switch(node.getOpcode()) {");
         code.appendln("case OpCode.INT_IMM:");
         code.increaseIndent();
-        code.appendln("return new uvm.mc.MCIntImmediate(((uvm.IntImmediate)node).getValue());");
+        code.appendln("ret = new uvm.mc.MCIntImmediate(((uvm.IntImmediate)node).getValue()); break;");
         code.decreaseIndent();
         code.appendln("case OpCode.FP_SP_IMM:");
         code.increaseIndent();
-        code.appendln("return new uvm.mc.MCSPImmediate(((uvm.FPImmediate)node).getFloat());");
+        code.appendln("ret = new uvm.mc.MCSPImmediate(((uvm.FPImmediate)node).getFloat()); break;");
         code.decreaseIndent();
         code.appendln("case OpCode.FP_DP_IMM:");
         code.increaseIndent();
-        code.appendln("return new uvm.mc.MCDPImmediate(((uvm.FPImmediate)node).getDouble());");
+        code.appendln("ret = new uvm.mc.MCDPImmediate(((uvm.FPImmediate)node).getDouble()); break;");
         code.decreaseIndent();
         code.appendln("case OpCode.REG_I1:");
         code.appendln("case OpCode.REG_I8:");
@@ -435,17 +433,21 @@ public class Burg {
         code.appendln("case OpCode.REG_I32:");
         code.appendln("case OpCode.REG_I64:");
         code.increaseIndent();
-        code.appendln("return uvm.mc.MCRegister.findOrCreate(((uvm.Register)node).getName(), uvm.mc.MCRegister.OTHER_SYMBOL_REG, dataType);");
+        code.appendln("ret = uvm.mc.MCRegister.findOrCreate(((uvm.Register)node).getName(), uvm.mc.MCRegister.OTHER_SYMBOL_REG, dataType); break;");
         code.decreaseIndent();
         code.appendln("case OpCode.LABEL:");
         code.increaseIndent();
-        code.appendln("return new uvm.mc.MCLabel(((uvm.Label)node).getName());");
+        code.appendln("ret = new uvm.mc.MCLabel(((uvm.Label)node).getName()); break;");
         code.decreaseIndent();
         code.appendln("default:");
         code.increaseIndent();
-        code.appendln("return uvm.mc.MCRegister.findOrCreate(\"res_reg\"+node.getId(), uvm.mc.MCRegister.RES_REG, dataType);");
+        code.appendln("ret = uvm.mc.MCRegister.findOrCreate(\"res_reg\"+node.getId(), uvm.mc.MCRegister.RES_REG, dataType); break;");
         code.decreaseIndent();
         code.appendln("}");
+        
+        code.appendStmtln("ret.highLevelOp = node");
+        code.appendStmtln("return ret");
+        
         code.decreaseIndent();
         code.appendln("}");
 
@@ -459,7 +461,21 @@ public class Burg {
         writeTo(output + BURM_FILE, code.toString());
     }
     
-    public static String getOperandCreation(CCTOperand operand, int dataType) {
+    public static String getOperandCreation(CCTOperand operand, int dataType) {        
+        switch(dataType) {
+        case MCRegister.DATA_DP:
+        case MCRegister.DATA_SP:
+        case MCRegister.DATA_GPR:
+        case MCRegister.DATA_MEM:
+            break;
+        case -1:
+            break;
+        default:
+            System.out.println("unexpected data type: " + dataType);
+            Thread.dumpStack();
+            System.exit(6);
+        }
+        
         String newOperandStr = null;
                 
         if (operand instanceof OpdIntImmediate) {
@@ -614,9 +630,9 @@ public class Burg {
      */
     static class MCOp {
         String name;
-        int operands;
+        int operands = 0;
         String emit;
-        int resDataType;
+        int resDataType = -1;
         int[] opDataType;
         boolean defined = false;
     }
@@ -825,6 +841,11 @@ public class Burg {
         if (MC_UNCOND_JUMP.contains(op.name)) {
             code.appendln();
             code.appendln("@Override public boolean isUncondJump() {return true; }");
+        }
+        
+        if (MC_CALL.contains(op.name)) {
+            code.appendln();
+            code.appendln("@Override public boolean isCall() {return true;}");
         }
         
         // is mc ret?
@@ -1061,6 +1082,24 @@ public class Burg {
         
         code.appendln("@Override public int getNumberOfFPRRet() {return FP_REG_RET.length;}");
         code.appendln("@Override public String getFPRRetName(int i) {return FP_REG_RET[i];}");
+        
+        // callee save
+        code.appendln();
+        code.appendln("@Override public boolean isCalleeSave(String reg) {");
+        code.increaseIndent();
+        code.appendln("if (");
+        for (int i = 0; i < REG_CALLEE_SAVE.size(); i++) {
+            code.append(String.format("(reg.equals(\"%s\"))", REG_CALLEE_SAVE.get(i)));
+            if (i != REG_CALLEE_SAVE.size() - 1)
+                code.appendln(" || ");
+        }
+        code.appendln(")");
+        code.increaseIndent();
+        code.appendStmtln("return true");
+        code.decreaseIndent();
+        code.appendStmtln("return false");
+        code.decreaseIndent();
+        code.appendln("}");
         
         // MC op emit
         code.appendln();

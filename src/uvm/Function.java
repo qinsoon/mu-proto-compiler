@@ -16,6 +16,8 @@ public class Function {
     String name;
     FunctionSignature sig;
     
+    uvm.Label funcLabel;
+    
     boolean defined = false;
     
     // to define a function. The following need to be provided
@@ -65,6 +67,8 @@ public class Function {
         
         this.name = name;
         this.sig = sig;
+        
+        this.funcLabel = findOrCreateLabel(name);
     }
     
     public void defineFunction(HashMap<String, Const> constPool, List<BasicBlock> BBs) {
@@ -99,5 +103,9 @@ public class Function {
 
     public List<BasicBlock> getBBs() {
         return BBs;
+    }
+
+    public uvm.Label getFuncLabel() {
+        return funcLabel;
     }
 }

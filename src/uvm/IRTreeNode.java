@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import burm.BurmState;
-import compiler.UVMCompiler;
 
 public abstract class IRTreeNode {
     static int nextId = 0;

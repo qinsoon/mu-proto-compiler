@@ -29,5 +29,7 @@ public abstract class AbstractMCDriver {
     public abstract int getNumberOfFPRRet();
     public abstract String getFPRRetName(int i);
     
+    public abstract boolean isCalleeSave(String reg);
+    
     public abstract String emitOp(MCOperand op);
 }

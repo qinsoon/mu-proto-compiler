@@ -25,6 +25,10 @@ public class MicroVM {
         System.out.println("declared func: " + f);
     }
     
+    public Function getFunction(String name) {
+        return funcs.get(name);
+    }
+    
     public List<CompiledFunction> compiledFuncs = new ArrayList<CompiledFunction>();
     
     public void compiledFunc(CompiledFunction cf) {

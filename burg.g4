@@ -22,6 +22,7 @@ declare
     |   mcPhiDecl
     |   mcNopDecl
     |   mcInstPtrDecl
+    |   mcCallDecl
 // op emit
     |   opEmitRule
 // mc define
@@ -33,6 +34,7 @@ declare
     |   fpRegDecl
     |   fpRegParamDecl
     |   fpRegRetDecl
+    |   calleeSaveDecl
     ;
 
 opEmitRule
@@ -46,7 +48,7 @@ opClass
     ;
 
 mcDefine
-    :   '.mc_def' mcOp '=' '{'
+    :   '.mc_def' mcOp ('(' DIGITS ')')? '=' '{'
         // operand type
         operandTypeDefine ?
         // emit code
@@ -83,6 +85,10 @@ mcInstPtrDecl
     :   '.inst_ptr' idString
     ;
 
+mcCallDecl
+    :   '.mc_call' idString+
+    ;
+
 gprDecl
     :   '.gpr' idString+
     ;
@@ -105,6 +111,10 @@ fpRegParamDecl
 
 fpRegRetDecl
     :   '.fp_reg_ret' idString+
+    ;
+
+calleeSaveDecl
+    :   '.callee_save' idString+
     ;
 
 mcNopDecl

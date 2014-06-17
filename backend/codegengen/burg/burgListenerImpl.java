@@ -58,6 +58,11 @@ public class burgListenerImpl extends burgBaseListener {
         Burg.MC_NOP.add(ctx.idString().getText());
     }
     
+    @Override public void exitMcCallDecl(@NotNull burgParser.McCallDeclContext ctx) {
+        for (burgParser.IdStringContext s : ctx.idString())
+            Burg.MC_CALL.add(s.getText());
+    }
+    
     @Override public void exitGprDecl(@NotNull burgParser.GprDeclContext ctx) {
         for (burgParser.IdStringContext s : ctx.idString())
             Burg.REG_GPR.add(s.getText());
@@ -86,6 +91,11 @@ public class burgListenerImpl extends burgBaseListener {
     @Override public void exitFpRegRetDecl(@NotNull burgParser.FpRegRetDeclContext ctx) {
         for (burgParser.IdStringContext s : ctx.idString())
             Burg.REG_FP_RET.add(s.getText());
+    }
+    
+    @Override public void exitCalleeSaveDecl(@NotNull burgParser.CalleeSaveDeclContext ctx) {
+        for (burgParser.IdStringContext s : ctx.idString())
+            Burg.REG_CALLEE_SAVE.add(s.getText());
     }
     
     private static int getDataType(burgParser.McOperandTypeContext typeCtx) {
@@ -124,6 +134,15 @@ public class burgListenerImpl extends burgBaseListener {
         
         // op
         define.name = op;
+        
+        // operands
+        if (ctx.DIGITS() != null) {
+            int operands = Integer.parseInt(ctx.DIGITS().getText());
+            if (define.operands != 0 && define.operands != operands)
+                Burg.error("mc define for " + op + " has a different operand number");
+            else 
+                define.operands = operands;
+        }
         
         // data type
         if (ctx.operandTypeDefine() != null) {

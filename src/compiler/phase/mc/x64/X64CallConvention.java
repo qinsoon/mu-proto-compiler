@@ -1,22 +1,16 @@
-package compiler.phase.mc;
+package compiler.phase.mc.x64;
 
 import java.util.List;
 
-import uvm.CompiledFunction;
-import uvm.MicroVM;
-import uvm.Type;
-import uvm.mc.MCRegister;
 import compiler.UVMCompiler;
-import compiler.phase.AbstractCompilationPhase;
+import uvm.CompiledFunction;
+import uvm.Function;
+import uvm.Type;
+import uvm.mc.AbstractMachineCode;
+import uvm.mc.MCRegister;
 
-public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
-
-    public AllocateParamRetRegister(String name) {
-        super(name);
-    }
-    
-    @Override
-    protected void visitCompiledFunction(CompiledFunction cf) {
+public class X64CallConvention {
+    public void calleeInitParameterRegisters(CompiledFunction cf) {
         // set param_regi to the ith of param registers if suitable
         
         int usedGPRParamReg = 0;
@@ -41,7 +35,7 @@ public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
                     UVMCompiler.error("a param fits in several GPRs, unimplemented");
                 }
             } else if (paramType.fitsInFPR() > 0) {
-                if (paramTypes.get(i).fitsInFPR() == 2) {
+                if (paramTypes.get(i).fitsInFPR() == 1) {
                     // double precision
                     MCRegister symbolParamReg = cf.findRegister("param_reg"+i, MCRegister.PARAM_REG);
                     MCRegister realParamReg = cf.findOrCreateRegister(UVMCompiler.MCDriver.getFPRParamName(usedFPRParamReg), MCRegister.MACHINE_REG, MCRegister.DATA_DP);
@@ -57,7 +51,9 @@ public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
                 UVMCompiler.error("Type " + paramType.prettyPrint() + " seems errornous on its fitness of registers. ");
             }
         }
-        
+    }
+    
+    public void calleeInitReturnRegister(CompiledFunction cf) {
         // set ret_regi to the ith of return registers
         
         Type returnType = cf.getOriginFunction().getSig().getReturnType();
@@ -91,5 +87,11 @@ public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
             UVMCompiler.error("Type " + returnType.prettyPrint() + " seems errornous on its fitness of registers. ");
         }
     }
-
+    
+    public List<AbstractMachineCode> callerSetupCallSequence(
+            CompiledFunction caller, 
+            Function callee,
+            AbstractMachineCode callMC) {
+        return null;
+    }
 }

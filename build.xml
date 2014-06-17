@@ -1,9 +1,7 @@
 <project name="uvm-compiler" default="build" basedir=".">
 
 	<property name="backend-dir" location="backend"/>
-
-	<property name="antlr-jar" location="antlr-4.2-complete.jar"/>
-	
+	<property name="antlr-jar" location="antlr-4.2-complete.jar"/>	
 	<property name="uvm-dir" location="src"/>
 	
 	<property name="uir-rule"  location="uIR.g4"/>
@@ -44,13 +42,17 @@
 		<mkdir dir="${burg-exec-dir}"/>
 		
 		<echo message="javac some uVM classes..."/>
-		<javac srcdir="${uvm-dir}/uvm"
+		<javac srcdir="${uvm-dir}/uvm:${burg-impl-dir}/burm"
 		       includeantruntime="false"
+		       classpath="${burg-impl-dir}:${uvm-dir}"
 		       destdir="${burg-exec-dir}">
 		       <include name="OpCode.java"/>
+		       <include name="IRTreeNode.java"/>
+		       <include name="BurmState.java"/>
 		</javac>
 		<javac srcdir="${uvm-dir}/uvm/mc"
 			   includeantruntime="false"
+			   classpath="${burg-impl-dir}:${burg-exec-dir}"
 			   destdir="${burg-exec-dir}"/>
 			   
 		<echo message="javac burg..."/>
@@ -78,7 +80,6 @@
 			<arg value="${target-rule-file}"/>
 			<arg line="-o ${burm-dir}"/>
 		</java>
-
 	</target>
 	
 	<target name="clean">
@@ -91,7 +92,7 @@
 		<antcall target="build-burg"/>
 	</target>
 	
-	<target name="build" depends="gen-antlr, generate-BURM">
+	<target name="build" depends="build-eclipse, build-runtime">
 		<echo message="Generating uVM compiler..."/>
 		<javac srcdir="parser-generated:src:backend/codegengen-gen"
 			   classpath="${antlr-jar}"
@@ -100,6 +101,10 @@
 	</target>
 	
 	<target name="build-eclipse" depends="gen-antlr, generate-BURM">
+	</target>
+		
+	<target name="build-runtime">
+		<exec executable="make" dir="runtime/"/>
 	</target>
 	
 	<target name="run-test">

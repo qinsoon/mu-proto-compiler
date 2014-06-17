@@ -132,6 +132,8 @@ public class LinearScan extends AbstractMCCompilationPhase {
             
             // collect available registers in f
             
+            System.out.println("Trying assign reg for " + cur.getReg().REP().getName() + " of dataType= " + cur.getReg().REP().getDataType() + ", HLLOp=" + cur.getReg().REP().highLevelOp.prettyPrint());
+            
             // f <- free
             LinkedList<MCRegister> f = new LinkedList<MCRegister>();
             if (cur.getReg().REP().getDataType() == MCRegister.DATA_GPR)

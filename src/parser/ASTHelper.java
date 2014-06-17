@@ -22,12 +22,14 @@ import uvm.IRTreeNode;
 import uvm.Instruction;
 import uvm.IntImmediate;
 import uvm.Label;
+import uvm.MicroVM;
 import uvm.Register;
 import uvm.Type;
 import uvm.Value;
 import uvm.inst.InstAdd;
 import uvm.inst.InstBranch;
 import uvm.inst.InstBranch2;
+import uvm.inst.InstCall;
 import uvm.inst.InstEq;
 import uvm.inst.InstFAdd;
 import uvm.inst.InstFDiv;
@@ -273,6 +275,30 @@ public abstract class ASTHelper {
             }
             
             Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), toType);
+            node.setDefReg(def);
+            return node;
+        } else if (inst instanceof parser.uIRParser.InstCallContext) {
+            parser.uIRParser.InstCallContext callCtx = (parser.uIRParser.InstCallContext) inst;
+            
+            parser.uIRParser.FuncCallBodyContext calleeCtx = callCtx.funcCallBody();
+            String calleeName = getIdentifierName(calleeCtx.value().IDENTIFIER(), true);
+            Function callee = MicroVM.v.getFunction(calleeName);
+            FunctionSignature sig = getFunctionSignature(calleeCtx.funcSig());
+            if (callee == null) {
+                callee = new Function(calleeName, sig);
+                MicroVM.v.declareFunc(calleeName, callee);
+            }
+            
+            parser.uIRParser.ArgsContext argsCtx = calleeCtx.args();
+            List<uvm.Value> args = new ArrayList<uvm.Value>();
+            for (int i = 0; i < argsCtx.value().size(); i++) {
+                parser.uIRParser.ValueContext valueCtx = argsCtx.value(i);
+                args.add(getValue(f, valueCtx, sig.getParamTypes().get(i)));
+            }
+            
+            Instruction node = new InstCall(callee, args);
+            
+            Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), sig.getReturnType());
             node.setDefReg(def);
             return node;
         }

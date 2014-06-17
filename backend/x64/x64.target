@@ -12,6 +12,7 @@
 .mc_spmov movss
 .mc_phi imcphi dpmcphi spmcphi
 .mc_nop nop
+.mc_call call
 
 .inst_ptr rip
 
@@ -23,6 +24,8 @@
 .fp_reg xmm0 xmm1 xmm2 xmm3 xmm4 xmm5 xmm6 xmm7 xmm8 xmm9 xmm10 xmm11 xmm12 xmm13 xmm14 xmm15
 .fp_reg_param xmm0 xmm1 xmm2 xmm3 xmm4 xmm5 xmm6 xmm7
 .fp_reg_ret xmm0 xmm1
+
+.callee_save rbx rbp r12 r13 r14 r15
 
 // _|_|_|_|  _|      _|  _|_|_|  _|_|_|_|_|      _|_|_|    _|    _|  _|        _|_|_|_|    _|_|_|
 // _|        _|_|  _|_|    _|        _|          _|    _|  _|    _|  _|        _|        _|      
@@ -254,6 +257,18 @@ ireg : FPTOSI(dpvalue)
 1
 
 // ********************************
+// CALLs
+// ********************************
+
+op : CALL(label)
+> call P[0] -> %res_reg
+5
+
+ireg : CALL(label)
+> call P[0] -> %res_reg
+6
+
+// ********************************
 // NON-EMIT RULEs
 // ********************************
 
@@ -410,6 +425,22 @@ label : LABEL
 .mc_def test = {
 	GPR GPR;
 	"testq %s,%s", OP[0], OP[1];
+}
+
+// ********************************
+// CALLS
+// ********************************
+
+.mc_def call = {
+	"call %s", OP[0];
+}
+
+.mc_def push(1) = {
+	"pushq %s", OP[0];
+}
+
+.mc_def pop(1) = {
+	"popq %s", OP[0];
 }
 
 // ********************************

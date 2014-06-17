@@ -115,6 +115,10 @@ public abstract class AbstractMachineCode {
         return false;
     }
     
+    public boolean isCall() {
+        return false;
+    }
+    
     // we will try register coalescing for mov mc
     public boolean isMov() {
         return false;

@@ -26,7 +26,7 @@ public class Double extends Type {
 
     @Override
     public int fitsInFPR() {
-        return 2;
+        return 1;
     }
 
 }

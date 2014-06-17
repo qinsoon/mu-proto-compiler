@@ -22,7 +22,7 @@ public class MCRegister extends MCOperand{
     
     public MCRegister(String name, int type, int dataType) {
         this.name = name;
-        this.type = type;
+        this.type = type;        
         this.dataType = dataType;
         
         this.join = this;

@@ -71,7 +71,13 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
                 checkAndAddValue(phi, entry.getValue());
                 inst.addChild(entry.getKey());
             }
-        } else {
+        } else if (inst instanceof InstCall) {
+            InstCall call = (InstCall) inst;
+            
+            inst.addChild(call.getCallee().getFuncLabel());
+        }
+        
+        else {
             for (Value v : inst.getOperands()) {
                 checkAndAddValue(inst, v);
             }

@@ -15,6 +15,7 @@ import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
 import compiler.phase.MCRepresentationGeneration;
 import compiler.phase.mc.*;
+import compiler.phase.mc.x64.AllocateParamRetRegister;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
@@ -86,6 +87,7 @@ public class UVMCompiler {
              */
             new CombineReturns("combineret").execute();
             new BBReconstruction("reconstbb").execute();
+            new RetainHighLevelDataType("retainhlltype").execute();
             
             /*
              *  register allocation
