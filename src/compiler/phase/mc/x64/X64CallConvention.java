@@ -1,12 +1,26 @@
 package compiler.phase.mc.x64;
 
 import java.util.List;
+import java.util.ArrayList;
 
+import burm.mc.X64add;
+import burm.mc.X64pop;
+import burm.mc.X64push;
 import compiler.UVMCompiler;
 import uvm.CompiledFunction;
 import uvm.Function;
+import uvm.IRTreeNode;
+import uvm.Instruction;
+import uvm.OpCode;
 import uvm.Type;
+import uvm.Value;
+import uvm.inst.InstCall;
 import uvm.mc.AbstractMachineCode;
+import uvm.mc.LiveInterval;
+import uvm.mc.MCIntImmediate;
+import uvm.mc.MCLabel;
+import uvm.mc.MCMemoryOperand;
+import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
 
 public class X64CallConvention {
@@ -69,7 +83,7 @@ public class X64CallConvention {
                 UVMCompiler.error("a return value fits in several GPRs, unimplemented");
             }
         } else if (returnType.fitsInFPR() > 0) {
-            if (returnType.fitsInFPR() == 2) {
+            if (returnType.fitsInFPR() == 1) {
                 MCRegister symbolRetReg = cf.findRegister("ret_reg0", MCRegister.RET_REG);
                 MCRegister realRetReg = cf.findOrCreateRegister(UVMCompiler.MCDriver.getFPRRetName(0), MCRegister.MACHINE_REG, MCRegister.DATA_DP);
                 
@@ -92,6 +106,202 @@ public class X64CallConvention {
             CompiledFunction caller, 
             Function callee,
             AbstractMachineCode callMC) {
-        return null;
+        List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>();
+        
+        // caller saved registers
+        int callMCIndex = callMC.sequence;
+        List<MCRegister> liveRegs = caller.getLiveRegistersAt(callMCIndex);
+        for (MCRegister reg : liveRegs) {
+            pushStack(reg);
+        }
+        
+        // deal with arguments
+        InstCall callIR = (InstCall) callMC.getHighLevelIR();
+        List<Value> args = callIR.getArguments();
+        List<Type> argTypes = callee.getSig().getParamTypes();
+        
+        UVMCompiler._assert(
+                argTypes.size() == args.size(), 
+                "call IR has " + args.size() + " arguments while func signature has " + argTypes.size());
+        
+        int usedParamGPRs = 0;
+        int usedParamFPRs = 0;
+        for (int i = 0; i < argTypes.size(); i++) {
+            Type curType = argTypes.get(i);
+            MCOperand arg = operandFromNode(caller, args.get(i));
+            if (curType.fitsInGPR() > 0) {
+                if (curType.fitsInGPR() == 1) {                   
+                    if (usedParamGPRs < UVMCompiler.MCDriver.getNumberOfGPRParam()) {
+                        // pass by register
+                        MCRegister nextAvailParamReg = caller.findOrCreateRegister(
+                                UVMCompiler.MCDriver.getGPRParamName(usedParamGPRs),
+                                MCRegister.MACHINE_REG,
+                                MCRegister.DATA_GPR);
+                        
+                        ret.add(UVMCompiler.MCDriver.genMove(nextAvailParamReg, arg));
+                        
+                        usedParamGPRs++;
+                    } else {
+                        // pass by stack
+                        ret.add(pushStack(arg));
+                    }
+                } else {
+                    UVMCompiler.error("argument requires more than one GPR, unimplemented. ");
+                }
+            } else if (curType.fitsInFPR() > 0){
+                if (curType.fitsInFPR() == 1) {
+                    if (usedParamFPRs < UVMCompiler.MCDriver.getNumberOfFPRParam()) {
+                        // pass by register
+                        MCRegister nextAvailParamReg = caller.findOrCreateRegister(
+                                UVMCompiler.MCDriver.getFPRParamName(usedParamFPRs), 
+                                MCRegister.MACHINE_REG, 
+                                MCRegister.DATA_DP);
+                        
+                        ret.add(UVMCompiler.MCDriver.genDPMove(nextAvailParamReg, arg));
+                        
+                        usedParamFPRs++;
+                    } else {
+                        // pass by stack
+                        ret.add(pushStack(arg));
+                    }
+                } else {
+                    UVMCompiler.error("argument requires more than one FPR, unimplemented. ");
+                }
+            } else if (curType.fitsInFPR() == 0 && curType.fitsInGPR() == 0) {
+                UVMCompiler.error("a param doesnt fit in registers, and passed on stack. unimplemented");
+            } else {
+                UVMCompiler.error("Type " + curType.prettyPrint() + " seems errornous on its fitness of registers. ");
+            }
+        }
+        
+        // push return address
+        MCLabel callerLabel = (MCLabel) operandFromNode(caller, caller.getOriginFunction().getFuncLabel());
+        MCMemoryOperand callerRelAddress = new MCMemoryOperand();
+        MCRegister rip = caller.findOrCreateRegister(UVMCompiler.MCDriver.getInstPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+        callerRelAddress.setBase(rip);
+        callerRelAddress.setDispLabel(callerLabel);
+        ret.add(pushStack(callerRelAddress));
+        
+        // generate call
+        ret.add(UVMCompiler.MCDriver.genCall((MCLabel) operandFromNode(caller, callee.getFuncLabel())));
+        
+        return ret;
+    }
+    
+    public void genPrologue(CompiledFunction cf) {
+        List<AbstractMachineCode> prologue = cf.prologue;
+        
+        // set up its own frame
+        
+        // push rbp
+        MCRegister rbp = cf.findOrCreateRegister(UVMCompiler.MCDriver.getFramePtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+        AbstractMachineCode pushRBP = pushStack(rbp);
+        pushRBP.setLabel(new MCLabel("prologue"));
+        prologue.add(pushRBP);
+        
+        // rsp -> rbp
+        MCRegister rsp = cf.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+        prologue.add(UVMCompiler.MCDriver.genMove(rbp, rsp));
+        
+        // allocate space for local storage
+        int stackDisp = 0;
+        for (MCRegister reg : cf.intervals.keySet()) {
+            if (cf.intervals.get(reg).hasValidRanges() && reg.isSpilled()) {
+                if (reg.getDataType() == MCRegister.DATA_GPR) {
+                    stackDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
+                }
+                else if (reg.getDataType() == MCRegister.DATA_DP ||
+                        reg.getDataType() == MCRegister.DATA_SP) {
+                    UVMCompiler.error("unimplemented: calculate stack disp for spilled fp regs");
+                } else {
+                    UVMCompiler.error("unimplemented: calculate stack disp");
+                }
+            }
+        }
+        if (stackDisp != 0) {
+            X64add dispRSP = new X64add();
+            dispRSP.setOperand0(rsp);
+            dispRSP.setOperand1(new MCIntImmediate(stackDisp));
+            dispRSP.setReg(rsp);
+            prologue.add(dispRSP);
+        }
+        
+        // callee-saved register
+        for (MCRegister reg : cf.intervals.keySet()) {
+            LiveInterval li = cf.intervals.get(reg);
+            if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()) && li.hasValidRanges()) {
+                // need to save it
+                prologue.add(pushStack(reg));
+            }
+        }
+    }
+    
+    public void genEpilogue(CompiledFunction cf) {
+        
+    }
+    
+    private X64pop popStack(MCOperand dst) {
+        X64pop ret = new X64pop();
+        ret.setOperand(0, dst);
+        return ret;
+    }
+    
+    private X64push pushStack(MCOperand src) {
+        X64push ret = new X64push();
+        ret.setOperand(0, src);
+        return ret;
+    }
+    
+    private static MCOperand operandFromNode(CompiledFunction cf, IRTreeNode node) {
+        MCOperand ret;
+        switch(node.getOpcode()) {
+        case OpCode.INT_IMM:
+          ret = new uvm.mc.MCIntImmediate(((uvm.IntImmediate)node).getValue()); break;
+        case OpCode.FP_SP_IMM:
+          ret = new uvm.mc.MCSPImmediate(((uvm.FPImmediate)node).getFloat()); break;
+        case OpCode.FP_DP_IMM:
+          ret = new uvm.mc.MCDPImmediate(((uvm.FPImmediate)node).getDouble()); break;
+        case OpCode.REG_I1:
+        case OpCode.REG_I8:
+        case OpCode.REG_I16:
+        case OpCode.REG_I32:
+        case OpCode.REG_I64:
+          ret = cf.findOrCreateRegister(
+                  ((uvm.Register)node).getName(), 
+                  uvm.mc.MCRegister.OTHER_SYMBOL_REG, 
+                  uvm.mc.MCRegister.DATA_GPR); break;
+        case OpCode.LABEL:
+          ret = new uvm.mc.MCLabel(((uvm.Label)node).getName()); break;
+        default:
+          ret = cf.findOrCreateRegister(
+                  "res_reg"+node.getId(), 
+                  uvm.mc.MCRegister.RES_REG, 
+                  getDataTypeFromHighLevelIR(node)); break;
+        }
+        ret.highLevelOp = node;
+        return ret;
+    }
+    
+    private static int getDataTypeFromHighLevelIR(IRTreeNode ir) {
+        switch(ir.getOpcode()) {
+        case OpCode.REG_I1:
+        case OpCode.REG_I8:
+        case OpCode.REG_I16:
+        case OpCode.REG_I32:
+        case OpCode.REG_I64:
+        case OpCode.INT_IMM:
+            return MCRegister.DATA_GPR;
+        case OpCode.FP_SP_IMM:
+            return MCRegister.DATA_SP;
+        case OpCode.FP_DP_IMM:
+            return MCRegister.DATA_DP;
+        default:
+            if (ir instanceof Instruction) {
+                Instruction inst = (Instruction) ir;
+                return getDataTypeFromHighLevelIR(inst.getDefReg());
+            }
+            UVMCompiler.error("cannot get data type from HLL IR:" + ir.prettyPrint());
+            return -1;
+        }
     }
 }

@@ -14,6 +14,8 @@ public abstract class AbstractMachineCode {
     
     protected uvm.mc.MCRegister reg;
     
+    protected uvm.IRTreeNode highLevelIR;
+    
     public abstract String emit();
     
     public String getName() {
@@ -135,5 +137,13 @@ public abstract class AbstractMachineCode {
 
     public void setNodeIndex(int index) {
         this.node = index;
+    }
+
+    public uvm.IRTreeNode getHighLevelIR() {
+        return highLevelIR;
+    }
+
+    public void setHighLevelIR(uvm.IRTreeNode highLevelIR) {
+        this.highLevelIR = highLevelIR;
     }
 }

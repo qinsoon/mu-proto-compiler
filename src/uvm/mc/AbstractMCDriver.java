@@ -13,7 +13,11 @@ public abstract class AbstractMCDriver {
     
     public abstract AbstractMachineCode genOppositeCondJump(AbstractMachineCode orig);
     
+    public abstract AbstractMachineCode genCall(MCLabel func);
+    
     public abstract String getInstPtrReg();
+    public abstract String getStackPtrReg();
+    public abstract String getFramePtrReg();
     
     public abstract int getNumberOfGPR();
     public abstract String getGPRName(int i);

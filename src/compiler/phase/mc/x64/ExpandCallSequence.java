@@ -19,6 +19,11 @@ public class ExpandCallSequence extends AbstractMCCompilationPhase {
 
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
+        X64CallConvention cc = new X64CallConvention();
+        
+        cc.genPrologue(cf);
+        cc.genEpilogue(cf);
+        
         for (MCBasicBlock bb : cf.BBs) {
             List<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
             
@@ -27,13 +32,15 @@ public class ExpandCallSequence extends AbstractMCCompilationPhase {
                     // expand calling sequence
                     MCLabel label = (MCLabel) mc.getOperand(0);
                     Function callee = MicroVM.v.getFunction(label.getName());
-                    List<AbstractMachineCode> expandedCallSequence = new X64CallConvention().callerSetupCallSequence(cf, callee, mc);
+                    List<AbstractMachineCode> expandedCallSequence = cc.callerSetupCallSequence(cf, callee, mc);
                     
                     newMC.addAll(expandedCallSequence);
                 } else {
                     newMC.add(mc);
                 }
             }
+            
+            bb.setMC(newMC);
         }
     }
 

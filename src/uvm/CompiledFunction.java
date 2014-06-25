@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Queue;
 
 import compiler.UVMCompiler;
@@ -24,6 +25,9 @@ public class CompiledFunction {
     public List<AbstractMachineCode> mc = new ArrayList<AbstractMachineCode>();
     
     public List<AbstractMachineCode> finalMC = new ArrayList<AbstractMachineCode>();
+    
+    public List<AbstractMachineCode> prologue = new ArrayList<AbstractMachineCode>();
+    public List<AbstractMachineCode> epilogue = new ArrayList<AbstractMachineCode>();
     
     // MC BB
     public List<MCBasicBlock> BBs = new ArrayList<MCBasicBlock>();
@@ -149,6 +153,17 @@ public class CompiledFunction {
         return mc;
     }
     
+    public List<MCRegister> getLiveRegistersAt(int sequence) {
+        List<MCRegister> ret = new ArrayList<MCRegister>();
+        
+        for (Entry<MCRegister, LiveInterval> entry : intervals.entrySet()) {
+            if (entry.getValue().isLiveAt(sequence)) {
+                ret.add(entry.getKey());
+            }
+        }
+        return ret;
+    }
+    
     public void printInterval() {        
         System.out.println("Live interval for " + getOriginFunction().getName());
         
@@ -178,5 +193,21 @@ public class CompiledFunction {
             
             System.out.println(" " + reg.prettyPrint());
         }
+    }
+
+    public List<AbstractMachineCode> getEpilogue() {
+        return epilogue;
+    }
+
+    public void setEpilogue(List<AbstractMachineCode> epilogue) {
+        this.epilogue = epilogue;
+    }
+
+    public MCBasicBlock getEntryBB() {
+        return entryBB;
+    }
+
+    public void setEntryBB(MCBasicBlock entryBB) {
+        this.entryBB = entryBB;
     }
 }

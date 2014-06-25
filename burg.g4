@@ -22,6 +22,8 @@ declare
     |   mcPhiDecl
     |   mcNopDecl
     |   mcInstPtrDecl
+    |   mcStackPtrDecl
+    |   mcFramePtrDecl
     |   mcCallDecl
 // op emit
     |   opEmitRule
@@ -83,6 +85,14 @@ mcEmitOperand
 
 mcInstPtrDecl
     :   '.inst_ptr' idString
+    ;
+
+mcStackPtrDecl
+    :   '.stack_ptr' idString
+    ;
+
+mcFramePtrDecl
+    :   '.frame_ptr' idString
     ;
 
 mcCallDecl
@@ -164,8 +174,8 @@ idString
     ;
 
 node
-    :   TERM ('(' node+ ')')?
-    |   NONTERM
+    :   TERM ('(' node+ ')')?   # TermNode
+    |   NONTERM                 # NonTermNode
     ;
 
 /*

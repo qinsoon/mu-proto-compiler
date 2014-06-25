@@ -16,6 +16,7 @@ import compiler.phase.InstructionSelection;
 import compiler.phase.MCRepresentationGeneration;
 import compiler.phase.mc.*;
 import compiler.phase.mc.x64.AllocateParamRetRegister;
+import compiler.phase.mc.x64.ExpandCallSequence;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
@@ -29,6 +30,7 @@ public class UVMCompiler {
 
     public static AbstractMCDriver MCDriver = new X64Driver();
     public static final int MC_REG_SIZE = 64;
+    public static final int MC_REG_SIZE_IN_BYTES = 8;
     
     public static void main(String[] args) {
         if (args.length == 0)
@@ -105,6 +107,7 @@ public class UVMCompiler {
             new RegisterCoalescing("regcoalesc").execute();             //*
             new LinearScan("linearscan").execute();                     //*
             
+            new ExpandCallSequence("expandcallseq").execute();
             /*
              *  code emission
              */

@@ -43,6 +43,8 @@ public class Burg {
     public static final List<String>    MC_DPMOV = new ArrayList<String>();
     public static final List<String>    MC_SPMOV = new ArrayList<String>();
     public static String                INST_PTR;
+    public static String                STACK_PTR;
+    public static String                FRAME_PTR;
     public static final List<String>    MC_CALL = new ArrayList<String>();
     
     public static final List<String>    REG_GPR = new ArrayList<String>();
@@ -136,6 +138,9 @@ public class Burg {
         
         if (MC_DPMOV.isEmpty() || MC_SPMOV.isEmpty())
             error("need to define double/single-precition fp mov instruction by using .mc_dpmov/.mc_spmov in .target file");
+        
+        if (MC_CALL.isEmpty())
+            error("need to define call mc");
         
         for (MCOp op : mcOps.values()) {
             if (!op.defined) {
@@ -368,6 +373,8 @@ public class Burg {
                     code.appendStmtln(String.format(
                             "%s %s = new %s()", opClass, var, opClass));
                     
+                    code.appendStmtln(String.format("%s.setHighLevelIR(node)", var));
+                    
                     for (int j = 0; j < mc.operands.size(); j++) {
                         CCTOperand operand = mc.operands.get(j);
                         String newOperandStr;
@@ -409,6 +416,8 @@ public class Burg {
         /*
          * TODO shouldnt hard-code it here
          * operandFromNode()
+         * 
+         * there is another copy of this code in X64CallConvention
          */
         code.appendln(String.format(
                 "public static MCOperand operandFromNode(%s node, int dataType) {", IR_NODE_TYPE));
@@ -958,6 +967,17 @@ public class Burg {
         code.decreaseIndent();
         code.appendln("}");
         
+        // call
+        code.appendln();
+        code.appendln("@Override public AbstractMachineCode genCall(MCLabel func) {");
+        code.increaseIndent();
+        String callMC = targetName + MC_CALL.get(0);
+        code.appendStmtln(String.format("%s ret = new %s()", callMC, callMC));
+        code.appendStmtln("ret.setOperand(0, func)");
+        code.appendStmtln("return ret");
+        code.decreaseIndent();
+        code.appendln("}");
+        
         // nop
         code.appendln("@Override public AbstractMachineCode genNop() {");
         code.increaseIndent();
@@ -996,6 +1016,20 @@ public class Burg {
         code.appendln("@Override public String getInstPtrReg() {");
         code.increaseIndent();
         code.appendStmtln("return \"" + INST_PTR + "\"");
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        code.appendln();
+        code.appendln("@Override public String getStackPtrReg() {");
+        code.increaseIndent();
+        code.appendStmtln("return \"" + STACK_PTR + "\"");
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        code.appendln();
+        code.appendln("@Override public String getFramePtrReg() {");
+        code.increaseIndent();
+        code.appendStmtln("return \"" + FRAME_PTR + "\"");
         code.decreaseIndent();
         code.appendln("}");
         

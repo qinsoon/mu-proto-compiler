@@ -19,6 +19,14 @@ public class burgListenerImpl extends burgBaseListener {
         Burg.INST_PTR = ctx.idString().getText();
     }
     
+    @Override public void exitMcStackPtrDecl(@NotNull burgParser.McStackPtrDeclContext ctx) {
+        Burg.STACK_PTR = ctx.idString().getText();
+    }
+    
+    @Override public void exitMcFramePtrDecl(@NotNull burgParser.McFramePtrDeclContext ctx) {
+        Burg.FRAME_PTR = ctx.idString().getText();
+    }
+    
     @Override public void exitMcCondJumpDecl(@NotNull burgParser.McCondJumpDeclContext ctx) {
         for (burgParser.IdStringContext s : ctx.idString())
             Burg.MC_COND_JUMP.add(s.getText());
@@ -205,14 +213,16 @@ public class burgListenerImpl extends burgBaseListener {
     }
     
     private TreeNode getTreeNode(NodeContext ctx) {
-        if (ctx.NONTERM() != null)
-            return Burg.findOrCreateNonTerm(ctx.NONTERM().toString());
-        
-        Terminal t = (Terminal) Burg.findOrCreateTerm(ctx.TERM().toString());
-        for (NodeContext c : ctx.node()) {
-            t.children.add(getTreeNode(c));
+        if (ctx instanceof burgParser.NonTermNodeContext) {
+            return Burg.findOrCreateNonTerm((((burgParser.NonTermNodeContext)ctx).NONTERM().toString()));
         }
-        return t;
+        else if (ctx instanceof burgParser.TermNodeContext) {
+            Terminal t = Burg.findOrCreateTerm(((burgParser.TermNodeContext)ctx).TERM().toString());
+            for (NodeContext c : ((burgParser.TermNodeContext) ctx).node())
+                t.children.add(getTreeNode(c));
+            return t;
+        }
+        return null;
     }
     
     @Override public void exitMcode(@NotNull burgParser.McodeContext ctx) {

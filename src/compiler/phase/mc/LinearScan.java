@@ -7,6 +7,7 @@ import uvm.CompiledFunction;
 import uvm.FunctionSignature;
 import uvm.MicroVM;
 import uvm.mc.LiveInterval;
+import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCRegister;
 import compiler.UVMCompiler;
 import compiler.phase.AbstractCompilationPhase;
@@ -29,6 +30,9 @@ public class LinearScan extends AbstractMCCompilationPhase {
         
         LinkedList<MCRegister> freeGPRs = new LinkedList<MCRegister>();
         LinkedList<MCRegister> freeFPRs = new LinkedList<MCRegister>();
+        
+        int stackSlot = 0;
+        int stackDisp = - UVMCompiler.MC_REG_SIZE_IN_BYTES;
         
         // init free registers
         for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfGPR(); i++) {
@@ -162,7 +166,29 @@ public class LinearScan extends AbstractMCCompilationPhase {
             
             // select a register from f
             if (f.isEmpty()) {
-                UVMCompiler.error("run out of register. assignMemLoc()");
+                UVMCompiler.error("run out of registers. assignMemLoc()");
+                
+                // TODO: compute weight and decide which register to spill first
+                // missing implementation here
+                
+                // spilling register here
+                MCRegister toBeSpilled = cur.getReg().REP();
+                
+                // assign a memory location
+                MCMemoryOperand mem = new MCMemoryOperand();
+                mem.setBase(cf.findOrCreateRegister(UVMCompiler.MCDriver.getFramePtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
+                if (toBeSpilled.getDataType() == MCRegister.DATA_GPR) {
+                    mem.setDisp(stackDisp);
+                    mem.setSize((byte) 8);
+                    stackDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
+                    stackSlot ++;
+                } else if (toBeSpilled.getDataType() == MCRegister.DATA_DP || toBeSpilled.getDataType() == MCRegister.DATA_SP) {
+                    UVMCompiler.error("spilling floating pointer registers to memory");
+                } else {
+                    UVMCompiler.error("spilling unknown register type to memory");
+                }
+                
+                toBeSpilled.setSPILL(mem);
             } else {
                 MCRegister freeReg = f.poll();
                 

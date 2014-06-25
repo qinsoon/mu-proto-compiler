@@ -44,6 +44,14 @@ public class LiveInterval {
         return false;
     }
     
+    public boolean hasValidRanges() {
+        return !ranges.isEmpty();
+    }
+    
+    public boolean isLiveAt(int mc) {
+        return overlap(mc);
+    }
+    
     public boolean overlap(int mc) {
         for (Range range : ranges)
             if (range.contains(mc))

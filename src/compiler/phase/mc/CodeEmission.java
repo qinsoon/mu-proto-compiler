@@ -47,18 +47,24 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             if (cf.getOriginFunction().getName().equals("main")) {
                 writer.write("\t.globl _main\n");
                 writer.write("_main:\n");
+            } else {
+                writer.write("\t.globl " + cf.getOriginFunction().getName() + "\n");
             }
             
             writer.write(cf.getOriginFunction().getName() + ":\n");
             
+            if (!cf.prologue.isEmpty()) {
+                for (AbstractMachineCode mc : cf.prologue)
+                    emitMC(writer, mc);
+            }
+            
             for (AbstractMachineCode mc : cf.finalMC) {
-                if (mc.getLabel() != null) {
-                    writer.write(UVMCompiler.MCDriver.emitOp(mc.getLabel()) + ":");
-                    writer.write('\n');
-                }
-                writer.write('\t');
-                writer.write(mc.emit());
-                writer.write('\n');
+                emitMC(writer, mc);
+            }
+            
+            if (!cf.epilogue.isEmpty()) {
+                for (AbstractMachineCode mc : cf.epilogue)
+                    emitMC(writer, mc);
             }
         } catch (IOException e) {
             UVMCompiler.error("Error when emitting " + fileName);
@@ -70,5 +76,15 @@ public class CodeEmission extends AbstractMCCompilationPhase {
                     e.printStackTrace();
                 }
         }
+    }
+    
+    private static void emitMC(BufferedWriter writer, AbstractMachineCode mc) throws IOException {
+        if (mc.getLabel() != null) {
+            writer.write(UVMCompiler.MCDriver.emitOp(mc.getLabel()) + ":");
+            writer.write('\n');
+        }
+        writer.write('\t');
+        writer.write(mc.emit());
+        writer.write('\n');
     }
 }

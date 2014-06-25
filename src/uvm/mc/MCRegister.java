@@ -18,7 +18,10 @@ public class MCRegister extends MCOperand{
     int dataType;
     String name;
     
+    public int weight = 0;  // used by linear scan to decide which register to spill
+    
     MCRegister join;
+    MCMemoryOperand spill = null;
     
     public MCRegister(String name, int type, int dataType) {
         this.name = name;
@@ -44,6 +47,18 @@ public class MCRegister extends MCOperand{
         if (this.join == this)
             return this;
         else return join.REP();
+    }
+    
+    public MCMemoryOperand SPILL() {
+        return spill;
+    }
+    
+    public boolean isSpilled() {
+        return spill != null;
+    }
+    
+    public void setSPILL(MCMemoryOperand mem) {
+        this.spill = mem;
     }
     
     public static HashMap<String, MCRegister> temps = new HashMap<String, MCRegister>();
