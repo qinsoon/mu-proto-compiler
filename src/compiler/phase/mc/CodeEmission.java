@@ -16,8 +16,8 @@ import uvm.mc.*;
 public class CodeEmission extends AbstractMCCompilationPhase {
     String dir;
     
-    public CodeEmission(String name, String dir) {
-        super(name);
+    public CodeEmission(String name, String dir, boolean verbose) {
+        super(name, verbose);
         this.dir = dir;
     }    
 
@@ -59,12 +59,7 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             }
             
             for (AbstractMachineCode mc : cf.finalMC) {
-                emitMC(writer, mc);
-            }
-            
-            if (!cf.epilogue.isEmpty()) {
-                for (AbstractMachineCode mc : cf.epilogue)
-                    emitMC(writer, mc);
+                emitMCInsertingEpilogueBeforeRet(writer, cf, mc);
             }
         } catch (IOException e) {
             UVMCompiler.error("Error when emitting " + fileName);
@@ -76,6 +71,25 @@ public class CodeEmission extends AbstractMCCompilationPhase {
                     e.printStackTrace();
                 }
         }
+    }
+    
+    private static void emitMCInsertingEpilogueBeforeRet(BufferedWriter writer, CompiledFunction cf, AbstractMachineCode mc) throws IOException {
+        if (mc.isRet()) {
+            // write the label of 'ret' first
+            if (mc.getLabel() != null) {
+                writer.write(UVMCompiler.MCDriver.emitOp(mc.getLabel()) + ":");
+                writer.write('\n');
+            }
+            
+            // emit epilogue
+            for (AbstractMachineCode epiMC : cf.epilogue)
+                emitMC(writer, epiMC);
+            
+            // emit ret
+            writer.write('\t');
+            writer.write(mc.emit());
+            writer.write('\n');
+        } else emitMC(writer, mc);
     }
     
     private static void emitMC(BufferedWriter writer, AbstractMachineCode mc) throws IOException {

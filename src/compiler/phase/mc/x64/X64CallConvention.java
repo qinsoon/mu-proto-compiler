@@ -102,6 +102,9 @@ public class X64CallConvention {
         }
     }
     
+    int argumentsSizeOnStack = -1;
+    List<MCRegister> callerSavedRegs = new ArrayList<MCRegister>();     // push order
+    
     public List<AbstractMachineCode> callerSetupCallSequence(
             CompiledFunction caller, 
             Function callee,
@@ -109,10 +112,12 @@ public class X64CallConvention {
         List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>();
         
         // caller saved registers
+        callerSavedRegs.clear();
         int callMCIndex = callMC.sequence;
         List<MCRegister> liveRegs = caller.getLiveRegistersAt(callMCIndex);
         for (MCRegister reg : liveRegs) {
-            pushStack(reg);
+            ret.add(pushStack(reg));
+            callerSavedRegs.add(reg);
         }
         
         // deal with arguments
@@ -126,6 +131,8 @@ public class X64CallConvention {
         
         int usedParamGPRs = 0;
         int usedParamFPRs = 0;
+        argumentsSizeOnStack = 0;
+        
         for (int i = 0; i < argTypes.size(); i++) {
             Type curType = argTypes.get(i);
             MCOperand arg = operandFromNode(caller, args.get(i));
@@ -144,6 +151,7 @@ public class X64CallConvention {
                     } else {
                         // pass by stack
                         ret.add(pushStack(arg));
+                        argumentsSizeOnStack += UVMCompiler.MC_REG_SIZE_IN_BYTES;
                     }
                 } else {
                     UVMCompiler.error("argument requires more than one GPR, unimplemented. ");
@@ -163,6 +171,7 @@ public class X64CallConvention {
                     } else {
                         // pass by stack
                         ret.add(pushStack(arg));
+                        argumentsSizeOnStack += UVMCompiler.MC_FP_REG_SIZE_IN_BYTES;
                     }
                 } else {
                     UVMCompiler.error("argument requires more than one FPR, unimplemented. ");
@@ -174,16 +183,79 @@ public class X64CallConvention {
             }
         }
         
-        // push return address
-        MCLabel callerLabel = (MCLabel) operandFromNode(caller, caller.getOriginFunction().getFuncLabel());
-        MCMemoryOperand callerRelAddress = new MCMemoryOperand();
-        MCRegister rip = caller.findOrCreateRegister(UVMCompiler.MCDriver.getInstPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
-        callerRelAddress.setBase(rip);
-        callerRelAddress.setDispLabel(callerLabel);
-        ret.add(pushStack(callerRelAddress));
+        // push return address - dont need to do this
+//        MCLabel callerLabel = (MCLabel) operandFromNode(caller, caller.getOriginFunction().getFuncLabel());
+//        MCMemoryOperand callerRelAddress = new MCMemoryOperand();
+//        MCRegister rip = caller.findOrCreateRegister(UVMCompiler.MCDriver.getInstPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+//        callerRelAddress.setBase(rip);
+//        callerRelAddress.setDispLabel(callerLabel);
+//        ret.add(pushStack(callerRelAddress));
         
         // generate call
         ret.add(UVMCompiler.MCDriver.genCall((MCLabel) operandFromNode(caller, callee.getFuncLabel())));
+        
+        return ret;
+    }
+    
+    public List<AbstractMachineCode> callerCleanupCallSequence(
+            CompiledFunction caller, 
+            Function callee,
+            AbstractMachineCode callMC) {
+        List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>();
+        
+        // trash arguments on stack
+        // add rsp, xxx
+        if (argumentsSizeOnStack == -1)
+            UVMCompiler.error("unknown arguments size on stack: should call callerSetupCallSequence() before call callerCleanupCallSequence()");
+        
+        if (argumentsSizeOnStack != 0) {
+            MCRegister rsp = caller.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+            X64add trashArguments = new X64add();
+            trashArguments.setOperand0(rsp);
+            trashArguments.setOperand1(new MCIntImmediate(argumentsSizeOnStack));
+            trashArguments.setReg(rsp);
+            ret.add(trashArguments);
+        }
+        
+        // save return value to designated reg or memory location
+        MCRegister retResult = null;
+        if (!callMC.getReg().REP().isSpilled())
+            retResult = callMC.getReg().REP();
+        else {
+            UVMCompiler.error("unimplemented: return value is spilled onto stack");
+        }
+        
+        Type returnType = callee.getSig().getReturnType();
+        
+        if (returnType.fitsInGPR() > 0) {
+            if (returnType.fitsInGPR() == 1) {
+                MCRegister realRetReg = caller.findOrCreateRegister(UVMCompiler.MCDriver.getGPRRetName(0), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+                ret.add(UVMCompiler.MCDriver.genMove(retResult, realRetReg));
+            } else {
+                UVMCompiler.error("a return value fits in several GPRs, unimplemented");
+            }
+        } else if (returnType.fitsInFPR() > 0) {
+            if (returnType.fitsInFPR() == 1) {
+                MCRegister realRetReg = caller.findOrCreateRegister(UVMCompiler.MCDriver.getFPRRetName(0), MCRegister.MACHINE_REG, MCRegister.DATA_DP);
+                
+                ret.add(UVMCompiler.MCDriver.genDPMove(retResult, realRetReg));
+            } else {
+                UVMCompiler.error("a return value fits in single-precision FPRs, unimplemented");
+            }
+        } else if (returnType.fitsInGPR() == 0 && returnType.fitsInFPR() == 0) {
+            if (returnType instanceof uvm.type.Void) {
+                // we dont need to do anything
+            } else { 
+                UVMCompiler.error("a return value of Type " + returnType.prettyPrint() + " doesnt fit in registers, and passed on stack. unimplemented");
+            }
+        } else {
+            UVMCompiler.error("Type " + returnType.prettyPrint() + " seems errornous on its fitness of registers. ");
+        }
+        
+        // restore caller saved register
+        for (int i = callerSavedRegs.size() - 1; i >= 0; i--) {
+            ret.add(popStack(callerSavedRegs.get(i)));
+        }
         
         return ret;
     }
@@ -230,6 +302,7 @@ public class X64CallConvention {
         for (MCRegister reg : cf.intervals.keySet()) {
             LiveInterval li = cf.intervals.get(reg);
             if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()) && li.hasValidRanges()) {
+                cf.calleeSavedRegs.add(reg);
                 // need to save it
                 prologue.add(pushStack(reg));
             }
@@ -237,7 +310,20 @@ public class X64CallConvention {
     }
     
     public void genEpilogue(CompiledFunction cf) {
+        List<AbstractMachineCode> epilogue = cf.epilogue;
         
+        // restore callee-saved regs
+        for (int i = cf.calleeSavedRegs.size() - 1; i >= 0; i--) {
+            epilogue.add(popStack(cf.calleeSavedRegs.get(i)));
+        }
+        
+        // set rbp -> rsp
+        MCRegister rbp = cf.findOrCreateRegister(UVMCompiler.MCDriver.getFramePtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+        MCRegister rsp = cf.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+        epilogue.add(UVMCompiler.MCDriver.genMove(rsp, rbp));
+        
+        // pop rbp
+        epilogue.add(popStack(rbp));
     }
     
     private X64pop popStack(MCOperand dst) {

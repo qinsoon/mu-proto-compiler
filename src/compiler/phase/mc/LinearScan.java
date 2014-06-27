@@ -14,14 +14,14 @@ import compiler.phase.AbstractCompilationPhase;
 
 public class LinearScan extends AbstractMCCompilationPhase {
 
-    public LinearScan(String name) {
-        super(name);
+    public LinearScan(String name, boolean verbose) {
+        super(name, verbose);
     }
     
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
         // implementing Section 5 of Linear Scan Register Allocation on SSA paper
-        System.out.println("\nRunning Linear Scan on " + cf.getOriginFunction().getName());
+        verboseln("\nRunning Linear Scan on " + cf.getOriginFunction().getName());
         
         LinkedList<LiveInterval> unhandled = prepareIntervals(cf);
         LinkedList<LiveInterval> active = new LinkedList<LiveInterval>();
@@ -64,19 +64,21 @@ public class LinearScan extends AbstractMCCompilationPhase {
             }
         }
         
-        System.out.print("free GPRs:");
-        for (MCRegister reg : freeGPRs)
-            System.out.print(reg.prettyPrint() + " ");
-        System.out.println();
-        System.out.print("free FPRs:");
-        for (MCRegister reg : freeFPRs)
-            System.out.print(reg.prettyPrint() + " ");
-        System.out.println();
+        if (verbose) {
+            System.out.print("free GPRs:");
+            for (MCRegister reg : freeGPRs)
+                System.out.print(reg.prettyPrint() + " ");
+            System.out.println();
+            System.out.print("free FPRs:");
+            for (MCRegister reg : freeFPRs)
+                System.out.print(reg.prettyPrint() + " ");
+            System.out.println();
+        }
         
         // while unhandled <> {} do
         while (!unhandled.isEmpty()) {
             LiveInterval cur = unhandled.poll();
-            System.out.println(cur.prettyPrint());
+            verboseln(cur.prettyPrint());
             
             // check for active intervals that expired
             for (int i = 0; i < active.size(); ) {
@@ -136,7 +138,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
             
             // collect available registers in f
             
-            System.out.println("Trying assign reg for " + cur.getReg().REP().getName() + " of dataType= " + cur.getReg().REP().getDataType() + ", HLLOp=" + cur.getReg().REP().highLevelOp.prettyPrint());
+            verboseln("Trying assign reg for " + cur.getReg().REP().getName() + " of dataType= " + cur.getReg().REP().getDataType() + ", HLLOp=" + cur.getReg().REP().highLevelOp.prettyPrint());
             
             // f <- free
             LinkedList<MCRegister> f = new LinkedList<MCRegister>();
@@ -166,7 +168,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
             
             // select a register from f
             if (f.isEmpty()) {
-                UVMCompiler.error("run out of registers. assignMemLoc()");
+//                UVMCompiler.error("run out of registers. assignMemLoc()");
                 
                 // TODO: compute weight and decide which register to spill first
                 // missing implementation here
@@ -192,7 +194,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
             } else {
                 MCRegister freeReg = f.poll();
                 
-                System.out.println("assigning " + cur.getReg().REP().prettyPrint() + " to " + freeReg.prettyPrint());
+                verboseln("assigning " + cur.getReg().REP().prettyPrint() + " to " + freeReg.prettyPrint());
                 cur.getReg().REP().setREP(freeReg);
                 
                 // free <- free - {cur.reg}
@@ -205,8 +207,10 @@ public class LinearScan extends AbstractMCCompilationPhase {
             }
         }
     
-        System.out.println("\nAfter linear scan:");
-        System.out.println(cf.prettyPrint());
+        if (verbose) {
+            System.out.println("\nAfter linear scan:");
+            System.out.println(cf.prettyPrint());
+        }
     }
 
     private LinkedList<LiveInterval> prepareIntervals(CompiledFunction cf) { 

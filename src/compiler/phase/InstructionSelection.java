@@ -9,21 +9,20 @@ import burm.BURM_GENERATED;
 import burm.BurmState;
 
 public class InstructionSelection extends AbstractCompilationPhase{
-    static final boolean VERBOSE = true;
-    
-    public InstructionSelection(String name) {
-        super(name);
+
+    public InstructionSelection(String name, boolean verbose) {
+        super(name, verbose);
     }
     
-    private static void print(IRTreeNode node) {
-        System.out.println(node.printNode());
-        System.out.println(node.state.prettyPrint());
+    private void print(IRTreeNode node) {
+        verboseln(node.printNode());
+        verboseln(node.state.prettyPrint());
         
         for (int i = 0; i < node.getArity(); i++)
             print(node.getChild(i));
     }
     
-    public static BurmState label(IRTreeNode p) {        
+    public BurmState label(IRTreeNode p) {        
         if (p != null) {
             BurmState[] leaves = new BurmState[p.getArity()];
             for (int i = 0; i < leaves.length; i++)
@@ -37,17 +36,16 @@ public class InstructionSelection extends AbstractCompilationPhase{
 
     @Override
     protected void preChecklist() {
-        if (VERBOSE)
-            System.out.println("\nStart instruction selection ... \n");
+        verboseln("\nStart instruction selection ... \n");
     }
 
     @Override
     protected void postChecklist() {
-        if (VERBOSE) {
+        if (verbose) {
             for (Function f : MicroVM.v.funcs.values()) {
                 for (IRTreeNode node : f.tree) {
                     print(node);
-                    System.out.println();
+                    verboseln();
                 }
             }
         }

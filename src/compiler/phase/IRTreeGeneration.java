@@ -14,8 +14,8 @@ import uvm.Value;
 import uvm.inst.*;
 
 public class IRTreeGeneration extends AbstractCompilationPhase{
-    public IRTreeGeneration(String name) {
-        super(name);
+    public IRTreeGeneration(String name, boolean verbose) {
+        super(name, verbose);
     }
     
     private static void checkAndAddValue(Instruction inst, Value v) {
@@ -35,12 +35,12 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         } else inst.addChild(v);
     }
     
-    public static void printIRTree() {
+    public void printIRTree() {
         for (Function f : MicroVM.v.funcs.values()) {
-            System.out.println(f);
+            verboseln(f);
             
             for (IRTreeNode node : f.tree) {
-                System.out.println("+" + node.printNode());
+                verboseln("+" + node.printNode());
             }
         }
     }
@@ -53,7 +53,8 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
 
     @Override
     protected void postChecklist() {
-       printIRTree();
+       if (verbose)
+           printIRTree();
     }
 
     @Override

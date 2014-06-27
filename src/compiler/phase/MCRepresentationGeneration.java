@@ -14,10 +14,9 @@ import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCRegister;
 
 public class MCRepresentationGeneration extends AbstractCompilationPhase{
-    private static final boolean VERBOSE = true;
     
-    public MCRepresentationGeneration(String name) {
-        super(name);
+    public MCRepresentationGeneration(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     public void execute() {
@@ -38,7 +37,7 @@ public class MCRepresentationGeneration extends AbstractCompilationPhase{
             cf.setRegs(MCRegister.temps);
             MCRegister.clearTemps();
             
-            if (VERBOSE) {
+            if (verbose) {
                 System.out.println(f.getName() + " machine code:");
                 for (AbstractMachineCode mc : cf.getMachineCode()) {
                     System.out.println(mc.prettyPrint());

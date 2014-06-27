@@ -7,13 +7,31 @@ import uvm.Instruction;
 import uvm.MicroVM;
 
 public abstract class AbstractCompilationPhase {
-    String name;
+    protected String name;
+    protected final boolean verbose;
     
-    public AbstractCompilationPhase(String name) {
+    public AbstractCompilationPhase(String name, boolean verbose) {
         this.name = name;
+        this.verbose = verbose;
+    }
+    
+    public void verboseln(Object o) {
+        if (verbose)
+            System.out.println(o);
+    }
+    
+    public void verbose(Object o) {
+        if (verbose)
+            System.out.print(o);
+    }
+    
+    public void verboseln() {
+        if (verbose)
+            System.out.println();
     }
     
     public void execute() {
+        verboseln("=========== " + name + " ===========\n");
         preChecklist();
         
         for (Function f : MicroVM.v.funcs.values()) {

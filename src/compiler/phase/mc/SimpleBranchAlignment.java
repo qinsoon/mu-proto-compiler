@@ -15,13 +15,13 @@ import uvm.mc.MCLabel;
 
 public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
 
-    public SimpleBranchAlignment(String name) {
-        super(name);
+    public SimpleBranchAlignment(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
-        System.out.println("*************Trying to schedule a trace for :" + cf.getOriginFunction().getName() + "**************");
+        verboseln("----- Trying to schedule a trace for :" + cf.getOriginFunction().getName() + " -----");
         
         // find out all BBs that are in a cycle
         DFS(cf.entryBB);
@@ -39,7 +39,7 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
         List<AbstractMachineCode> finalMC = new ArrayList<AbstractMachineCode>();
         
         while (cur != null) {
-            System.out.println(">>>Examining BB " + cur.prettyPrintWithPreAndSucc());
+            verboseln(">>>Examining BB " + cur.prettyPrintWithPreAndSucc());
             
             unvisited.remove(cur);
 
@@ -51,7 +51,7 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
             // for unconditional jump, we simply lay its successor after this BB
             if (lastMC.isUncondJump()) {
                 if (cur.getSuccessor().size() != 1) {
-                    System.out.println(cur.prettyPrintWithPreAndSucc());
+                    verboseln(cur.prettyPrintWithPreAndSucc());
                     UVMCompiler.error("BB with unconditional branch should have exactly 1 successor");
                 }
                 
@@ -67,13 +67,13 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
                     // set next bb
                     next = cur.getSuccessor().get(0);
                     
-                    System.out.println(" remove uncond jump. set next BB as " + next.getName());
+                    verboseln(" remove uncond jump. set next BB as " + next.getName());
                 }
             } 
             // for conditional jump, we need to identify which successor should be laid immediate-after
             else if (lastMC.isCondJump()) {
                 if (cur.getSuccessor().size() != 2) {
-                    System.out.println(cur.prettyPrintWithPreAndSucc());
+                    verboseln(cur.prettyPrintWithPreAndSucc());
                     UVMCompiler.error("BB with conditional branch should have exactly 2 successors");
                 }
                 
@@ -81,7 +81,7 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
                 MCBasicBlock succ1 = cur.getSuccessor().get(0);
                 MCBasicBlock succ2 = cur.getSuccessor().get(1);
                 
-                System.out.println(" cond jump to 1." + succ1.getName() + ", 2." + succ2.getName());
+                verboseln(" cond jump to 1." + succ1.getName() + ", 2." + succ2.getName());
                 
                 // we use a simple heuristic: if one succ is in a loop and the other is not
                 // then we put the in-loop one after this
@@ -104,7 +104,7 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
                    }
                 }
                 
-                System.out.println(" fall through to " + succFallThrough.getName() + ", branch to " + succBranchTo.getName());
+                verboseln(" fall through to " + succFallThrough.getName() + ", branch to " + succBranchTo.getName());
                 
                 if (unvisited.contains(succFallThrough)) {             
                     // adjust code
@@ -117,7 +117,7 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
                         cur.getMC().remove(lastMC);
                         cur.addMC(newBr);
                         
-                        System.out.println(" need to adjust branch code");
+                        verboseln(" need to adjust branch code");
                     }
                     
                     // next
@@ -131,7 +131,7 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
                     UVMCompiler.error("no branch mc at the end, but has more than one successor");
                 }
                 
-                System.out.println(" originally a fallthrough bb");
+                verboseln(" originally a fallthrough bb");
                 
                 MCBasicBlock succ = cur.getSuccessor().get(0);
                 if (unvisited.contains(succ)) {
@@ -139,22 +139,24 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
                 } else {
                     AbstractMachineCode jmp = UVMCompiler.MCDriver.genJmp(succ.getLabel());
                     cur.addMC(jmp);
-                    System.out.println(" the bb already placed, so add jump");
+                    verboseln(" the bb already placed, so add jump");
                 }
             }
             
             if (next == null && !unvisited.isEmpty()) {
                 next = unvisited.get(0);
-                System.out.println(" we havent decided next block. get a random one from unvisited: " + next.getName());
+                verboseln(" we havent decided next block. get a random one from unvisited: " + next.getName());
             }
             
             finalMC.addAll(cur.getMC());
             cur = next;
         }
         
-        System.out.println("*********SimpleBranchAlignment: " + cf.getOriginFunction().getName() + "**********");
-        for (AbstractMachineCode mc : finalMC)
-            System.out.println(mc.prettyPrintOneline());
+        if (verbose) {
+            System.out.println("----- SimpleBranchAlignment: " + cf.getOriginFunction().getName() + " -----");
+            for (AbstractMachineCode mc : finalMC)
+                System.out.println(mc.prettyPrintOneline());
+        }
         
         cf.finalMC.addAll(finalMC);
     }
@@ -169,14 +171,14 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
             // we have a cycle
             int start = currentVisiting.indexOf(node);
             
-            System.out.println("Possible cycle is:");
+            verboseln("Possible cycle is:");
             
             for (int i = start; i < currentVisiting.size(); i++) {
-                System.out.print(i + currentVisiting.get(i).getName() + "->");
+                verbose(i + currentVisiting.get(i).getName() + "->");
                 nodesInCycle.add(currentVisiting.get(i));
             }
-            System.out.print(start + node.getName());
-            System.out.println();
+            verbose(start + node.getName());
+            verboseln();
         } else {
             visited.add(node);
             currentVisiting.push(node);

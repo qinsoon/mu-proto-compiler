@@ -11,8 +11,8 @@ import uvm.mc.MCRegister;
 
 public class RetainHighLevelDataType extends AbstractMCCompilationPhase {
 
-    public RetainHighLevelDataType(String name) {
-        super(name);
+    public RetainHighLevelDataType(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     @Override

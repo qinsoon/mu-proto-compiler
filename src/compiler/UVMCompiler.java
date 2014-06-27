@@ -30,7 +30,9 @@ public class UVMCompiler {
 
     public static AbstractMCDriver MCDriver = new X64Driver();
     public static final int MC_REG_SIZE = 64;
-    public static final int MC_REG_SIZE_IN_BYTES = 8;
+    public static final int MC_REG_SIZE_IN_BYTES = MC_REG_SIZE / 8;
+    public static final int MC_FP_REG_SIZE = 80;
+    public static final int MC_FP_REG_SIZE_IN_BYTES = MC_FP_REG_SIZE / 8;
     
     public static void main(String[] args) {
         if (args.length == 0)
@@ -75,21 +77,21 @@ public class UVMCompiler {
             /*
              *  generating IR tree
              */
-            new DefUseGeneration("defusegen").execute();            
-            new IRTreeGeneration("treegen").execute();
+            new DefUseGeneration("defusegen", Verbose.DEF_USE_GEN).execute();            
+            new IRTreeGeneration("treegen", Verbose.TREE_GEN).execute();
             
             /*
              *  instruction selection (use BURM)
              */
-            new InstructionSelection("instsel").execute();
-            new MCRepresentationGeneration("mcrepgen").execute();
+            new InstructionSelection("instsel", Verbose.INST_SEL).execute();
+            new MCRepresentationGeneration("mcrepgen", Verbose.MC_REP_GEN).execute();
             
             /*
              *  mc code transform
              */
-            new CombineReturns("combineret").execute();
-            new BBReconstruction("reconstbb").execute();
-            new RetainHighLevelDataType("retainhlltype").execute();
+            new CombineReturns("combineret", Verbose.COMBINE_RET).execute();
+            new BBReconstruction("reconstbb", Verbose.RECONSTRUCT_BB).execute();
+            new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();
             
             /*
              *  register allocation
@@ -100,25 +102,25 @@ public class UVMCompiler {
              *  - Vivek Sarkar's work in CC07: http://dl.acm.org/citation.cfm?id=1759937.1759950
              *  - Christian Wimmer's work in CGO10: http://doi.acm.org/10.1145/1772954.1772979
              */
-            new GenMovForPhi("genmovforphi").execute();                 //*
-            new InstructionNumbering("instnumbering").execute();        //*
-            new AllocateParamRetRegister("allocparamret").execute();
-            new ComputeLiveInterval("compinterval").execute();          //*
-            new RegisterCoalescing("regcoalesc").execute();             //*
-            new LinearScan("linearscan").execute();                     //*
+            new GenMovForPhi("genmovforphi", Verbose.GEN_MOV_FOR_PHI).execute();                    //*
+            new InstructionNumbering("instnumbering", Verbose.INST_NUMBERING).execute();            //*
+            new AllocateParamRetRegister("allocparamret", Verbose.ALLOC_PARAM_RET_REG).execute();
+            new ComputeLiveInterval("compinterval", Verbose.COMPUTE_INTERVAL).execute();            //*
+            new RegisterCoalescing("regcoalesc", Verbose.REG_COALESC).execute();                    //*
+            new LinearScan("linearscan", Verbose.LINEAR_SCAN).execute();                            //*
             
-            new ExpandCallSequence("expandcallseq").execute();
+            new ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
             /*
              *  code emission
              */
-            new SimpleBranchAlignment("simplebralign").execute();
-            new MachineCodeCleanup("mccleanup").execute();
+            new SimpleBranchAlignment("simplebralign", Verbose.SIMPLE_BRANCH_ALIGN).execute();
+            new MachineCodeCleanup("mccleanup", Verbose.MC_CLEANUP).execute();
             
             /*
              * machine dependent transformation
              */
-            new compiler.phase.mc.SpillConstantsToMemory("spillconstant").execute();
-            new CodeEmission("codeemit", "emit").execute();
+            new compiler.phase.mc.SpillConstantsToMemory("spillconstant", Verbose.SPILL_CONSTANT).execute();
+            new CodeEmission("codeemit", "emit", Verbose.CODE_EMIT).execute();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

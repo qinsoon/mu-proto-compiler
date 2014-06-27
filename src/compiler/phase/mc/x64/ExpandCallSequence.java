@@ -13,8 +13,8 @@ import compiler.phase.mc.AbstractMCCompilationPhase;
 
 public class ExpandCallSequence extends AbstractMCCompilationPhase {
 
-    public ExpandCallSequence(String name) {
-        super(name);
+    public ExpandCallSequence(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     @Override
@@ -27,14 +27,16 @@ public class ExpandCallSequence extends AbstractMCCompilationPhase {
         for (MCBasicBlock bb : cf.BBs) {
             List<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
             
-            for (AbstractMachineCode mc : bb.getMC()) {
+            for (AbstractMachineCode mc : bb.getMC()) {    
                 if (mc.isCall()) {
+                    // use this instance for this call only
+                    X64CallConvention cc1 = new X64CallConvention();
+                    
                     // expand calling sequence
                     MCLabel label = (MCLabel) mc.getOperand(0);
                     Function callee = MicroVM.v.getFunction(label.getName());
-                    List<AbstractMachineCode> expandedCallSequence = cc.callerSetupCallSequence(cf, callee, mc);
-                    
-                    newMC.addAll(expandedCallSequence);
+                    newMC.addAll(cc1.callerSetupCallSequence(cf, callee, mc));
+                    newMC.addAll(cc1.callerCleanupCallSequence(cf, callee, mc));
                 } else {
                     newMC.add(mc);
                 }

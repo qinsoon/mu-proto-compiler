@@ -2,9 +2,12 @@ package uvm.mc;
 
 import java.util.LinkedList;
 import java.util.List;
+
 import uvm.mc.*;
 
 public class LiveInterval {
+    static final boolean DEBUG = false;
+    
     MCRegister reg;
     
     int begin = Integer.MAX_VALUE;
@@ -53,11 +56,15 @@ public class LiveInterval {
     }
     
     public boolean overlap(int mc) {
-        for (Range range : ranges)
-            if (range.contains(mc))
-                return false;
+        if (!hasValidRanges())
+            return false;
         
-        return true;
+        for (Range range : ranges) {
+            if (range.contains(mc))
+                return true;
+        }
+        
+        return false;
     }
     
     public boolean overlap(LiveInterval another) {
@@ -122,10 +129,12 @@ public class LiveInterval {
         }
         
         public void merge(int start, int end) {
-            System.out.print(" merge range [" + this.start + "," + this.end + "[ with [" + start + ", " + end + "[");
+            if (DEBUG)
+                System.out.print(" merge range [" + this.start + "," + this.end + "[ with [" + start + ", " + end + "[");
             this.start = Math.min(this.start, start);
             this.end = Math.max(this.end, end);
-            System.out.println(" => [" + this.start + ", " + this.end + "[");
+            if (DEBUG)
+                System.out.println(" => [" + this.start + ", " + this.end + "[");
         }
         
         public static Range union(Range a, Range b) {
@@ -201,19 +210,19 @@ public class LiveInterval {
 //      return null;
 //  }
   
-  /**
-   * 
-   * @param bb
-   * @return may return null
-   */
-  public Range getRange(MCBasicBlock bb) {
+    /**
+     * 
+     * @param bb
+     * @return may return null
+     */
+    public Range getRange(MCBasicBlock bb) {
       for (Range r : ranges)
           if (r.getBB().equals(bb))
               return r;
       
 //      error("cannot find range for BB " + bb.getName() + " for reg " + i.prettyPrint());
       return null;
-  }
+    }
     
     public void removeRange(MCBasicBlock bb) {
         for (int i = 0; i < ranges.size(); i++) {
@@ -241,14 +250,16 @@ public class LiveInterval {
         boolean addNewRange = true;
         for (Range r : ranges) {
             if (r.getBB().equals(bb)) {
-                System.out.println(" found range for bb " + bb.getName());
+                if (DEBUG)
+                    System.out.println(" found range for bb " + bb.getName());
                 r.merge(start, end);
                 addNewRange = false;
             }
         }
         
         if (addNewRange) {
-            System.out.println(" create new range for bb " + bb.getName());
+            if (DEBUG)
+                System.out.println(" create new range for bb " + bb.getName());
             ranges.add(new Range(bb, start, end));
         }
     }

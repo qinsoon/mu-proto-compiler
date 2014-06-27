@@ -13,18 +13,18 @@ import compiler.phase.AbstractCompilationPhase;
 
 public class RegisterCoalescing extends AbstractMCCompilationPhase {
 
-    public RegisterCoalescing(String name) {
-        super(name);
+    public RegisterCoalescing(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
-        System.out.println("=========Register Coalescing for function " + cf.getOriginFunction().getName() + "=========\n");
+        verboseln("----- Register Coalescing for function " + cf.getOriginFunction().getName() + " -----\n");
         for (MCBasicBlock bb : cf.topologicalBBs) {
 //            ArrayList<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
             
             for (AbstractMachineCode mc : bb.getMC()) {                    
-                System.out.println("-check mc " + mc.prettyPrintNoLabel());
+                verboseln("-check mc " + mc.prettyPrintNoLabel());
                 boolean remove = false;
                 if (mc.isMov()) {
                     // try join
@@ -47,12 +47,12 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
 //                }
                 
                 if (remove) {
-                    System.out.println("->joined");
+                    verboseln("->joined");
 //                    cf.getMachineCode().remove(mc);
                 }
                 
                 if (!remove) {
-                    System.out.println("->cant join");
+                    verboseln("->cant join");
 //                    newMC.add(mc);
                 }
             }
@@ -60,9 +60,11 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
 //            bb.setMC(newMC);
         }
         
-        System.out.println("\nAfter register coalescing");
-        cf.printInterval();
-        System.out.println(cf.prettyPrint());
+        if (verbose) {
+            System.out.println("\nAfter register coalescing");
+            cf.printInterval();
+            System.out.println(cf.prettyPrint());
+        }
     }
     
     /**
@@ -71,8 +73,8 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
      * @param y
      * @return
      */
-    static boolean join(CompiledFunction cf, MCBasicBlock bb, AbstractMachineCode mc, MCRegister x, MCRegister y) {
-        System.out.println(" check if we join x:" + x.REP().prettyPrint() + " and y:" + y.REP().prettyPrint());
+    boolean join(CompiledFunction cf, MCBasicBlock bb, AbstractMachineCode mc, MCRegister x, MCRegister y) {
+        verboseln(" check if we join x:" + x.REP().prettyPrint() + " and y:" + y.REP().prettyPrint());
         
         // we want to keep specific registers
         if (isSpecificRegister(x) && !isSpecificRegister(y))
@@ -87,21 +89,21 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
         
 //        System.out.println(" i=" + (i == null ? "null" : i.prettyPrint()));
 //        System.out.println(" j=" + (j == null ? "null" : j.prettyPrint()));
-        System.out.println("x=" + intervalX.prettyPrint());
-        System.out.println("y=" + intervalY.prettyPrint());
+        verboseln("x=" + intervalX.prettyPrint());
+        verboseln("y=" + intervalY.prettyPrint());
 
 //        boolean overlap = i != null && j != null && i.overlap(j);
         boolean overlap = intervalX != null && intervalY != null && intervalX.overlap(intervalY);
         boolean compatible = compatible(cf, mc, x, y);
         
-        System.out.println(" overlap:" + overlap);
-        System.out.println(" compatible:" + compatible);
+        verboseln(" overlap:" + overlap);
+        verboseln(" compatible:" + compatible);
         
         if (!overlap && compatible) {
-            System.out.println(" keeping " + y.REP().prettyPrint() + ", removing " + x.REP().prettyPrint());
+            verboseln(" keeping " + y.REP().prettyPrint() + ", removing " + x.REP().prettyPrint());
             
             // join
-            System.out.println(" join current range");
+            verboseln(" join current range");
             Range union = Range.union(i, j);
             
             if (j == null)
@@ -113,7 +115,7 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
                 cf.intervals.get(x.REP()).removeRange(i.getBB());
             
             // TODO this part of code might be problematic
-            System.out.println(" copy other x ranges to y");
+            verboseln(" copy other x ranges to y");
             for (LiveInterval.Range r : cf.intervals.get(x.REP()).getRanges())
                 cf.intervals.get(y.REP()).addRange(r);
             

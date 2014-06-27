@@ -6,13 +6,13 @@ import compiler.UVMCompiler;
 
 public class SpillConstantsToMemory extends AbstractMCCompilationPhase {
 
-    public SpillConstantsToMemory(String name) {
-        super(name);
+    public SpillConstantsToMemory(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
-        System.out.println("========After spilling constants=========");
+        verboseln("----- After spilling constants ------");
         
         String fName = cf.getOriginFunction().getName();
         
@@ -40,7 +40,7 @@ public class SpillConstantsToMemory extends AbstractMCCompilationPhase {
                     // replace old immediate operand with new memory operand
                     mc.setOperand(i, memOp);
                     
-                    System.out.println(mc.prettyPrintOneline());
+                    verboseln(mc.prettyPrintOneline());
                 } else if (operand instanceof MCSPImmediate) {
                     UVMCompiler.error("single-precision fp constant, unimplemented. ");
                 }

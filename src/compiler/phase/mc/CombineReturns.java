@@ -11,8 +11,8 @@ import compiler.phase.AbstractCompilationPhase;
 
 public class CombineReturns extends AbstractMCCompilationPhase {
 
-    public CombineReturns(String name) {
-        super(name);
+    public CombineReturns(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     @Override

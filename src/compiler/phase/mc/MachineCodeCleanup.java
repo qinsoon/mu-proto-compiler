@@ -23,13 +23,13 @@ import compiler.phase.AbstractCompilationPhase;
  */
 public class MachineCodeCleanup extends AbstractMCCompilationPhase {
 
-    public MachineCodeCleanup(String name) {
-        super(name);
+    public MachineCodeCleanup(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
-        System.out.println("\n======Machine Code Cleanup======");
+        verboseln("\n----- Machine Code Cleanup: " + cf.getOriginFunction().getName() + " -----");
         
         List<AbstractMachineCode> newFinalMC = new ArrayList<AbstractMachineCode>();
         
@@ -58,9 +58,11 @@ public class MachineCodeCleanup extends AbstractMCCompilationPhase {
         cf.finalMC.clear();
         cf.finalMC.addAll(newFinalMC);
         
-        System.out.println("\nAfter MC cleanup, final code for " + cf.getOriginFunction().getName());
-        for (AbstractMachineCode mc : cf.finalMC)
-            System.out.println(mc.prettyPrint());
+        if (verbose) {
+            System.out.println("\nAfter MC cleanup, final code for " + cf.getOriginFunction().getName());
+            for (AbstractMachineCode mc : cf.finalMC)
+                System.out.println(mc.prettyPrint());
+        }
     }
     
     /**

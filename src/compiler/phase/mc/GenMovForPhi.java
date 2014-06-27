@@ -20,8 +20,8 @@ import compiler.phase.AbstractCompilationPhase;
  */
 public class GenMovForPhi extends AbstractMCCompilationPhase {
 
-    public GenMovForPhi(String name) {
-        super(name);
+    public GenMovForPhi(String name, boolean verbose) {
+        super(name, verbose);
     }
     
     public void changeSuccessor(MCBasicBlock b, MCBasicBlock oldSuccessor, MCBasicBlock newSuccessor) {
@@ -40,7 +40,8 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
         int genMovBBIndex = 0;
         int genMovRegIndex = 0;
         
-        cf.printDotFile("beforeGenMov");
+        if (verbose)
+            cf.printDotFile("beforeGenMov");
         // to avoid concurernt modification on the list, we put new BB here
         // and add them after traversal
         List<MCBasicBlock> newBBs = new ArrayList<MCBasicBlock>();
@@ -72,15 +73,15 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                     newBBs.add(n);
                     
                     addingLabelForNewBlock = true;
-                    System.out.println("Created new block #" + n.getName());
+                    verboseln("Created new block #" + n.getName());
                 } else {
                     n = p;
                 }
                 
                 for (AbstractMachineCode mc : bb.getMC()) {
                     if (mc.isPhi()) {
-                        System.out.println("examing phi: " + mc.prettyPrintNoLabel());
-                        System.out.println("trying to find value from #" + p.getName());
+                        verboseln("examing phi: " + mc.prettyPrintNoLabel());
+                        verboseln("trying to find value from #" + p.getName());
                         int opdForP = -1;
                         for (int i = 1; i < mc.getNumberOfOperands(); i += 2) {
                             MCLabel l = (MCLabel) mc.getOperand(i);
@@ -89,7 +90,7 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                         }
                         
                         if (opdForP != -1) {
-                            System.out.println("inserted mov");
+                            verboseln("inserted mov");
                             MCOperand opd = mc.getOperand(opdForP);
                             int opdDataType = -1;
                             if (opd instanceof MCRegister) {
@@ -151,7 +152,7 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                             // phi is mc.getReg()
                             genMovReg.setREP(mc.getReg());
                         } else {
-                            System.out.println("didnt insert mov");
+                            verboseln("didnt insert mov");
                         }
                     }
                 }
@@ -163,10 +164,11 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
             newBBs.clear();
         }            
         
-        System.out.println("\nAfter gen mov:\n");
-        System.out.println(cf.prettyPrint());
+        verboseln("\nAfter gen mov:\n");
+        verboseln(cf.prettyPrint());
         
-        cf.printDotFile("afterGenMov");
+        if (verbose)
+            cf.printDotFile("afterGenMov");
 
     }
 }

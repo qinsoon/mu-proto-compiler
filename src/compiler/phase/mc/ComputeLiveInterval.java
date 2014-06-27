@@ -31,8 +31,8 @@ import compiler.phase.AbstractCompilationPhase;
 // ==>  this may be NOT fine
 public class ComputeLiveInterval extends AbstractMCCompilationPhase {
 
-    public ComputeLiveInterval(String name) {
-        super(name);
+    public ComputeLiveInterval(String name, boolean verbose) {
+        super(name, verbose);
     }
     
     @Override
@@ -40,7 +40,8 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         buildLiveIn(cf);
         buildIntervals(cf);
         
-        cf.printInterval();;
+        if (verbose)
+            cf.printInterval();
     }
     
     public void buildLiveIn(CompiledFunction cf) {
@@ -61,10 +62,12 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
                 }
             }
             
-            System.out.println("\nLive-in for bb " + bb.getName());
-            System.out.println(bb.prettyPrint());
-            for (MCRegister reg : bb.liveIn)
-                System.out.println(reg.prettyPrint());
+            if (verbose) {
+                System.out.println("\nLive-in for bb " + bb.getName());
+                System.out.println(bb.prettyPrint());
+                for (MCRegister reg : bb.liveIn)
+                    System.out.println(reg.prettyPrint());
+            }
         }
     }
     
@@ -84,8 +87,8 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
                 
                 if (mc.getReg() != null) {
                     if (mc.sequence == cf.getMachineCode().size() - 1) {
-                        System.out.println("mc sequence: " + mc.sequence);
-                        System.out.println("mc: " + mc.prettyPrint());
+                        verboseln("mc sequence: " + mc.sequence);
+                        verboseln("mc: " + mc.prettyPrint());
                         UVMCompiler.error("defining a reg in the last mc (shouldnt be)");
                     }
                     
@@ -118,14 +121,14 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
     }
 
     public void addRange(CompiledFunction cf, MCBasicBlock bb, MCRegister reg, int start, int end) {
-        System.out.println("adding range [" + start + "," + end + "[ for %" + reg.getName());
+        verboseln("adding range [" + start + "," + end + "[ for %" + reg.getName());
         
         if (cf.intervals.containsKey(reg)) {
-            System.out.println(" found intervals");
+            verboseln(" found intervals");
             cf.intervals.get(reg).addRange(bb, start, end);
         }
         else {
-            System.out.println(" create new intervals");
+            verboseln(" create new intervals");
             LiveInterval l = new LiveInterval(reg);
             l.addRange(bb, start, end);
             cf.intervals.put(reg, l);

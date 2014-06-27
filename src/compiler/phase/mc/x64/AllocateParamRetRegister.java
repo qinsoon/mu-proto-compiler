@@ -6,8 +6,8 @@ import compiler.phase.mc.AbstractMCCompilationPhase;
 
 public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
 
-    public AllocateParamRetRegister(String name) {
-        super(name);
+    public AllocateParamRetRegister(String name, boolean verbose) {
+        super(name, verbose);
     }
     
     @Override

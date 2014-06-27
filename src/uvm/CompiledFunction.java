@@ -39,6 +39,7 @@ public class CompiledFunction {
 
     // register
     private HashMap<String, MCRegister> regs = new HashMap<String, MCRegister>();
+    public List<MCRegister> calleeSavedRegs = new ArrayList<MCRegister>();      // in push order
     
     public MCRegister findOrCreateRegister(String name, int type, int dataType) {
         if (regs.containsKey(name))

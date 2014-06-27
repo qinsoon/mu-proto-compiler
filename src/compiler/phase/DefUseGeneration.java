@@ -9,16 +9,14 @@ import uvm.Register;
 import uvm.Value;
 
 public class DefUseGeneration extends AbstractCompilationPhase{
-    static final boolean VERBOSE = false;
 
-    public DefUseGeneration(String name) {
-        super(name);
+    public DefUseGeneration(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     @Override
     protected void visitInstruction(Instruction inst) {
-        if (VERBOSE)
-            System.out.println("generating def-use for inst:" + inst.prettyPrint());
+        verboseln("generating def-use for inst:" + inst.prettyPrint());
         // uses
         for (Value v : inst.getOperands()) {
             if (v.isRegister()) {
@@ -26,16 +24,14 @@ public class DefUseGeneration extends AbstractCompilationPhase{
                 inst.getRegUses().add(reg);
                 reg.addUse(inst);
                 
-                if (VERBOSE)
-                    System.out.println("  uses:" + v.prettyPrint());
+                verboseln("  uses:" + v.prettyPrint());
             }
         }
         
         // def
         if (inst.getDefReg() != null) {
             inst.getDefReg().setDef(inst);
-            if (VERBOSE)
-                System.out.println("  def:" + inst.getDefReg().prettyPrint());
+            verboseln("  def:" + inst.getDefReg().prettyPrint());
         }
     }
 
@@ -59,8 +55,7 @@ public class DefUseGeneration extends AbstractCompilationPhase{
 
     @Override
     protected void postChecklist() {
-        if (VERBOSE)
-            System.out.println();
+        verboseln();
     }
 
     @Override

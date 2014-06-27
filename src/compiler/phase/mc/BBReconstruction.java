@@ -9,10 +9,9 @@ import compiler.UVMCompiler;
 import compiler.phase.AbstractCompilationPhase;
 
 public class BBReconstruction extends AbstractMCCompilationPhase{
-    private static final boolean VERBOSE = true;
-    
-    public BBReconstruction(String name) {
-        super(name);
+
+    public BBReconstruction(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     public static final String FALL_THROUGH_BLOCK = "fallthrough";
@@ -42,7 +41,7 @@ public class BBReconstruction extends AbstractMCCompilationPhase{
                 
                 cf.BBs.add(curBB);
             } else if (curBB != null && mc.getLabel() != null) {
-                System.out.println("dealing with " + mc.prettyPrint());
+                verboseln("dealing with " + mc.prettyPrint());
                 UVMCompiler.error("check what happened, probably a fall-through BB in source code. ");
             }
             
@@ -84,7 +83,7 @@ public class BBReconstruction extends AbstractMCCompilationPhase{
         }
         
         // print
-        if (VERBOSE) {
+        if (verbose) {
             for (MCBasicBlock bb : cf.BBs) {
                 System.out.println(bb.prettyPrintWithPreAndSucc());
             }

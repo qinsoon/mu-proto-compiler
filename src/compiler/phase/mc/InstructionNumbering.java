@@ -14,8 +14,8 @@ import compiler.phase.AbstractCompilationPhase;
 
 public class InstructionNumbering extends AbstractMCCompilationPhase {
 
-    public InstructionNumbering(String name) {
-        super(name);
+    public InstructionNumbering(String name, boolean verbose) {
+        super(name, verbose);
     }
 
     @Override
@@ -40,12 +40,12 @@ public class InstructionNumbering extends AbstractMCCompilationPhase {
             }
         }
         
-        System.out.println("\ninstruction numbering:\n");
+        verboseln("\ninstruction numbering:\n");
         int sequence = 0;
         for (MCBasicBlock cur : topologicalOrder) {
             cf.topologicalBBs.add(cur);
             for (AbstractMachineCode mc : cur.getMC()) {
-                System.out.println(sequence + ": " + mc.prettyPrint());
+                verboseln(sequence + ": " + mc.prettyPrint());
                 mc.sequence = sequence;
                 sequence ++;
             }
