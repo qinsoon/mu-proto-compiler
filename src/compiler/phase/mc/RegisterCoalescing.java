@@ -35,16 +35,16 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
                     }
                 } 
                 // join phi during 'GenMovForPhi'
-//                else if (mc.isPhi()) {
-//                    // try join
-//                    if (mc.getOperand(0) instanceof MCRegister &&
-//                        mc.getOperand(2) instanceof MCRegister &&
-//                        join(cf, bb, mc, (MCRegister) mc.getOperand(0), mc.getReg()) &&
-//                        join(cf, bb, mc, (MCRegister) mc.getOperand(2), mc.getReg())) {
-//                        // remove this phi mc
-//                        remove = true;                            
-//                    }
-//                }
+                else if (mc.isPhi()) {
+                    // try join
+                    if (mc.getOperand(0) instanceof MCRegister &&
+                        mc.getOperand(2) instanceof MCRegister &&
+                        join(cf, bb, mc, (MCRegister) mc.getOperand(0), mc.getReg()) &&
+                        join(cf, bb, mc, (MCRegister) mc.getOperand(2), mc.getReg())) {
+                        // remove this phi mc
+                        remove = true;                            
+                    }
+                }
                 
                 if (remove) {
                     verboseln("->joined");

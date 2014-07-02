@@ -159,7 +159,7 @@ public class CompiledFunction {
         
         for (Entry<MCRegister, LiveInterval> entry : intervals.entrySet()) {
             if (entry.getValue().isLiveAt(sequence)) {
-                ret.add(entry.getKey());
+                ret.add(entry.getKey().REP());
             }
         }
         return ret;
@@ -210,5 +210,13 @@ public class CompiledFunction {
 
     public void setEntryBB(MCBasicBlock entryBB) {
         this.entryBB = entryBB;
+    }
+
+    public MCBasicBlock getBasicBlockFor(AbstractMachineCode callMC) {
+        for (MCBasicBlock bb : BBs)
+            if (bb.getMC().contains(callMC))
+                return bb;
+        
+        return null;
     }
 }

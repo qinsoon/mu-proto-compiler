@@ -26,6 +26,17 @@
 
 .funcdef @main <int<32> ()> {
   .label %entry:
-  %ret = CALL <int<32> (int<64>)> @isPrime (982451653)
-  RET <int<32>> %ret
+  BRANCH %body
+  
+  .label %body:
+  %i.02 = PHI <int<64>> {%entry: 2; %body: %4;}
+  %sum.01 = PHI <int<32>> {%entry: 0; %body: %3;}
+  %2 = CALL <int<32> (int<64>)> @isPrime(%i.02)
+  %3 = ADD <int<32>> %2 %sum.01
+  %4 = ADD <int<64>> %i.02 1
+  %exitcond = EQ <int<64>> %4 100001
+  BRANCH2 %exitcond %ret %body
+  
+  .label %ret:
+  RET <int<32>> %3
 }

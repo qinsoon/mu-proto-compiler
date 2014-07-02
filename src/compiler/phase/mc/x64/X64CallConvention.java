@@ -17,6 +17,7 @@ import uvm.Value;
 import uvm.inst.InstCall;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.LiveInterval;
+import uvm.mc.MCBasicBlock;
 import uvm.mc.MCIntImmediate;
 import uvm.mc.MCLabel;
 import uvm.mc.MCMemoryOperand;
@@ -114,8 +115,17 @@ public class X64CallConvention {
         // caller saved registers
         callerSavedRegs.clear();
         int callMCIndex = callMC.sequence;
+        System.out.println("setup call seq at " + callMCIndex);
+        caller.printInterval();
         List<MCRegister> liveRegs = caller.getLiveRegistersAt(callMCIndex);
+        // add live-in regs
+        MCBasicBlock callBB = caller.getBasicBlockFor(callMC);
+        for (MCRegister reg : callBB.liveIn)
+            if (!liveRegs.contains(reg.REP()))
+                liveRegs.add(reg.REP());
+
         for (MCRegister reg : liveRegs) {
+            System.out.println("Pushing " + reg.prettyPrint() + ", hash:" + reg.hashCode());
             ret.add(pushStack(reg));
             callerSavedRegs.add(reg);
         }

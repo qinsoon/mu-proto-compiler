@@ -13,13 +13,21 @@ public class InstCall extends Instruction {
     public InstCall(Function callee, List<uvm.Value> arguments) {
         this.callee = callee;
         this.arguments = arguments;
+        this.operands.add(callee.getFuncLabel());
+        this.operands.addAll(arguments);
         this.opcode = OpCode.CALL;
     }
     
     @Override
     public String prettyPrint() {
-        // TODO Auto-generated method stub
-        return "CALL";
+        StringBuilder ret = new StringBuilder();
+        ret.append("CALL(");
+        for (uvm.Value v : arguments) {
+            ret.append(v.prettyPrint());
+            ret.append(',');
+        }
+        ret.append(')');
+        return ret.toString();
     }
 
     public Function getCallee() {

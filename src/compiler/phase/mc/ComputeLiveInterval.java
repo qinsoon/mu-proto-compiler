@@ -45,6 +45,7 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
     }
     
     public void buildLiveIn(CompiledFunction cf) {
+        verboseln("----- build live-in for " + cf.getOriginFunction().getName() + " -----");
         // arbitrary order
         for (MCBasicBlock bb : cf.BBs) {
             Set<MCRegister> defined = new HashSet<MCRegister>();
@@ -71,7 +72,9 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         }
     }
     
-    private void buildIntervals(CompiledFunction cf) {        
+    private void buildIntervals(CompiledFunction cf) { 
+        verboseln("----- build intervals for " + cf.getOriginFunction().getName() + " -----");
+        
         for (MCBasicBlock bb : cf.BBs) {
             // in reverse order
             for (int i = bb.getMC().size() - 1; i >= 0; i--) {
@@ -87,8 +90,8 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
                 
                 if (mc.getReg() != null) {
                     if (mc.sequence == cf.getMachineCode().size() - 1) {
-                        verboseln("mc sequence: " + mc.sequence);
-                        verboseln("mc: " + mc.prettyPrint());
+                        System.out.println("mc sequence: " + mc.sequence);
+                        System.out.println("mc: " + mc.prettyPrint());
                         UVMCompiler.error("defining a reg in the last mc (shouldnt be)");
                     }
                     
@@ -102,18 +105,27 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         // there might be some ranges with UNKNOWN_START/UNKNOWN_END
         for (MCRegister reg : cf.intervals.keySet()) {
             LiveInterval interval = cf.intervals.get(reg.REP());
+            verboseln(reg.prettyPrint() + ": " + interval.prettyPrint());
             for (Range range : interval.getRanges()) {
+                verboseln("range " + range.prettyPrint() + ":");
                 if (range.getStart() == UNKNOWN_START) {
+                    verboseln("UNKNOWN START");
                     // if this register is in live-in set, then the start is the first mc of the block
-                    if (range.getBB().liveIn.contains(reg.REP()))
+                    if (range.getBB().liveIn.contains(reg.REP())) {
+                        verboseln("live-in reg, set start=" + range.getBB().getFirst().sequence);
                         range.setStart(range.getBB().getFirst().sequence);
+                    }
                     // otherwise, this register might be implicitly produced by other mc
                     // we set the start to its previous mc
-                    else range.setStart(range.getEnd());
+                    else {
+                        verboseln("set start=" + range.getEnd());
+                        range.setStart(range.getEnd());
+                    }
                 }
                 
                 if (range.getEnd() == UNKNOWN_END) {
-                    // this register lives til the end of the bb
+                    verboseln("UNKNOWN END, set end=" + range.getBB().getLast().sequence);
+                    // this register lives till the end of the bb
                     range.setEnd(range.getBB().getLast().sequence);
                 }
             }

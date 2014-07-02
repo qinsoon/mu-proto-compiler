@@ -18,6 +18,7 @@ public class BBReconstruction extends AbstractMCCompilationPhase{
     
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
+        verboseln("----- reconstruction BB for " + cf.getOriginFunction().getName() + " -----");
         // if a BB doesnt have a label with it, use an indexed name: bbName + bbIndex
         String bbName = FALL_THROUGH_BLOCK;
         int bbIndex = 0;
@@ -25,11 +26,13 @@ public class BBReconstruction extends AbstractMCCompilationPhase{
         MCBasicBlock curBB = null;
         
         for (AbstractMachineCode mc : cf.mc) {
+            verboseln("scanning mc : " + mc.prettyPrintOneline());
             if (curBB == null) {
                 // start of a BB
                 
                 if (mc.getLabel() != null) {
                     curBB = new MCBasicBlock(mc.getLabel());
+                    verboseln("set curBB = " + curBB.getName());
                 } else {
                     curBB = new MCBasicBlock(bbName + bbIndex);
                     mc.setLabel(curBB.getLabel());
@@ -41,7 +44,8 @@ public class BBReconstruction extends AbstractMCCompilationPhase{
                 
                 cf.BBs.add(curBB);
             } else if (curBB != null && mc.getLabel() != null) {
-                verboseln("dealing with " + mc.prettyPrint());
+                System.out.println("dealing with " + mc.prettyPrint());
+                System.out.println("curBB=" + curBB.getName());
                 UVMCompiler.error("check what happened, probably a fall-through BB in source code. ");
             }
             

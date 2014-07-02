@@ -43,6 +43,7 @@ public class InstructionSelection extends AbstractCompilationPhase{
     protected void postChecklist() {
         if (verbose) {
             for (Function f : MicroVM.v.funcs.values()) {
+                verboseln("----- instruction sel for " + f.getName() + " -----");
                 for (IRTreeNode node : f.tree) {
                     print(node);
                     verboseln();

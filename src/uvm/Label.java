@@ -1,6 +1,6 @@
 package uvm;
 
-public class Label extends IRTreeNode {
+public class Label extends Value {
     String name;
     
     Label(String name) {
@@ -14,5 +14,10 @@ public class Label extends IRTreeNode {
     
     public String prettyPrint() {
         return "(LABEL " + name + ")";
+    }
+
+    @Override
+    public boolean isRegister() {
+        return false;
     }
 }
