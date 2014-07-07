@@ -7,9 +7,7 @@ public class FPImmediate extends ImmediateValue {
     public FPImmediate(Type type, double value) {
         this.value = value;
         this.type = type;
-        if (type.fitsInFPR() == 1)
-            this.opcode = OpCode.FP_SP_IMM;
-        else this.opcode = OpCode.FP_DP_IMM;
+        this.opcode = OpCode.FP_DP_IMM;
     }
     
     @Override

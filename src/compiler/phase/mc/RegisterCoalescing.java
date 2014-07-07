@@ -1,6 +1,7 @@
 package compiler.phase.mc;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import uvm.CompiledFunction;
 import uvm.MicroVM;
@@ -25,13 +26,13 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
             
             for (AbstractMachineCode mc : bb.getMC()) {                    
                 verboseln("-check mc " + mc.prettyPrintNoLabel());
-                boolean remove = false;
+                boolean joined = false;
                 if (mc.isMov()) {
                     // try join
                     if (mc.getOperand(0) instanceof MCRegister &&
                             join(cf, bb,  mc, ((MCRegister) mc.getOperand(0)).REP(), mc.getReg().REP())) {
                         // remove this mov mc
-                        remove = true;
+                        joined = true;
                     }
                 } 
                 // join phi during 'GenMovForPhi'
@@ -42,16 +43,16 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
                         join(cf, bb, mc, (MCRegister) mc.getOperand(0), mc.getReg()) &&
                         join(cf, bb, mc, (MCRegister) mc.getOperand(2), mc.getReg())) {
                         // remove this phi mc
-                        remove = true;                            
+                        joined = true;                            
                     }
                 }
                 
-                if (remove) {
+                if (joined) {
                     verboseln("->joined");
 //                    cf.getMachineCode().remove(mc);
                 }
                 
-                if (!remove) {
+                if (!joined) {
                     verboseln("->cant join");
 //                    newMC.add(mc);
                 }
@@ -76,16 +77,19 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
     boolean join(CompiledFunction cf, MCBasicBlock bb, AbstractMachineCode mc, MCRegister x, MCRegister y) {
         verboseln(" check if we join x:" + x.REP().prettyPrint() + " and y:" + y.REP().prettyPrint());
         
+        if (x.REP().getName().equals(y.REP().getName())) 
+            return true;
+        
         // we want to keep specific registers
         if (isSpecificRegister(x) && !isSpecificRegister(y))
             return join(cf, bb, mc, y, x);
         
         // i <- interval[REP(x).n]
         LiveInterval intervalX = cf.intervals.get(x.REP());
-        Range i = intervalX.getRange(bb);
+        Range i = intervalX.getRange(bb, mc.sequence);
         // j <- interval[REP(x).n]
         LiveInterval intervalY = cf.intervals.get(y.REP());
-        Range j = intervalY.getRange(bb);
+        Range j = intervalY.getRange(bb, mc.sequence);
         
 //        System.out.println(" i=" + (i == null ? "null" : i.prettyPrint()));
 //        System.out.println(" j=" + (j == null ? "null" : j.prettyPrint()));
@@ -104,20 +108,23 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
             
             // join
             verboseln(" join current range");
-            Range union = Range.union(i, j);
+            List<Range> union = Range.union(i, j);
             
             if (j == null)
-                cf.intervals.get(y.REP()).addRange(union);
+                cf.intervals.get(y.REP()).addRange(bb, i);
             else
-                cf.intervals.get(y.REP()).replaceRange(j.getBB(), union);
+                cf.intervals.get(y.REP()).replaceRange(bb, union);
             
             if (i != null)
-                cf.intervals.get(x.REP()).removeRange(i.getBB());
+                cf.intervals.get(x.REP()).removeRange(bb);
             
             // TODO this part of code might be problematic
             verboseln(" copy other x ranges to y");
-            for (LiveInterval.Range r : cf.intervals.get(x.REP()).getRanges())
-                cf.intervals.get(y.REP()).addRange(r);
+            for (MCBasicBlock otherBB : cf.intervals.get(x.REP()).getRanges().keySet()) {
+                List<LiveInterval.Range> list = cf.intervals.get(x.REP()).getRange(otherBB);
+                for (LiveInterval.Range r : list)
+                    cf.intervals.get(y.REP()).addRange(otherBB, r);
+            }
             
             cf.intervals.get(x.REP()).getRanges().clear();
             // end of problem code

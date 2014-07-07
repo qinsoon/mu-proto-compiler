@@ -1,6 +1,7 @@
 package compiler.phase.mc;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import uvm.CompiledFunction;
@@ -138,7 +139,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
             
             // collect available registers in f
             
-            verboseln("Trying assign reg for " + cur.getReg().REP().getName() + " of dataType= " + cur.getReg().REP().getDataType() + ", HLLOp=" + cur.getReg().REP().highLevelOp.prettyPrint());
+            verboseln("Trying assign reg for " + cur.getReg().REP().getName() + " of dataType= " + cur.getReg().REP().getDataType() + ", HLLOp=" + cur.getReg().REP().prettyPrintHLLOp());
             
             // f <- free
             LinkedList<MCRegister> f = new LinkedList<MCRegister>();
@@ -219,11 +220,13 @@ public class LinearScan extends AbstractMCCompilationPhase {
         // before sorting
         for (MCRegister reg : cf.intervals.keySet()) {
             LiveInterval i = cf.intervals.get(reg.REP());
-            for (LiveInterval.Range r : i.getRanges()) {
-                if (i.getBegin() > r.getStart())
-                    i.setBegin(r.getStart());
-                if (i.getEnd() < r.getEnd())
-                    i.setEnd(r.getEnd());
+            for (List<LiveInterval.Range> list : i.getRanges().values()) {
+                for (LiveInterval.Range r : list) {
+                    if (i.getBegin() > r.getStart())
+                        i.setBegin(r.getStart());
+                    if (i.getEnd() < r.getEnd())
+                        i.setEnd(r.getEnd());
+                }
             }
             if (!all.contains(i))
                 all.add(i);

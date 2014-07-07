@@ -181,12 +181,14 @@ public class CompiledFunction {
             for (int i = 0; i < output.length; i++)
                 output[i] = 'x';
             LiveInterval interval = intervals.get(reg);
-            for (Range range : interval.getRanges()) {
-                if (range.getStart() != UNKNOWN_START && range.getEnd() != UNKNOWN_END) {
-                    for (int i = range.getStart(); i <= range.getEnd(); i++)
-                        output[i] = '-';
-                } else {
-                    UVMCompiler.error("fml");
+            for (List<Range> list : interval.getRanges().values()) {
+                for (Range range : list) {
+                    if (range.getStart() != UNKNOWN_START && range.getEnd() != UNKNOWN_END) {
+                        for (int i = range.getStart(); i <= range.getEnd(); i++)
+                            output[i] = '-';
+                    } else {
+                        UVMCompiler.error("fml");
+                    }
                 }
             }
             

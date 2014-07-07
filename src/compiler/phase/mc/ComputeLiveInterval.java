@@ -1,27 +1,21 @@
 package compiler.phase.mc;
 
-import java.util.ArrayList;
-
-import static uvm.mc.LiveInterval.Range.UNKNOWN_START;
 import static uvm.mc.LiveInterval.Range.UNKNOWN_END;
+import static uvm.mc.LiveInterval.Range.UNKNOWN_START;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 
 import uvm.CompiledFunction;
-import uvm.MicroVM;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.LiveInterval;
+import uvm.mc.LiveInterval.Range;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
-import uvm.mc.LiveInterval.Range;
+
 import compiler.UVMCompiler;
-import compiler.phase.AbstractCompilationPhase;
 
 // TODO this live interval analysis is based on SSA
 // however the machine code is not _strictly_ SSA
@@ -106,27 +100,37 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         for (MCRegister reg : cf.intervals.keySet()) {
             LiveInterval interval = cf.intervals.get(reg.REP());
             verboseln(reg.prettyPrint() + ": " + interval.prettyPrint());
-            for (Range range : interval.getRanges()) {
-                verboseln("range " + range.prettyPrint() + ":");
-                if (range.getStart() == UNKNOWN_START) {
-                    verboseln("UNKNOWN START");
-                    // if this register is in live-in set, then the start is the first mc of the block
-                    if (range.getBB().liveIn.contains(reg.REP())) {
-                        verboseln("live-in reg, set start=" + range.getBB().getFirst().sequence);
-                        range.setStart(range.getBB().getFirst().sequence);
+            for (MCBasicBlock bb : interval.getRanges().keySet()) {
+                List<Range> list = interval.getRange(bb);
+                for (Range range : list) {
+                    verboseln("range " + range.prettyPrint() + ":");
+                    if (range.getStart() == UNKNOWN_START) {
+                        verboseln("UNKNOWN START");
+                        // if this register is in live-in set, then the start is the first mc of the block
+                        if (bb.liveIn.contains(reg.REP())) {
+                            verboseln("live-in reg, set start=" + bb.getFirst().sequence);
+                            interval.replaceRange(bb, range, bb.getFirst().sequence, range.getEnd());
+                        }
+                        // otherwise, this register might be implicitly produced by other mc
+                        // we set the start to its previous mc
+                        else {
+                            verboseln("set start=" + range.getEnd());
+                            int newStart = range.getEnd();
+                            interval.replaceRange(bb, range, newStart, range.getEnd());
+                        }
                     }
-                    // otherwise, this register might be implicitly produced by other mc
-                    // we set the start to its previous mc
-                    else {
-                        verboseln("set start=" + range.getEnd());
-                        range.setStart(range.getEnd());
+                    
+                    // TODO problem here
+                    // %res_reg45: %res_reg45 beg=0 end=0 {body:[9,9[,[8,-1[,}
+                    // range [9,9[:
+                    // range [8,-1[:
+                    // UNKNOWN END, set end=14
+                    if (range.getEnd() == UNKNOWN_END) {
+                        verboseln("UNKNOWN END, set end=" + bb.getLast().sequence);
+                        
+                        // this register lives till the end of the bb
+                        interval.replaceRange(bb, range, range.getStart(), bb.getLast().sequence);
                     }
-                }
-                
-                if (range.getEnd() == UNKNOWN_END) {
-                    verboseln("UNKNOWN END, set end=" + range.getBB().getLast().sequence);
-                    // this register lives till the end of the bb
-                    range.setEnd(range.getBB().getLast().sequence);
                 }
             }
         }
@@ -136,8 +140,12 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         verboseln("adding range [" + start + "," + end + "[ for %" + reg.getName());
         
         if (cf.intervals.containsKey(reg)) {
-            verboseln(" found intervals");
-            cf.intervals.get(reg).addRange(bb, start, end);
+            verboseln(" found intervals:");
+            LiveInterval live = cf.intervals.get(reg);
+            verboseln(live.prettyPrint());
+            live.addRange(bb, start, end);
+            verboseln(" -> ");
+            verboseln(cf.intervals.get(reg).prettyPrint());
         }
         else {
             verboseln(" create new intervals");
