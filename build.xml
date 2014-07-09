@@ -18,6 +18,8 @@
 	<property name="burm-dir" location="${codegengen-dir}/burm"/>
 	<property name="burm-file" location="${burm-dir}/BURM_GENERATED.java"/>
 	
+	<property name="build" location="build"/>
+	
 	<target name="build-uir-parser">
 		<echo message="Generating uIR parser from ${uir-rule} to ${uir-parser-generated}"/> 
 		<mkdir dir="${uir-parser-generated}"/>
@@ -85,6 +87,7 @@
 	<target name="clean">
 		<delete dir="${uir-parser-generated}"/>
 		<delete dir="${codegengen-dir}"/>
+		<delete dir="${build}"/>
 	</target>
 	
 	<target name="gen-antlr">
@@ -93,12 +96,22 @@
 	</target>
 	
 	<target name="build" depends="build-eclipse, build-runtime">
-		<echo message="Generating uVM compiler..."/>
-		<mkdir dir="bin"/>
-		<javac srcdir="parser-generated:src:backend/codegengen-gen"
-			   classpath="${antlr-jar}:bin"
-			   includeantruntime="false"
-			   destdir="bin"/>
+		<mkdir dir="${build}"/>
+		<echo message="Building BURM (static)..."/>
+		<javac srcdir="${uvm-dir}/uvm:${burg-impl-dir}/burm"
+		       includeantruntime="false"
+		       classpath="${burg-impl-dir}:${uvm-dir}"
+		       destdir="${build}">
+		       <include name="OpCode.java"/>
+		       <include name="IRTreeNode.java"/>
+		       <include name="BurmState.java"/>
+		</javac>
+		<echo message="Building uVM compiler..."/>
+		<javac srcdir="${burm-dir}:${uvm-dir}/uvm:${uvm-dir}:parser-generated"
+		       includeantruntime="false"
+		       classpath="${burg-impl-dir}:${antlr-jar}:${build}:${uvm-dir}"
+		       destdir="${build}">
+		</javac>
 	</target>
 	
 	<target name="build-eclipse" depends="gen-antlr, generate-BURM">
@@ -112,7 +125,7 @@
 		<java classname="compiler.UVMCompiler" fork="true" failonerror="true">
 			<classpath>
 				<pathelement path="${antlr-jar}"/>
-				<pathelement path="bin"/>
+				<pathelement path="${build}"/>
 			</classpath>
 			<arg value="tests/micro-bm/int-prime-number/prime-number.uir"/>
 		</java>
