@@ -96,7 +96,7 @@
 		<echo message="Generating uVM compiler..."/>
 		<mkdir dir="bin"/>
 		<javac srcdir="parser-generated:src:backend/codegengen-gen"
-			   classpath="${antlr-jar}"
+			   classpath="${antlr-jar}:bin"
 			   includeantruntime="false"
 			   destdir="bin"/>
 	</target>
