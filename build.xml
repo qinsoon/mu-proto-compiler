@@ -94,6 +94,7 @@
 	
 	<target name="build" depends="build-eclipse, build-runtime">
 		<echo message="Generating uVM compiler..."/>
+		<mkdir dir="bin"/>
 		<javac srcdir="parser-generated:src:backend/codegengen-gen"
 			   classpath="${antlr-jar}"
 			   includeantruntime="false"
