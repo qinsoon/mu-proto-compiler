@@ -6,6 +6,7 @@ syntax: glob
 *.s
 *.class
 *.out
+bm_run
 bin
 emit
 resource
