@@ -65,17 +65,19 @@ class BenchmarkResults(object):
 		
 		# generate JMeter Text Log (.jtl)
 		root = ET.Element("testResults")
-		root.set("version", "1.1")
+		root.set("version", "1.2")
 		
 		for entry in self.result_entry_list2:
-			sample = ET.SubElement(root, "sampleResult")
-			sample.set("label", entry.name)
-			sample.set("threadName", entry.exe)
-			sample.set("time", str(int(entry.exec_time)))
+			sample = ET.SubElement(root, "sample")
+			sample.set("lb", entry.name)
+			sample.set("tn", entry.exe)
+			sample.set("t", str(int(entry.exec_time)))
+			sample.set("rc", str(entry.return_value))
+			sample.set("dt", "text")
 			if entry.return_value == correct_rv:
-				sample.set("success", "true")
+				sample.set("s", "true")
 			else:
-				sample.set("success", "false")
+				sample.set("s", "false")
 		
 		tree = ET.ElementTree(root)
 		jtl_file = os.path.join(uvm_bm_run_dir, self.name + ".jtl")
