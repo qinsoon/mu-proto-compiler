@@ -30,6 +30,8 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             outFile.getParentFile().mkdirs();
             writer = new BufferedWriter(new FileWriter(outFile));
             
+            // constants
+            writer.write(".align 8\n");
             for (MCConstant c : MCConstant.constants) {
                 writer.write(UVMCompiler.MCDriver.emitOp(c.getLabel()) + ":");
                 writer.write('\n');

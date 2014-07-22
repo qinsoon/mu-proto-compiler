@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 import shutil
 import inspect
+import xml.etree.cElementTree as ET
 
 class BenchmarkEntry(object):
 	"""
@@ -46,9 +47,40 @@ class BenchmarkResults(object):
 	def report(self):
 		# collect info in list 1
 		print "============= Report ============="
-		report_on_list(self.result_entry_list1)
+		avg1 = report_on_list(self.result_entry_list1)
 		print
-		report_on_list(self.result_entry_list2)
+		avg2 = report_on_list(self.result_entry_list2)
+		print
+		
+		ratio = avg2 / avg1
+		print "Execution time on set2 is " + '{:.2%}'.format(ratio) + " of set1"
+		
+		if ratio >= BEARABLE_PERFORMANCE:
+			print "Performance exceeds bearable threshold (" + str(BEARABLE_PERFORMANCE) + "), failed"
+			sys.exit(1)
+		
+		correct_rv = self.result_entry_list1[0].return_value
+		
+		print
+		
+		# generate JMeter Text Log (.jtl)
+		root = ET.Element("testResults")
+		root.set("version", "1.1")
+		
+		for entry in self.result_entry_list2:
+			sample = ET.SubElement(root, "sampleResult")
+			sample.set("label", entry.exe)
+			sample.set("time", str(entry.exec_time))
+			if entry.return_value == correct_rv:
+				sample.set("success", "true")
+			else:
+				sample.set("success", "false")
+		
+		tree = ET.ElementTree(root)
+		jtl_file = os.path.join(uvm_bm_run_dir, self.name + ".jtl")
+		tree.write(jtl_file, encoding='utf-8', xml_declaration=True)
+		
+		print "Output to " + jtl_file
 		print
 		
 def report_on_list(list):
@@ -67,6 +99,10 @@ def report_on_list(list):
 	if same_rv:
 		print "Return Value: " + str(last_rv)
 		print "Avg Execution Time: " + str(avg)
+	else:
+		print "Error on execution: different return values"
+	
+	return avg
 		
 def get_immediate_subdirs(dir) :
 	"""
@@ -204,6 +240,8 @@ CC_FLAGS = ['-O3','-std=c99']
 
 C_EXEC_TIMES  = 5
 UIR_EXEC_TIMES = 5
+
+BEARABLE_PERFORMANCE = 1.5
 
 print "===== uVM compiler automated tests ====="
 

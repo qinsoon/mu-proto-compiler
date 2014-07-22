@@ -1,10 +1,11 @@
 package uvm.mc;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
 public class MCConstant {
-    public static final HashSet<MCConstant> constants = new HashSet<MCConstant>();
+    public static final ArrayList<MCConstant> constants = new ArrayList<MCConstant>();
     private static long index = 0;
     
     public static MCConstant findOrCreateConstant(String namePrefix, long[] value) {
