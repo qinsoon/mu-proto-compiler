@@ -69,8 +69,9 @@ class BenchmarkResults(object):
 		
 		for entry in self.result_entry_list2:
 			sample = ET.SubElement(root, "sampleResult")
-			sample.set("label", entry.exe)
-			sample.set("time", str(entry.exec_time))
+			sample.set("label", entry.name)
+			sample.set("threadName", entry.exe)
+			sample.set("time", str(int(entry.exec_time)))
 			if entry.return_value == correct_rv:
 				sample.set("success", "true")
 			else:
