@@ -17,6 +17,7 @@ class BenchmarkEntry(object):
 	run_id = 0
 	dir = ""
 	exe = ""
+	timestamp = 0
 	exec_time = 0.0
 	return_value = 0
 	
@@ -72,8 +73,11 @@ class BenchmarkResults(object):
 			sample.set("lb", entry.name)
 			sample.set("tn", entry.exe)
 			sample.set("t", str(int(entry.exec_time)))
-			sample.set("rc", str(entry.return_value))
+			sample.set("rc", "200")
+			sample.set("rm", "OK")
+			sample.set("by", "1024")
 			sample.set("dt", "text")
+			sample.set("ts", str(entry.timestamp))
 			if entry.return_value == correct_rv:
 				sample.set("s", "true")
 			else:
@@ -227,6 +231,8 @@ def execute(entry, exe):
 def start_benchmark(dir):
 	return 0
 
+current_milli_time = lambda: int(round(time.time() * 1000))
+
 script_dir    = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 print "script_dir = " + script_dir
@@ -302,6 +308,7 @@ for bm in get_immediate_subdirs(uvm_bm_dir):
 		c_result.name = bm	
 		c_result.dir = os.path.join(uvm_bm_run_dir, bm_with_id)
 		c_result.exe = sig
+		c_result.timestamp = current_milli_time()
 	
 		# compile native code
 		compile_c( \
@@ -338,6 +345,7 @@ for bm in get_immediate_subdirs(uvm_bm_dir):
 		uir_result.name = bm		
 		uir_result.dir = os.path.join(uvm_bm_run_dir, bm_with_id)
 		uir_result.exe = sig
+		uir_result.timestamp = current_milli_time()
 		
 		# compile uir code
 		uir_source = get_bm_source_path_from_dir(os.path.join(uvm_bm_dir, bm))
