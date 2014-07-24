@@ -250,6 +250,10 @@ CC_FLAGS = ['-O3','-std=c99']
 C_EXEC_TIMES  = 5
 UIR_EXEC_TIMES = 5
 
+if len(sys.argv) != 0:
+	UIR_EXEC_TIMES = int(sys.argv[1])
+	print "User defined UVM BM invocations = " + str(UIR_EXEC_TIMES)
+
 BEARABLE_PERFORMANCE = 1.5
 
 print "===== uVM compiler automated tests ====="
