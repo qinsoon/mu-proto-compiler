@@ -17,6 +17,7 @@ import compiler.phase.MCRepresentationGeneration;
 import compiler.phase.mc.*;
 import compiler.phase.mc.x64.AllocateParamRetRegister;
 import compiler.phase.mc.x64.ExpandCallSequence;
+import compiler.phase.mc.x64.InsertSpillingCode;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
@@ -115,6 +116,9 @@ public class UVMCompiler {
              */
             new SimpleBranchAlignment("simplebralign", Verbose.SIMPLE_BRANCH_ALIGN).execute();
             new MachineCodeCleanup("mccleanup", Verbose.MC_CLEANUP).execute();
+            
+//            new RegisterSpillingReplaceMemOp("replacememop", Verbose.REPLACE_MEM_OP).execute();
+            new InsertSpillingCode("insertspilling", Verbose.INSERT_SPILLING).execute();
             
             /*
              * machine dependent transformation

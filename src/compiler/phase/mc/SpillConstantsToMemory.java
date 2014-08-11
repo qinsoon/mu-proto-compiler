@@ -32,7 +32,7 @@ public class SpillConstantsToMemory extends AbstractMCCompilationPhase {
                     MCConstant constant = MCConstant.findOrCreateConstant(fName + "_DPCONSTANT", output);
                     
                     // this constant will be referred to as a memory op
-                    MCMemoryOperand memOp = new MCMemoryOperand();
+                    MCLabeledMemoryOperand memOp = new MCLabeledMemoryOperand();
                     memOp.setBase(cf.findOrCreateRegister(UVMCompiler.MCDriver.getInstPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
                     memOp.setDispLabel(constant.getLabel());
                     memOp.setSize((byte) 8);

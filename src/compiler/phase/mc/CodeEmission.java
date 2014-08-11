@@ -75,7 +75,8 @@ public class CodeEmission extends AbstractMCCompilationPhase {
         }
     }
     
-    private static void emitMCInsertingEpilogueBeforeRet(BufferedWriter writer, CompiledFunction cf, AbstractMachineCode mc) throws IOException {
+    private void emitMCInsertingEpilogueBeforeRet(BufferedWriter writer, CompiledFunction cf, AbstractMachineCode mc) throws IOException {
+        verboseln("Emiting: " + mc.prettyPrintOneline());
         if (mc.isRet()) {
             // write the label of 'ret' first
             if (mc.getLabel() != null) {

@@ -12,7 +12,7 @@ public abstract class AbstractMachineCode {
     
     protected uvm.mc.MCLabel label;
     
-    protected uvm.mc.MCRegister reg;
+    protected uvm.mc.MCOperand reg;
     
     protected uvm.IRTreeNode highLevelIR;
     
@@ -32,10 +32,14 @@ public abstract class AbstractMachineCode {
      * this may not always be valid result (when the mc doesnt have a result)
      */
     public MCRegister getReg() {
+        return (MCRegister) reg;
+    }
+    
+    public MCOperand getResultOp() {
         return reg;
     }
     
-    public void setReg(MCRegister reg) {
+    public void setReg(MCOperand reg) {
         this.reg = reg;
     }
     

@@ -128,8 +128,19 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
                     if (range.getEnd() == UNKNOWN_END) {
                         verboseln("UNKNOWN END, set end=" + bb.getLast().sequence);
                         
-                        // this register lives till the end of the bb
-                        interval.replaceRange(bb, range, range.getStart(), bb.getLast().sequence);
+                        boolean liveOut = false;
+                        for (MCBasicBlock succ : bb.getSuccessor()) {
+                            if (succ.liveIn.contains(reg.REP()))
+                                liveOut = true;
+                        }
+                        
+                        if (liveOut) {
+                            // this register lives till the end of the bb
+                            interval.replaceRange(bb, range, range.getStart(), bb.getLast().sequence);
+                        } else {
+                            // this register doesnt need to live longer than its last appearance
+                            interval.replaceRange(bb, range, range.getStart(), range.getStart());
+                        }
                     }
                 }
             }

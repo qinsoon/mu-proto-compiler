@@ -8,6 +8,7 @@ import uvm.CompiledFunction;
 import uvm.FunctionSignature;
 import uvm.MicroVM;
 import uvm.mc.LiveInterval;
+import uvm.mc.MCDispMemoryOperand;
 import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCRegister;
 import compiler.UVMCompiler;
@@ -18,6 +19,9 @@ public class LinearScan extends AbstractMCCompilationPhase {
     public LinearScan(String name, boolean verbose) {
         super(name, verbose);
     }
+    
+    public static final int RESERVED_GPR_SCRATCH_REGISTERS = 1;
+    public static final int RESERVED_FPR_SCRATCH_REGISTERS = 1;
     
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
@@ -36,7 +40,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
         int stackDisp = - UVMCompiler.MC_REG_SIZE_IN_BYTES;
         
         // init free registers
-        for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfGPR(); i++) {
+        for (int i = RESERVED_GPR_SCRATCH_REGISTERS; i < UVMCompiler.MCDriver.getNumberOfGPR(); i++) {
             String regName = UVMCompiler.MCDriver.getGPRName(i);
             MCRegister reg = cf.findRegister(regName, MCRegister.MACHINE_REG); 
             if (reg == null) {
@@ -53,7 +57,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
             }
         }
         
-        for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfFPR(); i++) {
+        for (int i = RESERVED_FPR_SCRATCH_REGISTERS; i < UVMCompiler.MCDriver.getNumberOfFPR(); i++) {
             String regName = UVMCompiler.MCDriver.getFPRName(i);
             MCRegister reg = cf.findRegister(regName, MCRegister.MACHINE_REG);
             if (reg == null) {
@@ -95,7 +99,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
                     else freeFPRs.add(becomeFree);
                     
                     continue;
-                } else if (li.overlap(cur.getBegin())) {
+                } else if (!li.overlap(cur.getBegin())) {
                     // move i to inactive and add i.reg to free
                     active.remove(li);
                     inactive.add(li);
@@ -169,29 +173,28 @@ public class LinearScan extends AbstractMCCompilationPhase {
             
             // select a register from f
             if (f.isEmpty()) {
-//                UVMCompiler.error("run out of registers. assignMemLoc()");
-                
                 // TODO: compute weight and decide which register to spill first
                 // missing implementation here
                 
                 // spilling register here
                 MCRegister toBeSpilled = cur.getReg().REP();
-                
-                // assign a memory location
-                MCMemoryOperand mem = new MCMemoryOperand();
-                mem.setBase(cf.findOrCreateRegister(UVMCompiler.MCDriver.getFramePtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
-                if (toBeSpilled.getDataType() == MCRegister.DATA_GPR) {
-                    mem.setDisp(stackDisp);
-                    mem.setSize((byte) 8);
-                    stackDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
-                    stackSlot ++;
-                } else if (toBeSpilled.getDataType() == MCRegister.DATA_DP || toBeSpilled.getDataType() == MCRegister.DATA_SP) {
-                    UVMCompiler.error("spilling floating pointer registers to memory");
-                } else {
-                    UVMCompiler.error("spilling unknown register type to memory");
-                }
-                
-                toBeSpilled.setSPILL(mem);
+//                
+//                // assign a memory location
+//                MCDispMemoryOperand mem = new MCDispMemoryOperand();
+//                mem.setBase(cf.findOrCreateRegister(UVMCompiler.MCDriver.getFramePtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
+//                if (toBeSpilled.getDataType() == MCRegister.DATA_GPR) {
+//                    mem.setDisp(stackDisp);
+//                    mem.setSize((byte) 8);
+//                    stackDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
+//                    stackSlot ++;
+//                } else if (toBeSpilled.getDataType() == MCRegister.DATA_DP || toBeSpilled.getDataType() == MCRegister.DATA_SP) {
+//                    UVMCompiler.error("spilling floating pointer registers to memory");
+//                } else {
+//                    UVMCompiler.error("spilling unknown register type to memory");
+//                }
+//                
+//                verboseln(toBeSpilled.prettyPrint() + " spilled to " + mem.prettyPrint());
+                toBeSpilled.setSPILL(true);
             } else {
                 MCRegister freeReg = f.poll();
                 

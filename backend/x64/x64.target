@@ -381,8 +381,12 @@ label : LABEL
 	"%%%s", P(MCRegister).REP().getName();
 }
 
-.emit_op MCMemoryOperand = {
-	"%s(%%%s)", P(MCMemoryOperand).getDispLabel().getName(), P(MCMemoryOperand).getBase().REP().getName();
+.emit_op MCLabeledMemoryOperand = {
+	"%s(%%%s)", P(MCLabeledMemoryOperand).getDispLabel().getName(), P(MCMemoryOperand).getBase().REP().getName();
+}
+
+.emit_op MCDispMemoryOperand = {
+	"%d(%%%s)", P(MCDispMemoryOperand).getDisp(), P(MCDispMemoryOperand).getBase().REP().getName();
 }
 
 // _|      _|    _|_|_|      _|_|_|    _|_|_|_|  _|_|_|_|  _|_|_|  _|      _|  _|_|_|_|
