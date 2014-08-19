@@ -6,8 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
-import compiler.UVMCompiler;
-
 public class DotGraph {
     StringBuilder dot = new StringBuilder();
     
@@ -43,7 +41,8 @@ public class DotGraph {
             writer.write(dot.toString());
             writer.write("}");
         } catch (IOException e) {
-            UVMCompiler.error("Error when writing dot file: " + file);
+            System.err.println("Error when writing dot file: " + file);
+            System.exit(1);
         } finally {
             if (writer != null)
                 try {

@@ -1,4 +1,4 @@
-package compiler.phase.mc;
+package compiler.phase.mc.linearscan;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,11 +6,12 @@ import java.util.List;
 import uvm.CompiledFunction;
 import uvm.MicroVM;
 import uvm.mc.AbstractMachineCode;
-import uvm.mc.LiveInterval;
-import uvm.mc.LiveInterval.Range;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCRegister;
+import uvm.mc.linearscan.Interval;
+import uvm.mc.linearscan.LivenessRange;
 import compiler.phase.AbstractCompilationPhase;
+import compiler.phase.mc.AbstractMCCompilationPhase;
 
 public class RegisterCoalescing extends AbstractMCCompilationPhase {
 
@@ -85,11 +86,11 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
             return join(cf, bb, mc, y, x);
         
         // i <- interval[REP(x).n]
-        LiveInterval intervalX = cf.intervals.get(x.REP());
-        Range i = intervalX.getRange(bb, mc.sequence);
+        Interval intervalX = cf.intervals.get(x.REP());
+        LivenessRange i = intervalX.getLiveness();
         // j <- interval[REP(x).n]
-        LiveInterval intervalY = cf.intervals.get(y.REP());
-        Range j = intervalY.getRange(bb, mc.sequence);
+        Interval intervalY = cf.intervals.get(y.REP());
+        LivenessRange j = intervalY.getLiveness();
         
 //        System.out.println(" i=" + (i == null ? "null" : i.prettyPrint()));
 //        System.out.println(" j=" + (j == null ? "null" : j.prettyPrint()));
@@ -97,7 +98,7 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
         verboseln("y=" + intervalY.prettyPrint());
 
 //        boolean overlap = i != null && j != null && i.overlap(j);
-        boolean overlap = intervalX != null && intervalY != null && intervalX.overlap(intervalY);
+        boolean overlap = intervalX != null && intervalY != null && intervalX.doesIntersectWith(intervalY);
         boolean compatible = compatible(cf, mc, x, y);
         
         verboseln(" overlap:" + overlap);
@@ -108,25 +109,27 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
             
             // join
             verboseln(" join current range");
-            List<Range> union = Range.union(i, j);
+            LivenessRange union = LivenessRange.union(i, j);
             
-            if (j == null)
-                cf.intervals.get(y.REP()).addRange(bb, i);
-            else
-                cf.intervals.get(y.REP()).replaceRange(bb, union);
+//            if (j == null)
+//                cf.intervals.get(y.REP()).addRange(bb, i);
+//            else
+//                cf.intervals.get(y.REP()).replaceRange(bb, union);
             
-            if (i != null)
-                cf.intervals.get(x.REP()).removeRange(bb);
+            cf.intervals.get(y.REP()).setLivenessRange(union);
+            
+//            if (i != null)
+//                cf.intervals.get(x.REP()).removeRange(bb);
             
             // TODO this part of code might be problematic
-            verboseln(" copy other x ranges to y");
-            for (MCBasicBlock otherBB : cf.intervals.get(x.REP()).getRanges().keySet()) {
-                List<LiveInterval.Range> list = cf.intervals.get(x.REP()).getRange(otherBB);
-                for (LiveInterval.Range r : list)
-                    cf.intervals.get(y.REP()).addRange(otherBB, r);
-            }
+//            verboseln(" copy other x ranges to y");
+//            for (MCBasicBlock otherBB : cf.intervals.get(x.REP()).getRanges().keySet()) {
+//                List<LiveInterval.Range> list = cf.intervals.get(x.REP()).getRange(otherBB);
+//                for (LiveInterval.Range r : list)
+//                    cf.intervals.get(y.REP()).addRange(otherBB, r);
+//            }
             
-            cf.intervals.get(x.REP()).getRanges().clear();
+            cf.intervals.remove(x.REP());
             // end of problem code
             
             x.REP().setREP(y.REP());
@@ -154,10 +157,10 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
         }
         
         // x in a specific register and interval of y does not overlap any other intervals
-        else if (isSpecificRegister(x) && !cf.intervals.get(y).overlapOtherThan(cf.intervals.get(x), mc.sequence))
+        else if (isSpecificRegister(x) && !cf.intervals.get(y).intersectOtherThan(cf.intervals.get(x), mc.sequence))
             return true;
         
-        else if (isSpecificRegister(y) && !cf.intervals.get(x).overlapOtherThan(cf.intervals.get(y), mc.sequence))
+        else if (isSpecificRegister(y) && !cf.intervals.get(x).intersectOtherThan(cf.intervals.get(y), mc.sequence))
             return true;
         
         else return false;

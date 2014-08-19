@@ -1,8 +1,5 @@
 package uvm;
 
-import static uvm.mc.LiveInterval.Range.UNKNOWN_END;
-import static uvm.mc.LiveInterval.Range.UNKNOWN_START;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -13,10 +10,11 @@ import java.util.Queue;
 import compiler.UVMCompiler;
 import compiler.util.DotGraph;
 import uvm.mc.AbstractMachineCode;
-import uvm.mc.LiveInterval;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCRegister;
-import uvm.mc.LiveInterval.Range;
+import uvm.mc.linearscan.Interval;
+import uvm.mc.linearscan.LivenessRange;
+import compiler.phase.mc.linearscan.*;
 
 public class CompiledFunction {
     Function origin;
@@ -35,7 +33,7 @@ public class CompiledFunction {
     public List<MCBasicBlock> topologicalBBs = new ArrayList<MCBasicBlock>();
     
     // register live interval
-    public HashMap<MCRegister, LiveInterval> intervals = new HashMap<MCRegister, LiveInterval>();
+    public HashMap<MCRegister, Interval> intervals = new HashMap<MCRegister, Interval>();
 
     // register
     private HashMap<String, MCRegister> regs = new HashMap<String, MCRegister>();
@@ -157,7 +155,7 @@ public class CompiledFunction {
     public List<MCRegister> getLiveRegistersAt(int sequence) {
         List<MCRegister> ret = new ArrayList<MCRegister>();
         
-        for (Entry<MCRegister, LiveInterval> entry : intervals.entrySet()) {
+        for (Entry<MCRegister, Interval> entry : intervals.entrySet()) {
             if (entry.getValue().isLiveAt(sequence)) {
                 ret.add(entry.getKey().REP());
             }
@@ -177,22 +175,8 @@ public class CompiledFunction {
         for (MCRegister reg : intervals.keySet()) {
             System.out.print(String.format("%-"+maxRegNameLength+"s ", reg.getName()));
             
-            char[] output = new char[mc.size()];
-            for (int i = 0; i < output.length; i++)
-                output[i] = 'x';
-            LiveInterval interval = intervals.get(reg);
-            for (List<Range> list : interval.getRanges().values()) {
-                for (Range range : list) {
-                    if (range.getStart() != UNKNOWN_START && range.getEnd() != UNKNOWN_END) {
-                        for (int i = range.getStart(); i <= range.getEnd(); i++)
-                            output[i] = '-';
-                    } else {
-                        UVMCompiler.error("fml");
-                    }
-                }
-            }
-            
-            System.out.print(output);
+            Interval interval = intervals.get(reg);
+            System.out.print(interval.prettyPrint());
             
             System.out.println(" " + reg.prettyPrint());
         }

@@ -1,5 +1,6 @@
 package uvm.mc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractMachineCode {
@@ -9,10 +10,12 @@ public abstract class AbstractMachineCode {
     
     protected String name;
     protected List<MCOperand> operands;
+    protected List<MCOperand> implicitUses = new ArrayList<MCOperand>();
     
     protected uvm.mc.MCLabel label;
     
     protected uvm.mc.MCOperand reg;
+    protected List<MCOperand> implicitDefines = new ArrayList<MCOperand>();
     
     protected uvm.IRTreeNode highLevelIR;
     
@@ -45,6 +48,30 @@ public abstract class AbstractMachineCode {
     
     public int getNumberOfOperands() {
         return operands.size();
+    }
+    
+    public int getNumberOfImplicitUses() {
+        return implicitUses.size();
+    }
+    
+    public MCOperand getImplicitUse(int index) {
+        return implicitUses.get(index);
+    }
+    
+    public void addImplicitUse(MCOperand op) {
+        implicitUses.add(op);
+    }
+    
+    public int getNumberOfImplicitDefines() {
+        return implicitDefines.size();
+    }
+    
+    public MCOperand getImplicitDefine(int index) {
+        return implicitDefines.get(index);
+    }
+    
+    public void addImplicitDefine(MCOperand op) {
+        implicitDefines.add(op);        
     }
     
     public void setLabel(uvm.mc.MCLabel label) {

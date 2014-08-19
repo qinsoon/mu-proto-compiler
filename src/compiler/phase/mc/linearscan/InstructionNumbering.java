@@ -1,4 +1,4 @@
-package compiler.phase.mc;
+package compiler.phase.mc.linearscan;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +11,7 @@ import uvm.MicroVM;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
 import compiler.phase.AbstractCompilationPhase;
+import compiler.phase.mc.AbstractMCCompilationPhase;
 
 public class InstructionNumbering extends AbstractMCCompilationPhase {
 
@@ -26,20 +27,20 @@ public class InstructionNumbering extends AbstractMCCompilationPhase {
 
         Stack<MCBasicBlock> dfs = new Stack<MCBasicBlock>();
         dfs.push(cf.entryBB);
-        
+
         while (!dfs.isEmpty()) {
             MCBasicBlock cur = dfs.pop();
             dfsIndex.put(cur, index);
             topologicalOrder.add(cur);
-            
+
             index++;
-            
+
             for (MCBasicBlock succ : cur.getSuccessor()) {
                 if (dfsIndex.get(succ) == null)
                     dfs.push(succ);
             }
         }
-        
+
         verboseln("\ninstruction numbering:\n");
         int sequence = 0;
         for (MCBasicBlock cur : topologicalOrder) {
@@ -47,7 +48,7 @@ public class InstructionNumbering extends AbstractMCCompilationPhase {
             for (AbstractMachineCode mc : cur.getMC()) {
                 verboseln(sequence + ": " + mc.prettyPrint());
                 mc.sequence = sequence;
-                sequence ++;
+                sequence += 2;
             }
         }
     }

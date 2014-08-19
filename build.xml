@@ -52,6 +52,10 @@
 		       <include name="IRTreeNode.java"/>
 		       <include name="BurmState.java"/>
 		</javac>
+		<javac srcdir="${uvm-dir}/compiler/util"
+			   includeantruntime="false"
+			   classpath="${burg-impl-dir}:${uvm-dir}"
+			   destdir="${burg-exec-dir}"/>
 		<javac srcdir="${uvm-dir}/uvm/mc"
 			   includeantruntime="false"
 			   classpath="${burg-impl-dir}:${burg-exec-dir}"

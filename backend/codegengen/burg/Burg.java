@@ -644,6 +644,10 @@ public class Burg {
         int resDataType = -1;
         int[] opDataType;
         boolean defined = false;
+        List<String> implicitUses = new ArrayList<String>();
+        List<Integer> implicitUsesDataTypes = new ArrayList<Integer>();
+        List<String> implicitDefines = new ArrayList<String>();
+        List<Integer> implicitDefinesDataTypes = new ArrayList<Integer>();
     }
     
     static class OperandEmit {
@@ -825,6 +829,16 @@ public class Burg {
         code.increaseIndent();
         code.appendStmtln("this.name = \"" + op.name + "\"");
         code.appendStmtln(String.format("this.operands = Arrays.asList(new MCOperand[%d])", op.operands));
+        for (int i = 0; i < op.implicitUses.size(); i++) {
+            code.appendStmtln(
+                    String.format("this.implicitUses.add(MCRegister.findOrCreate(\"%s\", MCRegister.MACHINE_REG, %d))", 
+                            op.implicitUses.get(i), op.implicitUsesDataTypes.get(i)));
+        }
+        for (int i = 0; i < op.implicitDefines.size(); i++) {
+            code.appendStmtln(
+                    String.format("this.implicitDefines.add(MCRegister.findOrCreate(\"%s\", MCRegister.MACHINE_REG, %d))", 
+                            op.implicitDefines.get(i), op.implicitDefinesDataTypes.get(i)));
+        }
         code.decreaseIndent();
         code.appendln("}");
         

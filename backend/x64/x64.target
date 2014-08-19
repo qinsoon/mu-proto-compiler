@@ -500,6 +500,7 @@ label : LABEL
 .mc_def idiv = {
 	GPR;
 	"idivq %s", OP[0];
+	uses: rax(GPR);
 }
 
 .mc_def add = {

@@ -1,4 +1,4 @@
-package compiler.phase.mc;
+package compiler.phase.mc.linearscan;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +14,7 @@ import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
 import compiler.UVMCompiler;
 import compiler.phase.AbstractCompilationPhase;
+import compiler.phase.mc.AbstractMCCompilationPhase;
 
 /*
  *  Check paper <Linear Scan Register Allocation in the context of SSA form and Register Constraints> Sec 4.1 

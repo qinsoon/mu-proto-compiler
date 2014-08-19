@@ -55,7 +55,19 @@ mcDefine
         operandTypeDefine ?
         // emit code
         formatString (',' mcEmitOperand)* ';'
+        // implicit uses
+        implicitUses ?
+        // implicit defines
+        implicitDefines ?
         '}'
+    ;
+
+implicitUses
+    :   'uses:' (mcReg '(' mcOperandType ')')+ ';'
+    ;
+
+implicitDefines
+    :   'defines:' (mcReg '(' mcOperandType ')')+ ';'
     ;
 
 operandTypeDefine

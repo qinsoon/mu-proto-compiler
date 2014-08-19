@@ -16,13 +16,13 @@ import uvm.Type;
 import uvm.Value;
 import uvm.inst.InstCall;
 import uvm.mc.AbstractMachineCode;
-import uvm.mc.LiveInterval;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCIntImmediate;
 import uvm.mc.MCLabel;
 import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
+import uvm.mc.linearscan.Interval;
 
 public class X64CallConvention {
     public void calleeInitParameterRegisters(CompiledFunction cf) {
@@ -288,7 +288,7 @@ public class X64CallConvention {
         // allocate space for local storage
         int stackDisp = 0;
         for (MCRegister reg : cf.intervals.keySet()) {
-            if (cf.intervals.get(reg).hasValidRanges() && reg.isSpilled()) {
+            if (cf.intervals.get(reg).hasValidRange() && reg.isSpilled()) {
                 if (reg.getDataType() == MCRegister.DATA_GPR) {
                     stackDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
                 }
@@ -310,8 +310,8 @@ public class X64CallConvention {
         
         // callee-saved register
         for (MCRegister reg : cf.intervals.keySet()) {
-            LiveInterval li = cf.intervals.get(reg);
-            if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()) && li.hasValidRanges()) {
+            Interval li = cf.intervals.get(reg);
+            if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()) && li.hasValidRange()) {
                 cf.calleeSavedRegs.add(reg);
                 // need to save it
                 prologue.add(pushStack(reg));

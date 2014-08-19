@@ -15,6 +15,11 @@ import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
 import compiler.phase.MCRepresentationGeneration;
 import compiler.phase.mc.*;
+import compiler.phase.mc.linearscan.ComputeLiveInterval;
+import compiler.phase.mc.linearscan.GenMovForPhi;
+import compiler.phase.mc.linearscan.InstructionNumbering;
+import compiler.phase.mc.linearscan.LinearScan;
+import compiler.phase.mc.linearscan.RegisterCoalescing;
 import compiler.phase.mc.x64.AllocateParamRetRegister;
 import compiler.phase.mc.x64.ExpandCallSequence;
 import compiler.phase.mc.x64.InsertSpillingCode;
@@ -136,6 +141,10 @@ public class UVMCompiler {
     public static final void error(String message) {
         System.err.print(message);
         Thread.dumpStack();
+        System.exit(1);
+    }
+    
+    public static final void exit() {
         System.exit(1);
     }
     

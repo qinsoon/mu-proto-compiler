@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 
 import burg.Burg.*;
 import burg.burgParser.McOperandContext;
+import burg.burgParser.McRegContext;
 import burg.burgParser.NodeContext;
 
 public class burgListenerImpl extends burgBaseListener {
@@ -184,6 +185,24 @@ public class burgListenerImpl extends burgBaseListener {
             }
             else if (operand instanceof burgParser.McEmitOpContext) {
                 emit.append(String.format(", " + Burg.targetName + "Driver.v.emitOp(operands.get(%d))", Integer.parseInt(((burgParser.McEmitOpContext) operand).DIGITS().getText())));
+            }
+        }
+        
+        // implicit uses
+        if (ctx.implicitUses() != null) {
+            for (int i = 0; i < ctx.implicitUses().mcReg().size(); i++) {
+                McRegContext opCtx = ctx.implicitUses().mcReg(i);
+                define.implicitUses.add(opCtx.getText());
+                define.implicitUsesDataTypes.add(getDataType(ctx.implicitUses().mcOperandType(i)));
+            }
+        }
+        
+        // implicit defines
+        if (ctx.implicitDefines() != null) {
+            for (int i = 0; i < ctx.implicitDefines().mcReg().size(); i++) {
+                McRegContext opCtx = ctx.implicitDefines().mcReg(i);
+                define.implicitDefines.add(opCtx.getText());
+                define.implicitDefinesDataTypes.add(getDataType(ctx.implicitDefines().mcOperandType(i)));
             }
         }
         
