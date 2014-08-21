@@ -1,10 +1,6 @@
 package uvm.mc.linearscan;
 
 import java.util.BitSet;
-import java.util.LinkedList;
-import java.util.List;
-
-import compiler.UVMCompiler;
 import compiler.util.OrderedList;
 
 import java.util.Comparator;
@@ -41,8 +37,7 @@ public class LivenessRange {
                 // first position
                 if (p.isUse()) {
                     System.out.println(p.prettyPrint());
-                    System.err.println("first position in liveness range is USE");
-                    System.exit(1);
+                    System.err.println("warning: first position in liveness range is USE");
                 } else if (p.isDefine()) {
                     rangeStart = p;
                 }

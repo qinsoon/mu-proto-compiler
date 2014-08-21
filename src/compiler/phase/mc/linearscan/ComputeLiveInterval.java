@@ -1,5 +1,6 @@
 package compiler.phase.mc.linearscan;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -114,20 +115,18 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         }
         
         // calc and check intervals
+        HashMap<MCRegister, Interval> validIntervals = new HashMap<MCRegister, Interval>();
+        
         for (MCRegister reg :cf.intervals.keySet()) {
             // calc
             Interval interval = cf.intervals.get(reg);
             verboseln("computing liveness for " + reg.prettyPrint());
             verboseln(interval.prettyPrint());
-            interval.calcLiveness();
-            
-            // check
-            if (interval.getBegin() == -1 || interval.getEnd() == -1) {
-                System.out.println("interval for " + reg.prettyPrint() + " doesnt have a valid begin/end:");
-                System.out.println(interval.prettyPrint());
-                UVMCompiler.exit();
-            }
+            if (interval.calcLiveness())
+                validIntervals.put(reg, interval);
         }
+        
+        cf.intervals = validIntervals;
     }
 
     public void addPosition(CompiledFunction cf, MCBasicBlock bb, MCRegister reg, Position pos) {
@@ -143,7 +142,7 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         }
         else {
             verboseln(" create new intervals");
-            Interval l = new Interval(cf.mc.size() * 2, reg.getDataType());
+            Interval l = new Interval(cf.mc.size() * 2, reg.getDataType(), reg);
             l.addPosition(pos);
             cf.intervals.put(reg, l);
         }

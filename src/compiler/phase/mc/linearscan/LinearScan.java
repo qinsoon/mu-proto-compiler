@@ -102,6 +102,18 @@ public class LinearScan extends AbstractMCCompilationPhase {
                 i++;
             }
             
+            // if current is a fixed interval, then we dont need to allocate for it
+            if (current.isFixed()) {
+                if (current.isLiveAt(position)) {
+                    unhandled.remove(current);
+                    active.add(current);
+                } else {
+                    unhandled.remove(current);
+                    inactive.add(current);
+                }
+                continue;
+            }
+            
             // find a register for current
             boolean succ = tryAllocateFreeReg(current);
             if (!succ) {
@@ -174,11 +186,13 @@ public class LinearScan extends AbstractMCCompilationPhase {
         else if (current.getEnd() < highestFreeUntilPos) {
             // register available for the whole interval
             current.setPhysicalReg(candidate);
+            verboseln("Allocate " + candidate.prettyPrint() + " to virtual reg " + current.getOrig().prettyPrint());
             return true;
         }
         else {
             // register available for the first part of the interval
             current.setPhysicalReg(candidate);
+            verboseln("Allocate " + candidate.prettyPrint() + " to virtual reg " + current.getOrig().prettyPrint());
             
             // split current before freeUntilPos
             unhandled.add(current.splitAt(highestFreeUntilPos));

@@ -9,10 +9,10 @@ import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCRegister;
 
 public class Interval {
-    int begin;
-    int end;
-    
     LivenessRange liveness;
+    
+    MCRegister orig;
+    boolean fixed = false;
     
     int dataType;
     MCRegister physical;
@@ -34,8 +34,13 @@ public class Interval {
         return physical;
     }
     
-    public Interval(int length, int type) {
-        liveness = new LivenessRange(length);
+    public Interval(int length, int type, MCRegister orig) {
+        this.orig = orig;
+        if (orig.getType() == MCRegister.MACHINE_REG) {
+            this.fixed = true;
+            this.physical = orig;
+        }
+        this.liveness = new LivenessRange(length);
         this.dataType = type;
     }
     
@@ -45,21 +50,18 @@ public class Interval {
      * @return
      */
     public Interval splitAt(int pos) {
-        if (pos > end)
+        if (pos > getEnd())
             return null;
         
         // new Interval
         LivenessRange newRange = liveness.getSubrange(pos);
-        Interval newInterval = new Interval(liveness.size(), dataType);
+        Interval newInterval = new Interval(liveness.size(), dataType, orig);
         newInterval.liveness = newRange;
         newInterval.physical = this.physical;
         newInterval.spill = this.spill;
-        newInterval.begin = newRange.firstAlive();
-        newInterval.end = newRange.lastAlive();
         
         // cut current interval
         liveness.cropCurrentRange(pos);
-        end = liveness.lastAlive();
         
         return newInterval;
     }
@@ -94,8 +96,12 @@ public class Interval {
         return liveness;
     }
     
-    public void calcLiveness() {
+    public boolean calcLiveness() {
         liveness.calculateLivenessFromPositions();
+        
+        if (getBegin() == -1 || getEnd() == -1)
+            return false;
+        return true;
     }
 
     public boolean hasValidRange() {
@@ -105,10 +111,12 @@ public class Interval {
     public String prettyPrint() {
         StringBuilder ret = new StringBuilder();
         ret.append("Interval([");
-        ret.append(begin);
+        ret.append(getBegin());
         ret.append(",");
-        ret.append(end);
-        ret.append("],type=");
+        ret.append(getEnd());
+        ret.append("],orig=");
+        ret.append(orig.prettyPrint());
+        ret.append(",type=");
         ret.append(dataType);
         ret.append(",reg=");
         ret.append(physical == null ? "null" : physical.prettyPrint());
@@ -121,8 +129,6 @@ public class Interval {
     
     public void addPosition(Position pos) {
         liveness.addPosition(pos);
-        this.begin = liveness.firstAlive();
-        this.end = liveness.lastAlive();
     }
     
     public boolean doesIntersectWith(Interval another) {
@@ -151,5 +157,21 @@ public class Interval {
 
     public void setSpill(MCMemoryOperand spill) {
         this.spill = spill;
+    }
+
+    public MCRegister getOrig() {
+        return orig;
+    }
+
+    public void setOrig(MCRegister orig) {
+        this.orig = orig;
+    }
+
+    public boolean isFixed() {
+        return fixed;
+    }
+
+    public void setFixed(boolean fixed) {
+        this.fixed = fixed;
     }
 }

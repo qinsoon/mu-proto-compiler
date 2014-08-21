@@ -491,6 +491,7 @@ label : LABEL
 
 .mc_def ret = {
 	"ret";
+	uses: rax(GPR) rdx(GPR) xmm0(DP) xmm1(DP)
 }
 
 // ********************************

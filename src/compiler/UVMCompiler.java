@@ -20,6 +20,7 @@ import compiler.phase.mc.linearscan.GenMovForPhi;
 import compiler.phase.mc.linearscan.InstructionNumbering;
 import compiler.phase.mc.linearscan.LinearScan;
 import compiler.phase.mc.linearscan.RegisterCoalescing;
+import compiler.phase.mc.linearscan.ReplaceRegisterOperand;
 import compiler.phase.mc.x64.AllocateParamRetRegister;
 import compiler.phase.mc.x64.ExpandCallSequence;
 import compiler.phase.mc.x64.InsertSpillingCode;
@@ -114,7 +115,7 @@ public class UVMCompiler {
             new ComputeLiveInterval("compinterval", Verbose.COMPUTE_INTERVAL).execute();            //*
             new RegisterCoalescing("regcoalesc", Verbose.REG_COALESC).execute();                    //*
             new LinearScan("linearscan", Verbose.LINEAR_SCAN).execute();                            //*
-            
+            new ReplaceRegisterOperand("replaceregop", false).execute();
             new ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
             /*
              *  code emission
