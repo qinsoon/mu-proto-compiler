@@ -202,7 +202,9 @@ public class X64CallConvention {
 //        ret.add(pushStack(callerRelAddress));
         
         // generate call
-        ret.add(UVMCompiler.MCDriver.genCall((MCLabel) operandFromNode(caller, callee.getFuncLabel())));
+        // FIXME: why generate a new call inst instead of using the old one?
+        ret.add(callMC);
+//        ret.add(UVMCompiler.MCDriver.genCall((MCLabel) operandFromNode(caller, callee.getFuncLabel())));
         
         return ret;
     }

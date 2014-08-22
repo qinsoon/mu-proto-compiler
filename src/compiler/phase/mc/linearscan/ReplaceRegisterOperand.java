@@ -19,6 +19,7 @@ public class ReplaceRegisterOperand extends AbstractMCCompilationPhase {
     protected void visitCompiledFunction(CompiledFunction cf) {
         for (MCBasicBlock bb : cf.BBs) {
             for (AbstractMachineCode mc : bb.getMC()) {
+            	verboseln("replacing register: " + mc.prettyPrintOneline());
                 for (int i = 0; i < mc.getNumberOfOperands(); i++) {
                     MCOperand op = mc.getOperand(i);
                     if (op instanceof MCRegister) {

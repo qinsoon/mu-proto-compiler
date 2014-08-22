@@ -32,8 +32,10 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         buildLiveIn(cf);
         buildIntervals(cf);
         
-        if (verbose)
+        if (verbose) {
+        	verboseln("");
             cf.printInterval();
+        }
     }
     
     public void buildLiveIn(CompiledFunction cf) {
@@ -72,46 +74,57 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
             for (int i = bb.getMC().size() - 1; i >= 0; i--) {
                 AbstractMachineCode mc = bb.getMC().get(i);
                 
-                for (int j = 0; j < mc.getNumberOfOperands(); j++) {
-                    MCOperand op = mc.getOperand(j);
-                    // this mc uses a register, so the register has a range that ends with this mc
-                    if (op instanceof MCRegister) {
-                        addPosition(cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, j, false));
-                    }
-                }
+                if (mc.isPhi()) {
+                	// mc is phi inst, then we ignore its use operands
+                	// and its defining reg has its start as the first 'ordinary' inst in this block
+                	addPosition(mc.prettyPrintOneline(), cf, bb, mc.getReg().REP(), new Position(bb.getFirstNonPhiMC().sequence, Position.DEFINE, mc, -1, false));
+                } else {
+                	// mc is not a phi inst
+	                for (int j = 0; j < mc.getNumberOfOperands(); j++) {
+	                    MCOperand op = mc.getOperand(j);
+	                    // this mc uses a register, so the register has a range that ends with this mc
+	                    if (op instanceof MCRegister) {
+	                        addPosition(mc.prettyPrintOneline(), cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, j, false));
+	                    }
+	                }
+	                
+	                for (int j = 0; j < mc.getNumberOfImplicitUses(); j++) {
+	                    MCOperand op = mc.getImplicitUse(j);
+	                    if (op instanceof MCRegister) {
+	                        addPosition(mc.prettyPrintOneline(), cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, -1, false));
+	                    }
+	                }
+	                
+	                if (mc.getReg() != null) {
+	                    // this mc defines a register, so the register has a range that starts before _next_ mc
+	                    if (mc.sequence + 1 <= bb.getLast().sequence)
+	                        addPosition(mc.prettyPrintOneline(), cf, bb, mc.getReg().REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, false));
+	                    else {
+	                    	addPosition(mc.prettyPrintOneline(), cf, bb, mc.getReg().REP(), new Position(mc.sequence, Position.DEFINE, mc, -1, false));
+	                    }
+	                }
+	                
+	                for (int j = 0; j < mc.getNumberOfImplicitDefines(); j++) {
+	                    MCOperand op = mc.getImplicitDefine(j);
+	                    if (op instanceof MCRegister) {
+	                        addPosition(mc.prettyPrintOneline() + "(IMPLICITLY)", cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, false));
+	                    }
+	                }
                 
-                for (int j = 0; j < mc.getNumberOfImplicitUses(); j++) {
-                    MCOperand op = mc.getImplicitUse(j);
-                    if (op instanceof MCRegister) {
-                        addPosition(cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, -1, false));
-                    }
-                }
-                
-                if (mc.getReg() != null) {
-                    // this mc defines a register, so the register has a range that starts with _next_ mc
-                    if (mc.sequence + 1 <= bb.getLast().sequence)
-                        addPosition(cf, bb, mc.getReg().REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, false));
-                }
-                
-                for (int j = 0; j < mc.getNumberOfImplicitDefines(); j++) {
-                    MCOperand op = mc.getImplicitDefine(j);
-                    if (op instanceof MCRegister) {
-                        addPosition(cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, false));
-                    }
                 }
             }
             
             // add define if a register is live-in
             for (MCRegister livein : bb.liveIn) {
-                addPosition(cf, bb, livein.REP(), new Position(0, Position.DEFINE, null, -1, false));
+                addPosition("livein for " + bb.getName(), cf, bb, livein.REP(), new Position(bb.getFirst().sequence, Position.DEFINE, null, -1, false));
             }
-            
-            // add use if a register is live-in for successor blocks
-            for (MCBasicBlock succBB : bb.getSuccessor()) {
-                for (MCRegister reg : succBB.liveIn) {
-                    addPosition(cf, bb, reg.REP(), new Position(bb.getLast().sequence, Position.USE, null, -1, false));
-                }
-            }
+//            
+//            // add use if a register is live-in for successor blocks
+//            for (MCBasicBlock succBB : bb.getSuccessor()) {
+//                for (MCRegister reg : succBB.liveIn) {
+//                    addPosition("liveout for " + bb.getName(), cf, bb, reg.REP(), new Position(bb.getLast().sequence, Position.USE, null, -1, false));
+//                }
+//            }
         }
         
         // calc and check intervals
@@ -129,8 +142,8 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         cf.intervals = validIntervals;
     }
 
-    public void addPosition(CompiledFunction cf, MCBasicBlock bb, MCRegister reg, Position pos) {
-        verboseln("adding position [" + pos.getIndex() + "] for " + (pos.isDefine() ? "DEFINE" : "USE"));
+    public void addPosition(String msg, CompiledFunction cf, MCBasicBlock bb, MCRegister reg, Position pos) {
+        verboseln(msg + " adds position " + (pos.isDefine() ? "DEFINE" : "USE") + "[" + pos.getIndex() + "] for " + reg.prettyPrint());
         
         if (cf.intervals.containsKey(reg)) {
             verboseln(" found intervals:");

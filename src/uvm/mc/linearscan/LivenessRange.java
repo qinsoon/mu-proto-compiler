@@ -36,8 +36,13 @@ public class LivenessRange {
             if (rangeStart == null) {
                 // first position
                 if (p.isUse()) {
-                    System.out.println(p.prettyPrint());
-                    System.err.println("warning: first position in liveness range is USE");
+                	// commenting out the warning
+                	// some insts such as call, implicity uses all the parameter registers
+                	// if those registers are not used somewhere else, they only have a USE position
+                	// and we are supposed to ignore them and do not create intervals for them
+                	
+//                    System.out.println(p.prettyPrint());
+//                    System.err.println("warning: first position in liveness range is USE");
                 } else if (p.isDefine()) {
                     rangeStart = p;
                 }

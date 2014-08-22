@@ -439,6 +439,7 @@ label : LABEL
 
 .mc_def call = {
 	"call %s", OP[0];
+	uses: rdi(GPR) rsi(GPR) rdx(GPR) rcx(GPR) r8(GPR) r9(GPR) xmm0(DP) xmm1(DP) xmm2(DP) xmm3(DP) xmm4(DP) xmm5(DP) xmm6(DP) xmm7(DP)
 }
 
 .mc_def push(1) = {

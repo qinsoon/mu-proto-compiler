@@ -100,6 +100,8 @@ public class UVMCompiler {
             new BBReconstruction("reconstbb", Verbose.RECONSTRUCT_BB).execute();
             new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();
             
+            new ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
+            
             /*
              *  register allocation
              *  
@@ -115,12 +117,13 @@ public class UVMCompiler {
             new ComputeLiveInterval("compinterval", Verbose.COMPUTE_INTERVAL).execute();            //*
             new RegisterCoalescing("regcoalesc", Verbose.REG_COALESC).execute();                    //*
             new LinearScan("linearscan", Verbose.LINEAR_SCAN).execute();                            //*
-            new ReplaceRegisterOperand("replaceregop", false).execute();
-            new ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
+
             /*
              *  code emission
              */
             new SimpleBranchAlignment("simplebralign", Verbose.SIMPLE_BRANCH_ALIGN).execute();
+            
+            new ReplaceRegisterOperand("replaceregop", true).execute();
             new MachineCodeCleanup("mccleanup", Verbose.MC_CLEANUP).execute();
             
 //            new RegisterSpillingReplaceMemOp("replacememop", Verbose.REPLACE_MEM_OP).execute();

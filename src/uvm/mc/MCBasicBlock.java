@@ -95,6 +95,17 @@ public class MCBasicBlock {
         
         return mc.get(0);
     }
+    public AbstractMachineCode getFirstNonPhiMC() {
+    	if (mc.isEmpty())
+    		return null;
+    	
+    	for (int i = 0; i < mc.size(); i++) {
+    		if (!mc.get(i).isPhi())
+    			return mc.get(i);
+    	}
+    	
+    	return null;
+    }
     public AbstractMachineCode getLast() {
         if (mc.isEmpty())
             return null;
