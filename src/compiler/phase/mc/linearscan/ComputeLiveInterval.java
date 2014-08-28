@@ -52,8 +52,8 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
                             bb.liveIn.add(((MCRegister) op).REP());
                 }
                 
-                if (mc.getReg() != null) {
-                    defined.add(mc.getReg().REP());                    
+                if (mc.getDefine() != null) {
+                    defined.add(mc.getDefineAsReg().REP());                    
                 }
             }
             
@@ -77,14 +77,14 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
                 if (mc.isPhi()) {
                 	// mc is phi inst, then we ignore its use operands
                 	// and its defining reg has its start as the first 'ordinary' inst in this block
-                	addPosition(mc.prettyPrintOneline(), cf, bb, mc.getReg().REP(), new Position(bb.getFirstNonPhiMC().sequence, Position.DEFINE, mc, -1, false));
+                	addPosition(mc.prettyPrintOneline(), cf, bb, mc.getDefineAsReg().REP(), new Position(bb.getFirstNonPhiMC().sequence + 1, Position.DEFINE, mc, -1, false));
                 } else {
                 	// mc is not a phi inst
 	                for (int j = 0; j < mc.getNumberOfOperands(); j++) {
 	                    MCOperand op = mc.getOperand(j);
 	                    // this mc uses a register, so the register has a range that ends with this mc
 	                    if (op instanceof MCRegister) {
-	                        addPosition(mc.prettyPrintOneline(), cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, j, false));
+	                        addPosition(mc.prettyPrintOneline(), cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, j, mc.isOpRegOnly(j)));
 	                    }
 	                }
 	                
@@ -95,12 +95,12 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
 	                    }
 	                }
 	                
-	                if (mc.getReg() != null) {
+	                if (mc.getDefine() != null) {
 	                    // this mc defines a register, so the register has a range that starts before _next_ mc
 	                    if (mc.sequence + 1 <= bb.getLast().sequence)
-	                        addPosition(mc.prettyPrintOneline(), cf, bb, mc.getReg().REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, false));
+	                        addPosition(mc.prettyPrintOneline(), cf, bb, mc.getDefineAsReg().REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, mc.isDefineRegOnly()));
 	                    else {
-	                    	addPosition(mc.prettyPrintOneline(), cf, bb, mc.getReg().REP(), new Position(mc.sequence, Position.DEFINE, mc, -1, false));
+	                    	addPosition(mc.prettyPrintOneline(), cf, bb, mc.getDefineAsReg().REP(), new Position(mc.sequence, Position.DEFINE, mc, -1, mc.isDefineRegOnly()));
 	                    }
 	                }
 	                
@@ -116,7 +116,7 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
             
             // add define if a register is live-in
             for (MCRegister livein : bb.liveIn) {
-                addPosition("livein for " + bb.getName(), cf, bb, livein.REP(), new Position(bb.getFirst().sequence, Position.DEFINE, null, -1, false));
+                addPosition("livein for " + bb.getName(), cf, bb, livein.REP(), new Position(bb.getFirst().sequence, Position.USE, null, -1, false));
             }
 //            
 //            // add use if a register is live-in for successor blocks

@@ -10,6 +10,8 @@ import uvm.MicroVM;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCLabel;
+import uvm.mc.MCMemoryOperand;
+import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
 import compiler.UVMCompiler;
 import compiler.phase.AbstractCompilationPhase;
@@ -116,11 +118,11 @@ public class MachineCodeCleanup extends AbstractMCCompilationPhase {
             return false;
         
         if (mc.isPhi()) {
-            MCRegister res = mc.getReg().REP();
-            if ( mc.getOperand(0) instanceof MCRegister
-                    && ((MCRegister)mc.getOperand(0)).REP() == res
-                    && mc.getOperand(2) instanceof MCRegister
-                    && ((MCRegister)mc.getOperand(2)).REP() == res)
+            MCOperand define = mc.getDefine();
+            MCOperand op1 = mc.getOperand(0);
+            MCOperand op2 = mc.getOperand(2);
+            
+            if (op1 == define && op2 == define)
                 return true;
             else {
                 return false;
@@ -128,9 +130,16 @@ public class MachineCodeCleanup extends AbstractMCCompilationPhase {
         }
         
         if (mc.isMov()) {
-            if (mc.getOperand(0) instanceof MCRegister && 
-                    ((MCRegister)mc.getOperand(0)).REP() == mc.getReg().REP())
+        	MCOperand dst = mc.getDefine();
+        	MCOperand src = mc.getOperand(0);
+        	
+        	if (src instanceof MCRegister && dst instanceof MCRegister &&
+        			((MCRegister) src).REP() == ((MCRegister) dst).REP()) {
                 return true;
+        	} else if (src instanceof MCMemoryOperand && dst instanceof MCMemoryOperand &&
+        			src == dst) {
+        		return true;
+        	}
         }
         
         return false;

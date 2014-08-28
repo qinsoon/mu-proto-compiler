@@ -123,7 +123,7 @@ public class UVMCompiler {
              */
             new SimpleBranchAlignment("simplebralign", Verbose.SIMPLE_BRANCH_ALIGN).execute();
             
-            new ReplaceRegisterOperand("replaceregop", true).execute();
+            new ReplaceRegisterOperand("replaceregop", Verbose.REPLACE_MEM_OP).execute();
             new MachineCodeCleanup("mccleanup", Verbose.MC_CLEANUP).execute();
             
 //            new RegisterSpillingReplaceMemOp("replacememop", Verbose.REPLACE_MEM_OP).execute();

@@ -26,13 +26,13 @@ public class RegisterSpillingReplaceMemOp extends AbstractMCCompilationPhase {
                 }
             }
             
-            if (mc.getReg() != null) {
-                MCOperand op = mc.getReg();
+            if (mc.getDefine() != null) {
+                MCOperand op = mc.getDefine();
                 if (op instanceof MCRegister && ((MCRegister)op).REP().isSpilled()) {
                     verboseln(mc.prettyPrintOneline());
                     MCRegister reg = ((MCRegister)op).REP();
                     verboseln("op:" + op.prettyPrint() + " is spilled to " + reg.SPILL().prettyPrint());
-                    mc.setReg(reg.SPILL());
+                    mc.setDefine(reg.SPILL());
                 }
             }
         }

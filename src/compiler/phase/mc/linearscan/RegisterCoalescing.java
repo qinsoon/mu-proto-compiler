@@ -10,6 +10,7 @@ import uvm.mc.MCBasicBlock;
 import uvm.mc.MCRegister;
 import uvm.mc.linearscan.Interval;
 import uvm.mc.linearscan.LivenessRange;
+import compiler.UVMCompiler;
 import compiler.phase.AbstractCompilationPhase;
 import compiler.phase.mc.AbstractMCCompilationPhase;
 
@@ -31,7 +32,7 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
                 if (mc.isMov()) {
                     // try join
                     if (mc.getOperand(0) instanceof MCRegister &&
-                            join(cf, bb,  mc, ((MCRegister) mc.getOperand(0)).REP(), mc.getReg().REP())) {
+                            join(cf, bb,  mc, ((MCRegister) mc.getOperand(0)).REP(), mc.getDefineAsReg().REP())) {
                         // remove this mov mc
                         joined = true;
                     }
@@ -41,10 +42,15 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
                     // try join
                     if (mc.getOperand(0) instanceof MCRegister &&
                         mc.getOperand(2) instanceof MCRegister &&
-                        join(cf, bb, mc, (MCRegister) mc.getOperand(0), mc.getReg()) &&
-                        join(cf, bb, mc, (MCRegister) mc.getOperand(2), mc.getReg())) {
+                        join(cf, bb, mc, (MCRegister) mc.getOperand(0), mc.getDefineAsReg()) &&
+                        join(cf, bb, mc, (MCRegister) mc.getOperand(2), mc.getDefineAsReg())) {
                         // remove this phi mc
                         joined = true;                            
+                    }
+                    
+                    if (!joined) {
+                    	// we got a problem here
+                    	UVMCompiler.error("failed to join a Phi inst");
                     }
                 }
                 
@@ -82,7 +88,7 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
             return true;
         
         // we want to keep specific registers
-        if (isSpecificRegister(x) && !isSpecificRegister(y))
+        if (isFixedRegister(x) && !isFixedRegister(y))
             return join(cf, bb, mc, y, x);
         
         // i <- interval[REP(x).n]
@@ -146,27 +152,27 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
             return false;
         
         // both do not have to be in specific registers
-        if (!isSpecificRegister(x) && !isSpecificRegister(y))
+        if (!isFixedRegister(x) && !isFixedRegister(y))
             return true;
         
         // both have to be in the same specific register
-        else if (isSpecificRegister(x) && isSpecificRegister(y)) {
+        else if (isFixedRegister(x) && isFixedRegister(y)) {
             if (x.equals(y))
                 return true;
             else return false;
         }
         
         // x in a specific register and interval of y does not overlap any other intervals
-        else if (isSpecificRegister(x) && !cf.intervals.get(y).intersectOtherThan(cf.intervals.get(x), mc.sequence))
+        else if (isFixedRegister(x) && !cf.intervals.get(y).intersectOtherThan(cf.intervals.get(x), mc.sequence))
             return true;
         
-        else if (isSpecificRegister(y) && !cf.intervals.get(x).intersectOtherThan(cf.intervals.get(y), mc.sequence))
+        else if (isFixedRegister(y) && !cf.intervals.get(x).intersectOtherThan(cf.intervals.get(y), mc.sequence))
             return true;
         
         else return false;
     }
     
-    private static boolean isSpecificRegister(MCRegister reg) {
+    private static boolean isFixedRegister(MCRegister reg) {
         if (reg.getREPType() == MCRegister.OTHER_SYMBOL_REG ||  reg.getREPType() == MCRegister.RES_REG)
             return false;
         else return true;

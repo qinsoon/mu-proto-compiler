@@ -32,13 +32,13 @@ public class ReplaceRegisterOperand extends AbstractMCCompilationPhase {
                     }
                 }
                 
-                MCRegister reg = mc.getReg();
+                MCRegister reg = mc.getDefineAsReg();
                 if (reg != null) {
                     Interval regInterval = cf.intervals.get(reg.REP());
                     if (regInterval.getSpill() != null) {
-                        UVMCompiler.error("spilling defining reg to memory");
+                    	mc.setDefine(regInterval.getSpill());
                     } else if (regInterval.getPhysicalReg() != null) {
-                        mc.setReg(regInterval.getPhysicalReg());
+                        mc.setDefine(regInterval.getPhysicalReg());
                     }
                 }
             }

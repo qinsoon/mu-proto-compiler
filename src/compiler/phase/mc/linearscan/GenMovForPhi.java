@@ -151,7 +151,7 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                             // join i with phi
                             // i is genMovReg
                             // phi is mc.getReg()
-                            genMovReg.setREP(mc.getReg());
+                            genMovReg.setREP(mc.getDefineAsReg());
                         } else {
                             verboseln("didnt insert mov");
                         }

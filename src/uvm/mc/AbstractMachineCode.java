@@ -10,11 +10,13 @@ public abstract class AbstractMachineCode {
     
     protected String name;
     protected List<MCOperand> operands;
+    protected List<Boolean> opRegOnly;
     protected List<MCOperand> implicitUses = new ArrayList<MCOperand>();
     
     protected uvm.mc.MCLabel label;
     
-    protected uvm.mc.MCOperand reg;
+    protected uvm.mc.MCOperand define;
+    protected Boolean defineRegOnly;
     protected List<MCOperand> implicitDefines = new ArrayList<MCOperand>();
     
     protected uvm.IRTreeNode highLevelIR;
@@ -31,19 +33,31 @@ public abstract class AbstractMachineCode {
         newMC.label    = oldMC.label;
     }
     
+    public boolean isOpRegOnly(int i) {
+    	return opRegOnly.get(i);
+    }
+    
+    public boolean isDefineRegOnly() {
+    	return defineRegOnly;
+    }
+    
     /**
      * this may not always be valid result (when the mc doesnt have a result)
      */
-    public MCRegister getReg() {
-        return (MCRegister) reg;
+    public MCOperand getDefine() {
+        return define;
+    }
+    
+    public MCRegister getDefineAsReg() {
+    	return (MCRegister) define;
     }
     
     public MCOperand getResultOp() {
-        return reg;
+        return define;
     }
     
-    public void setReg(MCOperand reg) {
-        this.reg = reg;
+    public void setDefine(MCOperand reg) {
+        this.define = reg;
     }
     
     public int getNumberOfOperands() {
@@ -116,8 +130,8 @@ public abstract class AbstractMachineCode {
             if (i != operands.size() - 1)
                 ret.append(", ");
         }
-        if (reg != null)
-            ret.append(" -> " + reg.prettyPrint());
+        if (define != null)
+            ret.append(" -> " + define.prettyPrint());
 
         return ret.toString();
     }

@@ -36,6 +36,9 @@ public class OrderedList<T> implements List<T> {
     }
     
     public boolean add(T i) {
+    	if (i == null)
+    		return false;
+    	
         if (list.size() == 0) {
             list.add(i);
         } else if (comparator.compare(list.get(0), i) > 0) {

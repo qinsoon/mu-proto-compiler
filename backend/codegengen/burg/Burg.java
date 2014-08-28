@@ -389,7 +389,7 @@ public class Burg {
                     code.appendStmtln(String.format("%s.setNodeIndex(node.getId())", var));
                     
                     if (mc.reg != null)
-                        code.appendStmtln(String.format("%s.setReg((MCRegister)%s)", var, getOperandCreation(mc.reg, mc.op.resDataType)));
+                        code.appendStmtln(String.format("%s.setDefine((MCRegister)%s)", var, getOperandCreation(mc.reg, mc.op.resDataType)));
                     
                     code.appendStmtln(String.format(
                             "ret.add(%s)", var));
@@ -473,8 +473,17 @@ public class Burg {
     public static String getOperandCreation(CCTOperand operand, int dataType) {        
         switch(dataType) {
         case MCRegister.DATA_DP:
+        case OpdRegister.DATA_DP_OR_MEM:
+        	dataType = MCRegister.DATA_DP;
+        	break;
         case MCRegister.DATA_SP:
+        case OpdRegister.DATA_SP_OR_MEM:
+        	dataType = MCRegister.DATA_SP;
+        	break;
         case MCRegister.DATA_GPR:
+        case OpdRegister.DATA_GPR_OR_MEM:
+        	dataType = MCRegister.DATA_GPR;
+        	break;
         case MCRegister.DATA_MEM:
             break;
         case -1:
@@ -706,9 +715,12 @@ public class Burg {
         public static final int TMP_REG     = 5;
         
         public static final int DATA_DP = 100;
+        public static final int DATA_DP_OR_MEM = 200;
         public static final int DATA_SP = 101;
+        public static final int DATA_SP_OR_MEM = 201;
         public static final int DATA_GPR = 102;
-        public static final int DATA_MEM = 103;
+        public static final int DATA_GPR_OR_MEM = 202;
+        public static final int DATA_OTH = 103;
         
         int type;
         int dataType;
@@ -827,13 +839,43 @@ public class Burg {
         code.increaseIndent();
         code.appendln(String.format("public %s() {", opFullName));
         code.increaseIndent();
+        // set name
         code.appendStmtln("this.name = \"" + op.name + "\"");
+        // create operand list
         code.appendStmtln(String.format("this.operands = Arrays.asList(new MCOperand[%d])", op.operands));
+        // set opRegOnly
+        if (op.opDataType != null) {
+	        code.append("this.opRegOnly = Arrays.asList(");
+	        for (int i = 0; i < op.opDataType.length; i++) {
+	        	int dataType = op.opDataType[i];
+	        	if (dataType == OpdRegister.DATA_DP 
+	        			|| dataType == OpdRegister.DATA_SP
+	        			|| dataType == OpdRegister.DATA_GPR) {
+	        		code.appendNoIndent("true");
+	        	} else {
+	        		code.appendNoIndent("false");
+	        	}
+	        	
+	        	if (i != op.opDataType.length - 1)
+	        		code.appendNoIndent(",");
+	        }
+	        code.appendNoIndent(");\n");
+        }
+        // set defineRegOnly
+        if (op.resDataType == OpdRegister.DATA_DP 
+        		|| op.resDataType == OpdRegister.DATA_SP 
+        		|| op.resDataType == OpdRegister.DATA_GPR) {
+        	code.appendStmtln("this.defineRegOnly = true");
+        } else {
+        	code.appendStmtln("this.defineRegOnly = false");
+        }
+        // implicit uses
         for (int i = 0; i < op.implicitUses.size(); i++) {
             code.appendStmtln(
                     String.format("this.implicitUses.add(MCRegister.findOrCreate(\"%s\", MCRegister.MACHINE_REG, %d))", 
                             op.implicitUses.get(i), op.implicitUsesDataTypes.get(i)));
         }
+        // implicit defines
         for (int i = 0; i < op.implicitDefines.size(); i++) {
             code.appendStmtln(
                     String.format("this.implicitDefines.add(MCRegister.findOrCreate(\"%s\", MCRegister.MACHINE_REG, %d))", 
@@ -920,7 +962,7 @@ public class Burg {
         String mov = targetName + MC_MOV.get(0);
         code.appendStmtln(String.format("%s ret = new %s()", mov, mov));
         code.appendStmtln("ret.setOperand0(src)");
-        code.appendStmtln("ret.setReg(dest)");
+        code.appendStmtln("ret.setDefine(dest)");
         code.appendStmtln("return ret");        
         code.decreaseIndent();
         code.appendln("}");
@@ -931,7 +973,7 @@ public class Burg {
         String dpmov = targetName + MC_DPMOV.get(0);
         code.appendStmtln(String.format("%s ret = new %s()", dpmov, dpmov));
         code.appendStmtln("ret.setOperand0(src)");
-        code.appendStmtln("ret.setReg(dest)");
+        code.appendStmtln("ret.setDefine(dest)");
         code.appendStmtln("return ret");
         code.decreaseIndent();
         code.appendln("}");
@@ -942,7 +984,7 @@ public class Burg {
         String spmov = targetName + MC_SPMOV.get(0);
         code.appendStmtln(String.format("%s ret = new %s()", spmov, spmov));
         code.appendStmtln("ret.setOperand0(src)");
-        code.appendStmtln("ret.setReg(dest)");
+        code.appendStmtln("ret.setDefine(dest)");
         code.appendStmtln("return ret");
         code.decreaseIndent();
         code.appendln("}");
@@ -955,7 +997,7 @@ public class Burg {
             code.increaseIndent();
             code.appendStmtln(String.format("%s ret = new %s()", s, s));
             code.appendStmtln("ret.setOperand0(src)");
-            code.appendStmtln("ret.setReg(dest)");
+            code.appendStmtln("ret.setDefine(dest)");
             code.appendStmtln("return ret");
             
             code.decreaseIndent();

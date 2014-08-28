@@ -101,7 +101,7 @@ public class LivenessRange {
         bitset.clear(toIndex, bitset.size());
         for (int i = 0; i < positions.size();) {
             Position p = positions.get(i);
-            if (p.index > toIndex) {
+            if (p.index >= toIndex) {
                 positions.remove(i);
             } else {
                 i++;
@@ -148,6 +148,8 @@ public class LivenessRange {
     }
     
     public boolean isLiveAt(int index) {
+    	if (index < 0 || index >= size())
+    		return false;
         return bitset.get(index);
     }
     
@@ -177,12 +179,22 @@ public class LivenessRange {
                 }
             }
         }
-        
         ret.append("\n");
-        for (Position p : positions) {
-            ret.append(p.prettyPrint() + ", ");
-        }
-        return ret.toString();
+    	
+    	char[] output = new char[bitset.size()];
+    	for (int i = 0; i < output.length; i++) {
+    		if (bitset.get(i))
+    			output[i] = 'x';
+    		else output[i] = '-';
+    	}
+    	for (Position p : positions) {
+    		if (p.isUse())
+    			output[p.index] = 'U';
+    		else if (p.isDefine())
+    			output[p.index] = 'D';
+    	}
+    	
+    	return ret.toString() + new String(output);
     }
 
     public static LivenessRange union(LivenessRange i, LivenessRange j) {

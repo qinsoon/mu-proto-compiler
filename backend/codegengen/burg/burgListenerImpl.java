@@ -114,8 +114,12 @@ public class burgListenerImpl extends burgBaseListener {
             return Burg.OpdRegister.DATA_SP;
         else if (typeCtx instanceof burgParser.McOperandGPRContext)
             return Burg.OpdRegister.DATA_GPR;
-        else if (typeCtx instanceof burgParser.McOperandMemContext)
-            return Burg.OpdRegister.DATA_MEM;
+        else if (typeCtx instanceof burgParser.McOperandDPOrMemContext)
+        	return Burg.OpdRegister.DATA_DP_OR_MEM;
+        else if (typeCtx instanceof burgParser.McOperandSPOrMemContext)
+        	return Burg.OpdRegister.DATA_SP_OR_MEM;
+        else if (typeCtx instanceof burgParser.McOperandGPROrMemContext)
+        	return Burg.OpdRegister.DATA_GPR_OR_MEM;
         return -1;
     }
     
@@ -181,7 +185,7 @@ public class burgListenerImpl extends burgBaseListener {
         emit.append(format);
         for (burgParser.McEmitOperandContext operand : ctx.mcEmitOperand()) {
             if (operand instanceof burgParser.McEmitRegOpContext) {
-                emit.append(", " + Burg.targetName + "Driver.v.emitOp(reg)");
+                emit.append(", " + Burg.targetName + "Driver.v.emitOp(define)");
             }
             else if (operand instanceof burgParser.McEmitOpContext) {
                 emit.append(String.format(", " + Burg.targetName + "Driver.v.emitOp(operands.get(%d))", Integer.parseInt(((burgParser.McEmitOpContext) operand).DIGITS().getText())));

@@ -225,14 +225,14 @@ public class X64CallConvention {
             X64add trashArguments = new X64add();
             trashArguments.setOperand0(rsp);
             trashArguments.setOperand1(new MCIntImmediate(argumentsSizeOnStack));
-            trashArguments.setReg(rsp);
+            trashArguments.setDefine(rsp);
             ret.add(trashArguments);
         }
         
         // save return value to designated reg or memory location
         MCRegister retResult = null;
-        if (!callMC.getReg().REP().isSpilled())
-            retResult = callMC.getReg().REP();
+        if (!callMC.getDefineAsReg().REP().isSpilled())
+            retResult = callMC.getDefineAsReg().REP();
         else {
             UVMCompiler.error("unimplemented: return value is spilled onto stack");
         }
@@ -306,7 +306,7 @@ public class X64CallConvention {
             X64add dispRSP = new X64add();
             dispRSP.setOperand0(rsp);
             dispRSP.setOperand1(new MCIntImmediate(stackDisp));
-            dispRSP.setReg(rsp);
+            dispRSP.setDefine(rsp);
             prologue.add(dispRSP);
         }
         

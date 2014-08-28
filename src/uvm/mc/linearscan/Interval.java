@@ -50,8 +50,11 @@ public class Interval {
      * @return
      */
     public Interval splitAt(int pos) {
-        if (pos > getEnd())
-            return null;
+        if (pos > liveness.size()) {
+        	System.out.println("trying to split an interval at " + pos + " which is bigger than its size " + liveness.size());
+        	System.exit(1);
+        	return null;
+        }
         
         // new Interval
         LivenessRange newRange = liveness.getSubrange(pos);

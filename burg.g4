@@ -80,9 +80,11 @@ resultOperandType
 
 mcOperandType
     :   'DP'            # mcOperandDP
+    |   'DP/MEM'        # mcOperandDPOrMem
     |   'SP'            # mcOperandSP
+    |   'SP/MEM'        # mcOperandSPOrMem
     |   'GPR'           # mcOperandGPR
-    |   'MEM'           # mcOperandMem
+    |   'GPR/MEM'       # mcOperandGPROrMem
     |   'OTH'           # mcOperandOther
     ;
 

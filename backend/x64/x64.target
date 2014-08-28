@@ -400,22 +400,22 @@ label : LABEL
 // ********************************
 
 .mc_def mov = {
-	GPR = GPR;
+	GPR = GPR/MEM;
 	"movq %s,%s", OP[0], OP_REG;
 }
 
 .mc_def cmovlt = {
-	GPR = GPR;
+	GPR = GPR/MEM;
 	"cmovltq %s,%s", OP[0], OP_REG;
 }
 
 .mc_def cmovgt = {
-	GPR = GPR;
+	GPR = GPR/MEM;
 	"cmovgtq %s,%s", OP[0], OP_REG;
 }
 
 .mc_def cmoveq = {
-	GPR = GPR;
+	GPR = GPR/MEM;
 	"cmoveqq %s,%s", OP[0], OP_REG;
 }
 
@@ -424,12 +424,12 @@ label : LABEL
 // ********************************
 
 .mc_def cmp = {
-	GPR GPR;
+	GPR/MEM GPR;
 	"cmpq %s,%s", OP[0], OP[1];
 }
 
 .mc_def test = {
-	GPR GPR;
+	GPR/MEM GPR;
 	"testq %s,%s", OP[0], OP[1];
 }
 
@@ -500,18 +500,18 @@ label : LABEL
 // ********************************
 
 .mc_def idiv = {
-	GPR;
+	GPR/MEM;
 	"idivq %s", OP[0];
 	uses: rax(GPR);
 }
 
 .mc_def add = {
-	GPR = GPR GPR;
+	GPR = GPR/MEM GPR;
 	"addq %s,%s", OP[1], OP[0];
 }
 
 .mc_def xor = {
-	GPR = GPR GPR;
+	GPR = GPR/MEM GPR;
 	"xorq %s,%s", OP[1], OP[0];
 }
 
@@ -520,37 +520,37 @@ label : LABEL
 // ********************************
 
 .mc_def movsd = {
-	DP = DP;
+	DP = DP/MEM;
 	"movsd %s,%s", OP[0], OP_REG;
 }
 
 .mc_def movss = {
-	SP = SP;
+	SP = SP/MEM;
 	"movss %s,%s", OP[0], OP_REG;
 }
 
 .mc_def addsd = {
-	DP = DP DP;
+	DP = DP/MEM DP;
 	"addsd %s,%s", OP[1], OP[0];
 }
 
 .mc_def divsd = {
-	DP = DP DP;
+	DP = DP/MEM DP;
 	"divsd %s,%s", OP[1], OP[0];
 }
 
 .mc_def cvtsi2sd = {
-	DP = GPR;
+	DP = GPR/MEM;
 	"cvtsi2sd %s,%s", OP[0], OP_REG;
 }
 
 .mc_def cvtsd2si = {
-	GPR = DP;
+	GPR = DP/MEM;
 	"cvtsd2si %s,%s", OP[0], OP_REG;
 }
 
 .mc_def comisd = {
-	DP DP;
+	DP/MEM DP;
 	"comisd %s,%s", OP[0], OP[1];
 }
 
