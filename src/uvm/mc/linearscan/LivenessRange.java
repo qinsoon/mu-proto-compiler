@@ -217,4 +217,25 @@ public class LivenessRange {
         
         return ret;
     }
+    
+    public Position getPosition(int pos) {
+    	for (Position p : positions) {
+    		if (p.index == pos)
+    			return p;
+    	}
+    	return null;
+    }
+
+	public int regOnlyUses(int pos) {
+		int count = 0;
+		for (Position p : positions) {
+			if (p.index < pos)
+				continue;
+			else {
+				if (p.isUse() && p.regOnly)
+					count ++;
+			}
+		}
+		return count;
+	}
 }

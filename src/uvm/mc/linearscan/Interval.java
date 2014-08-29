@@ -91,6 +91,19 @@ public class Interval {
         else return -1;
     }
     
+    public int regOnlyUses(int pos) {
+    	return liveness.regOnlyUses(pos);
+    }
+    
+    public boolean isRegOnlyUseAt(int pos) {
+    	Position p = liveness.getPosition(pos);
+    	if (p == null)
+    		return false;
+    	else if (p.isUse() && p.regOnly)
+    		return true;
+    	else return false;
+    }
+    
     public boolean isLiveAt(int index) {
         return liveness.isLiveAt(index);
     }

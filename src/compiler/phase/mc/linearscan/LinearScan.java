@@ -124,7 +124,14 @@ public class LinearScan extends AbstractMCCompilationPhase {
             // find a register for current
             boolean succ = tryAllocateFreeReg(current);
             if (!succ) {
-                allocateBlockedReg(current);
+            	if (position == current.firstRegOnlyUse()) {
+                	// this is a split interval, its 'begin' is the first regonly use. 
+                	// we have to evacuate other intervals to allow this interval in register
+            		evacuateRegFor(current, position);
+            	} else {
+            		// normal spilling process
+            		allocateBlockedReg(current);
+            	}
             }
             
             // check if current has a register assigned
@@ -132,8 +139,8 @@ public class LinearScan extends AbstractMCCompilationPhase {
                 active.add(current);
         }
     }
-    
-    private Set<MCRegister> getAllPhysicalRegisters(int dataType) {
+
+	private Set<MCRegister> getAllPhysicalRegisters(int dataType) {
         HashSet<MCRegister> physRegisters = new HashSet<MCRegister>();
         
         if (dataType == MCRegister.DATA_GPR) {
@@ -208,6 +215,41 @@ public class LinearScan extends AbstractMCCompilationPhase {
         }
     }
     
+    /**
+     * evacuate a physical reg in active for current, since current needs a reg on pos (reg only use)
+     * @param current
+     * @param pos
+     */
+    private void evacuateRegFor(Interval current, int pos) {
+    	int leastRegOnlyUse = Integer.MAX_VALUE;
+    	MCRegister candidate = null;
+    	Interval candidateInterval = null;
+    	
+    	for (Interval it : active) {
+    		int regOnlyUse = it.regOnlyUses(pos);
+    		if (!it.isFixed() && !it.isRegOnlyUseAt(pos) && regOnlyUse < leastRegOnlyUse) {
+    			leastRegOnlyUse = regOnlyUse;
+    			candidate = it.getPhysicalReg();
+    			candidateInterval = it;
+    		}
+    	}
+    	
+    	if (candidate == null) {
+    		UVMCompiler.error("need to evacuate an interval to fit in " + current.getOrig().getName() + ", but failed to find a candidate");
+    	}
+    	
+    	// evacuate candidate
+    	
+    	// split the interval
+    	Interval afterSplit = candidateInterval.splitAt(pos);
+    	unhandled.add(afterSplit);
+    	
+    	// then we have the reg
+    	current.setPhysicalReg(candidate);
+    	
+    	verboseln(" evacuating " + candidateInterval.getOrig().getName() + " using " + candidate.prettyPrint() + " for " + current.getOrig().getName());
+	}
+    
     private void allocateBlockedReg(Interval current) {
         Set<MCRegister> physRegisters = getAllPhysicalRegisters(current.getDataType());
         
@@ -235,7 +277,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
         verboseln(" current first use = " + current.firstUse());
         
         // if first usage of current is after nextUsePos[reg]
-        if (current.firstUse() > highestNextUsePos) {
+        if (current.firstUse() >= highestNextUsePos) {
             // all other intervals are used before current
             // so it is best to spill current itself
             MCMemoryOperand spillSlot = stack.spillInterval(current);
@@ -247,6 +289,8 @@ public class LinearScan extends AbstractMCCompilationPhase {
             // if some of the uses need a reg, then we need to split it and handle the split one later
             if (firstRegOnlyUse != -1) {
 	            Interval afterSplit = current.splitAt(firstRegOnlyUse);
+	            afterSplit.setPhysicalReg(null);
+	            afterSplit.setSpill(null);
 	            unhandled.add(afterSplit);
             }
         } else {
