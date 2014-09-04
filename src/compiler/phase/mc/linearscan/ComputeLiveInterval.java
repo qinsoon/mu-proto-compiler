@@ -118,13 +118,13 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
             for (MCRegister livein : bb.liveIn) {
                 addPosition("livein for " + bb.getName(), cf, bb, livein.REP(), new Position(bb.getFirst().sequence, Position.USE, null, -1, false));
             }
-//            
-//            // add use if a register is live-in for successor blocks
-//            for (MCBasicBlock succBB : bb.getSuccessor()) {
-//                for (MCRegister reg : succBB.liveIn) {
-//                    addPosition("liveout for " + bb.getName(), cf, bb, reg.REP(), new Position(bb.getLast().sequence, Position.USE, null, -1, false));
-//                }
-//            }
+            
+            // add use if a register is live-in for successor blocks
+            for (MCBasicBlock succBB : bb.getSuccessor()) {
+                for (MCRegister reg : succBB.liveIn) {
+                    addPosition("liveout for " + bb.getName(), cf, bb, reg.REP(), new Position(bb.getLast().sequence, Position.USE, null, -1, false));
+                }
+            }
         }
         
         // calc and check intervals

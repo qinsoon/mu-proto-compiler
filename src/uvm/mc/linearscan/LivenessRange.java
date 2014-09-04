@@ -119,10 +119,20 @@ public class LivenessRange {
         return null;
     }
     
+    public Position nextRegOnlyPosAfter(int pos) {
+        for (int i = 0; i < positions.size(); i++) {
+            Position p = positions.get(i);
+            if (p.index >= pos && p.regOnly)
+                return p;
+        }
+        
+        return null;    	
+    }
+    
     public Position nextRegOnlyUseAfter(int pos) {
         for (int i = 0; i < positions.size(); i++) {
             Position p = positions.get(i);
-            if (p.index > pos && p.isUse() && p.regOnly)
+            if (p.index >= pos && p.isUse() && p.regOnly)
                 return p;
         }
         

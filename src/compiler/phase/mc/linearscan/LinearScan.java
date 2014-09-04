@@ -60,7 +60,10 @@ public class LinearScan extends AbstractMCCompilationPhase {
         while (!unhandled.isEmpty()) {
             Interval current = unhandled.poll();
             int position = current.getBegin();
-            verboseln("Handling: " + current.getOrig().prettyPrint() + " begins at " + position);
+            verboseln("Handling: " + current.getOrig().prettyPrint() + " begins at " + position + "(ends at " + current.getEnd() + ")");
+            verboseln(current.prettyPrint());
+            
+            verboseln("Expiring intervals: ");
             
             // check for intervals in active that are handled or inactive
             for (int i = 0; i < active.size(); ) {
@@ -71,6 +74,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
                 if (it.getEnd() < position) {
                     active.remove(i);
                     handled.add(it);
+                    verboseln(it.getOrig().prettyPrint() + "(in " + it.getPhysicalReg().prettyPrint() + "): active -> handled");
                     
                     continue;
                 } 
@@ -78,7 +82,8 @@ public class LinearScan extends AbstractMCCompilationPhase {
                 // move it from active to inactive
                 else if (!it.isLiveAt(position)) {
                     active.remove(i);
-                    inactive.add(it);
+                    verboseln(it.getOrig().prettyPrint() + "(in " + it.getPhysicalReg().prettyPrint() + "): active -> inactive");
+                    checkAndAddToInactive(it);                    
                     
                     continue;
                 }
@@ -94,6 +99,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
                 if (it.getEnd() < position) {
                     inactive.remove(i);
                     handled.add(it);
+                    verboseln(it.getOrig().prettyPrint() + "(in " + it.getPhysicalReg().prettyPrint() + "): inactive -> handled");
                     
                     continue;
                 }
@@ -101,7 +107,8 @@ public class LinearScan extends AbstractMCCompilationPhase {
                 // move it from inactive to active
                 else if (it.isLiveAt(position)) {
                     inactive.remove(i);
-                    active.add(it);
+                    verboseln(it.getOrig().prettyPrint() + "(in " + it.getPhysicalReg().prettyPrint() + "): inactive -> active");
+                    checkAndAddToActive(it);
                     
                     continue;
                 }
@@ -109,34 +116,63 @@ public class LinearScan extends AbstractMCCompilationPhase {
                 i++;
             }
             
+            verboseln("done...");
+            
             // if current is a fixed interval, then we dont need to allocate for it
             if (current.isFixed()) {
+                verboseln("fixed interval");
                 if (current.isLiveAt(position)) {
-                    unhandled.remove(current);
-                    active.add(current);
+                	// if any other active is using this reg, have to split it
+                	for (int i = 0; i < active.size(); i++) {
+                		Interval it = active.get(i);
+                		if (it.getPhysicalReg() == current.getPhysicalReg()) {
+                			active.remove(i);
+                    		Interval afterSplit = it.splitAt(position);
+                    		unhandled.add(afterSplit);
+                    		verboseln("spilting " + it.getOrig().getName() + " at " + position);
+                    		break;
+                    	}
+                	}
+                    
+                    verboseln("add to active");
+                    checkAndAddToActive(current);
                 } else {
-                    unhandled.remove(current);
-                    inactive.add(current);
-                }
+                    verboseln("add to inactive");
+                    checkAndAddToInactive(current);
+                }               
+                
+                verboseln("");
                 continue;
             }
             
             // find a register for current
+            verbose("trying find a free reg...");
             boolean succ = tryAllocateFreeReg(current);
             if (!succ) {
-            	if (position == current.firstRegOnlyUse()) {
-                	// this is a split interval, its 'begin' is the first regonly use. 
-                	// we have to evacuate other intervals to allow this interval in register
-            		evacuateRegFor(current, position);
-            	} else {
-            		// normal spilling process
-            		allocateBlockedReg(current);
-            	}
+            	verboseln("failed");
+//            	verboseln("firstRegOnlyUse=" + current.firstRegOnlyUse());
+        		verboseln("possibly spilling or evacuate");
+//            	if (position == current.firstRegOnlyUse()) {
+//                	// this is a split interval, its 'begin' is the first regonly use. 
+//                	// we have to evacuate other intervals to allow this interval in register
+//            		verboseln("require a reg, evacuate exisiting regs");
+//            		evacuateRegFor(current, position);
+//            	} else {
+//            		// normal spilling process
+//            		verboseln("possibly spilling or evacuate");
+//            		allocateBlockedReg(current);
+//            	}
+
+        		allocateBlockedReg(current);
             }
             
             // check if current has a register assigned
-            if (current.getPhysicalReg() != null)
-                active.add(current);
+            if (current.getPhysicalReg() != null) {
+            	verboseln("physical reg assigned");
+            	checkAndAddToActive(current);
+            }
+            
+            verboseln("");                
         }
     }
 
@@ -173,13 +209,22 @@ public class LinearScan extends AbstractMCCompilationPhase {
         for (MCRegister reg : physRegisters)
             freeUntilPos.put(reg, Integer.MAX_VALUE);
         
-        for (Interval it : active)
-            freeUntilPos.put(it.getPhysicalReg(), 0);
+        for (Interval it : active) {
+        	freeUntilPos.put(it.getPhysicalReg(), 0);
+        }
         
         for (Interval it : inactive) {
+        	if (it.isFixed())
+        		continue;
+        	
             if (it.doesIntersectWith(current)) {
-                // freeUntilPos = next intersection of it with current
-                freeUntilPos.put(it.getPhysicalReg(), it.nextIntersectionWith(current));
+            	int oldValue = freeUntilPos.get(it.getPhysicalReg());
+            	int newValue = it.nextIntersectionWith(current);
+            	
+            	// use the minimum
+            	if (newValue < oldValue) {
+            		freeUntilPos.put(it.getPhysicalReg(), newValue);
+            	}
             }
         }
         
@@ -209,7 +254,8 @@ public class LinearScan extends AbstractMCCompilationPhase {
             verboseln("Allocate " + candidate.prettyPrint() + " to virtual reg " + current.getOrig().prettyPrint());
             
             // split current before freeUntilPos
-            unhandled.add(current.splitAt(highestFreeUntilPos));
+            Interval afterSplit = current.splitAt(highestFreeUntilPos);
+            unhandled.add(afterSplit);
             verboseln("Split " + current.getOrig().prettyPrint() + " at " + highestFreeUntilPos);
             return true;
         }
@@ -227,7 +273,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
     	
     	for (Interval it : active) {
     		int regOnlyUse = it.regOnlyUses(pos);
-    		if (!it.isFixed() && !it.isRegOnlyUseAt(pos) && regOnlyUse < leastRegOnlyUse) {
+    		if (!it.isFixed() && !it.isRegOnlyPosAt(pos) && regOnlyUse < leastRegOnlyUse) {
     			leastRegOnlyUse = regOnlyUse;
     			candidate = it.getPhysicalReg();
     			candidateInterval = it;
@@ -240,9 +286,13 @@ public class LinearScan extends AbstractMCCompilationPhase {
     	
     	// evacuate candidate
     	
+    	// remove from active
+    	active.remove(candidateInterval);
+    	
     	// split the interval
     	Interval afterSplit = candidateInterval.splitAt(pos);
     	unhandled.add(afterSplit);
+    	verboseln("split " + candidateInterval.getOrig().getName() + " at " + pos);
     	
     	// then we have the reg
     	current.setPhysicalReg(candidate);
@@ -257,22 +307,51 @@ public class LinearScan extends AbstractMCCompilationPhase {
         for (MCRegister reg : physRegisters)
             nextUsePos.put(reg, Integer.MAX_VALUE);
         
-        for (Interval it : active) 
-            nextUsePos.put(it.getPhysicalReg(), it.nextUseAfter(current.getBegin()));
-        for (Interval it : inactive)
-            if (it.doesIntersectWith(current))
-                nextUsePos.put(it.getPhysicalReg(), it.nextUseAfter(current.getBegin()));
+        for (Interval it : active) {
+        	if (it.isFixed()) {
+        		nextUsePos.put(it.getPhysicalReg(), -1);
+        		System.out.println("active: " + it.getPhysicalReg().prettyPrint() + ".nextUsePos=-1");
+        		continue;
+        	}
+        	
+        	System.out.println("active: " + it.getPhysicalReg().prettyPrint() + ".nextUsePos=" + it.nextUseAfter(current.getBegin()));
+        	nextUsePos.put(it.getPhysicalReg(), it.nextUseAfter(current.getBegin()));
+        }
+        
+        for (Interval it : inactive) {
+        	if (it.isFixed()) {
+        		nextUsePos.put(it.getPhysicalReg(), -1);
+        		System.out.println("active: " + it.getPhysicalReg().prettyPrint() + ".nextUsePos=-1");
+        		continue;
+        	}
+        	
+            if (it.doesIntersectWith(current)) {
+            	System.out.println("inactive: " + it.getPhysicalReg().prettyPrint() + ".nextUsePos=" + it.nextUseAfter(current.getBegin()));
+            	int oldValue = nextUsePos.get(it.getPhysicalReg());
+            	int newValue = it.nextUseAfter(current.getBegin());
+            	
+            	if (newValue < oldValue) {
+            		nextUsePos.put(it.getPhysicalReg(), it.nextUseAfter(current.getBegin()));
+            	}            	
+            }
+        }
         
         // find register with highest nextUsePos
         MCRegister candidate = null;
         int highestNextUsePos = -1;
         for (MCRegister reg : nextUsePos.keySet()) {
             int i = nextUsePos.get(reg);
+        	System.out.println(reg.prettyPrint() + ".nextUsePos=" + i);
             if (i > highestNextUsePos) {
                 highestNextUsePos = i;
                 candidate = reg;
             }
         }
+        
+        if (candidate == null) {
+        	UVMCompiler.error("failed to find register candidate");
+        }
+        
         verboseln(" highest next use pos = " + highestNextUsePos + ", candidate = " + candidate.prettyPrint());
         verboseln(" current first use = " + current.firstUse());
         
@@ -280,19 +359,27 @@ public class LinearScan extends AbstractMCCompilationPhase {
         if (current.firstUse() >= highestNextUsePos) {
             // all other intervals are used before current
             // so it is best to spill current itself
-            MCMemoryOperand spillSlot = stack.spillInterval(current);
-            current.setSpill(spillSlot); 
-        	verboseln("Spill " + current.getOrig().prettyPrint() + " to " + spillSlot.prettyPrint());
-            
-            int firstRegOnlyUse = current.firstRegOnlyUse();
-            verboseln(" current first regonly use = " + firstRegOnlyUse);
-            // if some of the uses need a reg, then we need to split it and handle the split one later
-            if (firstRegOnlyUse != -1) {
-	            Interval afterSplit = current.splitAt(firstRegOnlyUse);
-	            afterSplit.setPhysicalReg(null);
-	            afterSplit.setSpill(null);
-	            unhandled.add(afterSplit);
-            }
+        	
+        	// check if we can spill current - if the first regonly pos for current isn't its begin, we can spill it
+        	boolean spillCurrent = (current.firstRegOnlyPos() != current.getBegin());
+        	
+        	if (spillCurrent) {
+	            MCMemoryOperand spillSlot = stack.spillInterval(current);
+	            current.setSpill(spillSlot); 
+	        	verboseln("Spill " + current.getOrig().prettyPrint() + " to " + spillSlot.prettyPrint());
+	            
+	            int firstRegOnlyUse = current.firstRegOnlyPos();
+	            verboseln(" current first regonly use = " + firstRegOnlyUse);
+	            // if some of the uses need a reg, then we need to split it and handle the split one later
+	            if (firstRegOnlyUse != -1) {
+		            Interval afterSplit = current.splitAt(firstRegOnlyUse);
+		            unhandled.add(afterSplit);
+		            verboseln(" spilting at " + firstRegOnlyUse);
+	            }
+        	} else {
+        		// we have to find a register for current
+        		evacuateRegFor(current, current.getBegin());
+        	}
         } else {
             // spill intervals that currently block reg
             current.setPhysicalReg(candidate);
@@ -302,6 +389,7 @@ public class LinearScan extends AbstractMCCompilationPhase {
             Interval toBeSplit = null;
             for (Interval it : active) {
                 if (it.getPhysicalReg() == candidate) {
+                	active.remove(it);
                     toBeSplit = it;
                     break;
                 }
@@ -313,7 +401,6 @@ public class LinearScan extends AbstractMCCompilationPhase {
             // FIXME: position is current.getBegin() ?
             Interval afterSplit = toBeSplit.splitAt(current.getBegin());
             if (afterSplit != null) {
-            	afterSplit.setPhysicalReg(null);
 	            unhandled.add(afterSplit);
 	            verboseln(" " + toBeSplit.getOrig().prettyPrint() + " lost its reg, will be split at " + current.getBegin());
             }
@@ -323,7 +410,6 @@ public class LinearScan extends AbstractMCCompilationPhase {
                 if (it.getPhysicalReg() == candidate) {
                     int liveAgain = it.skipLifetimeHole(current.getBegin());
                     Interval newInterval = it.splitAt(liveAgain);
-                    newInterval.setPhysicalReg(null);
                     unhandled.add(newInterval);
                     verboseln(" spilt inactive interval " + newInterval.getOrig().prettyPrint() + " at " + liveAgain);
                 }
@@ -349,5 +435,48 @@ public class LinearScan extends AbstractMCCompilationPhase {
             unhandled.add(split);
             verboseln(" current intersect with fixed interval, split at " + intersectWithFixedInterval);
         }
+    }
+    
+    /**
+     * check if active set contains the reg already
+     * @param i
+     */
+    private void checkAndAddToActive(Interval i) {
+    	for (Interval it : active) {
+    		if (it.getPhysicalReg() == i.getPhysicalReg()) {
+    			System.out.println("adding interval to active, but active set contains intervals with same phys reg");
+    			System.out.println(i.prettyPrint());
+    			System.out.println(it.prettyPrint());
+    			UVMCompiler.error("same phys reg in active set");
+    		}
+    	}
+
+    	active.add(i);
+    }
+    
+    /**
+     * check if active/inactive set contains the reg already
+     * @param i
+     */
+    private void checkAndAddToInactive(Interval i) {
+    	for (Interval it : active) {
+    		if (it.getPhysicalReg() == i.getPhysicalReg()) {
+    			System.out.println("adding interval to inactive, but active set contains intervals with same phys reg");
+    			System.out.println(i.prettyPrint());
+    			System.out.println(it.prettyPrint());
+    			UVMCompiler.error("same phys reg in active set");
+    		}
+    	}
+    	
+    	for (Interval it : inactive) {
+    		if (it.getPhysicalReg() == i.getPhysicalReg()) {
+    			System.out.println("adding interval to inactive, but inactive set contains intervals with same phys reg");
+    			System.out.println(i.prettyPrint());
+    			System.out.println(it.prettyPrint());
+    			UVMCompiler.error("same phys reg in inactive set");
+    		}
+    	}
+    	
+    	inactive.add(i);
     }
 }

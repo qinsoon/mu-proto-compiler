@@ -18,6 +18,8 @@ public class Interval {
     MCRegister physical;
     MCMemoryOperand spill;
     
+    Interval next = null;
+    
     public int getBegin() {
         return liveness.firstAlive();
     }
@@ -45,7 +47,8 @@ public class Interval {
     }
     
     /**
-     * Split this interval at a certain position. Return the rest as another interval
+     * Split this interval at a certain position. Return the rest as another interval.
+     * the new interval has its physical reg and spill set to 'null'
      * @param pos
      * @return
      */
@@ -56,17 +59,32 @@ public class Interval {
         	return null;
         }
         
+        if (pos == getBegin()) {
+        	return null;
+        }
+        
         // new Interval
         LivenessRange newRange = liveness.getSubrange(pos);
         Interval newInterval = new Interval(liveness.size(), dataType, orig);
         newInterval.liveness = newRange;
-        newInterval.physical = this.physical;
-        newInterval.spill = this.spill;
+        if (!this.fixed)
+        	newInterval.physical = null;
+        newInterval.spill = null;
+        if (next != null)
+        	newInterval.next = next;
         
         // cut current interval
         liveness.cropCurrentRange(pos);
+        next = newInterval;
+        
+        System.out.println("after split:");
+        System.out.println(prettyPrint());
         
         return newInterval;
+    }
+    
+    public Interval getNext() {
+    	return this.next;
     }
     
     public int nextUseAfter(int pos) {
@@ -89,6 +107,22 @@ public class Interval {
         if (ret != null)
             return ret.index;
         else return -1;
+    }
+    
+    public int firstRegOnlyPos() {
+    	Position ret = liveness.nextRegOnlyPosAfter(0);
+    	if (ret != null)
+    		return ret.index;
+    	else return -1;
+    }
+    
+    public boolean isRegOnlyPosAt(int pos) {
+    	Position p = liveness.getPosition(pos);
+    	if (p == null)
+    		return false;
+    	else if (p.regOnly)
+    		return true;
+    	else return false;
     }
     
     public int regOnlyUses(int pos) {
@@ -140,6 +174,11 @@ public class Interval {
         ret.append(spill == null ? "null" : spill.prettyPrint());
         ret.append(")");
         ret.append(liveness.prettyPrint());
+        ret.append("\n");
+        
+        if (next != null)
+        	ret.append(next.prettyPrint());
+        
         return ret.toString();
     }
     
@@ -147,8 +186,13 @@ public class Interval {
         liveness.addPosition(pos);
     }
     
+    /**
+     * two intervals have no overlapping length
+     * @param another
+     * @return
+     */
     public boolean doesIntersectWith(Interval another) {
-        return nextIntersectionWith(another) != -1;
+    	return liveness.firstIntersect(another.liveness) != -1;
     }
     
     public int nextIntersectionWith(Interval another) {

@@ -18,7 +18,7 @@ public abstract class Verbose {
     public static final boolean REG_COALESC         = false;
     public static final boolean LINEAR_SCAN         = true;
     
-    public static final boolean REPLACE_MEM_OP      = false;
+    public static final boolean REPLACE_MEM_OP      = true;
     public static final boolean INSERT_SPILLING     = false;
     
     public static final boolean EXPAND_CALL_SEQ     = false;
