@@ -11,4 +11,8 @@ public abstract class MCOperand {
             return "null";
         return highLevelOp.prettyPrint();
     }
+
+	public String prettyPrintREPOnly() {
+		return prettyPrint();
+	}
 }

@@ -13,6 +13,14 @@ public class StackManager {
 	int stackSlot;
 	int stackDisp;
 	
+	public int getStackSlot() {
+		return stackSlot;
+	}
+
+	public int getStackDisp() {
+		return stackDisp;
+	}
+
 	CompiledFunction current;
 	
 	HashMap<MCRegister, MCMemoryOperand> allocated;

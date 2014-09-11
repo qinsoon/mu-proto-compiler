@@ -21,10 +21,7 @@ public class MCRegister extends MCOperand{
     public int weight = 0;  // used by linear scan to decide which register to spill
     
     MCRegister join;
-    
-    MCMemoryOperand spill = null;
-    boolean spilled = false;
-    
+
     public MCRegister(String name, int type, int dataType) {
         this.name = name;
         this.type = type;        
@@ -49,18 +46,6 @@ public class MCRegister extends MCOperand{
         if (this.join == this)
             return this;
         else return join.REP();
-    }
-    
-    public MCMemoryOperand SPILL() {
-        return spill;
-    }
-    
-    public boolean isSpilled() {
-        return spilled;
-    }
-    
-    public void setSPILL(boolean b) {
-        this.spilled = b;
     }
     
     public static HashMap<String, MCRegister> temps = new HashMap<String, MCRegister>();
@@ -106,20 +91,15 @@ public class MCRegister extends MCOperand{
     @Override
     public String prettyPrint() {
         if (join == this)
-            return "%" + name + spillPart();
-        else return "%" + name + "(REP=" + join.prettyPrint() + ")" + spillPart();
+            return "%" + name;
+        else return "%" + name + "(REP=" + join.prettyPrint() + ")";
     }
     
-    private String spillPart() {
-        if (isSpilled())
-            return ",SPILL=" + SPILL().prettyPrint();
-        else return "";
-    }
-    
+    @Override
     public String prettyPrintREPOnly() {
         if (join == this)
-            return "%" + name + spillPart();
-        else return join.prettyPrintREPOnly() + spillPart();
+            return "%" + name;
+        else return join.prettyPrintREPOnly();
     }
 
     public int getDataType() {

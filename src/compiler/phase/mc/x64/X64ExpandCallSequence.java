@@ -11,9 +11,9 @@ import uvm.mc.MCBasicBlock;
 import uvm.mc.MCLabel;
 import compiler.phase.mc.AbstractMCCompilationPhase;
 
-public class ExpandCallSequence extends AbstractMCCompilationPhase {
+public class X64ExpandCallSequence extends AbstractMCCompilationPhase {
 
-    public ExpandCallSequence(String name, boolean verbose) {
+    public X64ExpandCallSequence(String name, boolean verbose) {
         super(name, verbose);
     }
 

@@ -2,8 +2,11 @@ package uvm.mc;
 
 public abstract class AbstractMCDriver {
     public abstract AbstractMachineCode genMove(MCRegister dest, MCOperand src);
+    public abstract AbstractMachineCode genMove(MCOperand dest, MCOperand src);
     public abstract AbstractMachineCode genDPMove(MCRegister dest, MCOperand src);
+    public abstract AbstractMachineCode genDPMove(MCOperand dest, MCOperand src);
     public abstract AbstractMachineCode genSPMove(MCRegister dest, MCOperand src);
+    public abstract AbstractMachineCode genSPMove(MCOperand dest, MCOperand src);
     
     public abstract AbstractMachineCode genJmp(MCLabel target);
     

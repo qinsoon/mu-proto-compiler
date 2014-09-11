@@ -16,5 +16,4 @@ public class MCSPImmediate extends AbstractMCImmediate {
     public String prettyPrint() {
         return "$" + Float.toString(value);
     }
-
 }

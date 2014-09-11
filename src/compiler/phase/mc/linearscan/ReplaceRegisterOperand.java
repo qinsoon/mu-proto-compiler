@@ -1,5 +1,8 @@
 package compiler.phase.mc.linearscan;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import uvm.CompiledFunction;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
@@ -8,6 +11,7 @@ import uvm.mc.MCRegister;
 import uvm.mc.linearscan.Interval;
 import compiler.UVMCompiler;
 import compiler.phase.mc.AbstractMCCompilationPhase;
+import compiler.util.Pair;
 
 public class ReplaceRegisterOperand extends AbstractMCCompilationPhase {
 
@@ -18,7 +22,48 @@ public class ReplaceRegisterOperand extends AbstractMCCompilationPhase {
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
         for (MCBasicBlock bb : cf.BBs) {
+        	List<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
+        	
             for (AbstractMachineCode mc : bb.getMC()) {
+            	// check if any insertion code
+            	if (cf.regMoveCodeInsertion.containsKey(mc.sequence)) {
+            		List<Pair<Interval, Interval>> list = cf.regMoveCodeInsertion.get(mc.sequence);
+            		
+            		// reverse order
+            		for (int i = list.size() - 1; i >= 0; i--) {
+            			Pair<Interval, Interval> p = list.get(i);
+            			
+            			MCOperand src = null;
+            			if (p.getFirst().getSpill() != null) {
+            				src = p.getFirst().getSpill();
+            			} else if (p.getFirst().getPhysicalReg() != null) {
+            				src = p.getFirst().getPhysicalReg();
+            			} else {
+            				UVMCompiler.error("error on getting physical reg/spill location for " + p.getFirst().prettyPrint());
+            			}
+            			
+            			MCOperand dst = null;
+            			if (p.getSecond().getSpill() != null) {
+            				dst = p.getSecond().getSpill();
+            			} else if (p.getSecond().getPhysicalReg() != null) {
+            				dst = p.getSecond().getPhysicalReg();
+            			} else {
+            				UVMCompiler.error("error on getting physical reg/spill location for " + p.getSecond().prettyPrint());
+            			}
+            			
+            			if (p.getFirst().getOrig().getDataType() == MCRegister.DATA_GPR) {
+                			AbstractMachineCode mov = UVMCompiler.MCDriver.genMove(dst, src); 
+                			verboseln("inserting code at " + mc.sequence + " for " + p.getFirst().getOrig().prettyPrint() + " -> " + p.getSecond().getOrig().prettyPrint());
+                			verboseln("  " + mov.prettyPrintREPOnly());
+                			newMC.add(mov);
+            			} else {
+            				UVMCompiler.error("unimplemented for other data types than GPR types");
+            			}
+            			
+
+            		}
+            	}
+            	
             	verboseln("replacing register: seq=" + mc.sequence + ", " + mc.prettyPrintOneline());
                 for (int i = 0; i < mc.getNumberOfOperands(); i++) {
                     MCOperand op = mc.getOperand(i);
@@ -71,7 +116,11 @@ public class ReplaceRegisterOperand extends AbstractMCCompilationPhase {
                     	UVMCompiler.error("failed to replace register op");
                     }
                 }
+                
+                newMC.add(mc);
             }
+            
+            bb.setMC(newMC);
         }
     }
 }

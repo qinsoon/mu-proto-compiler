@@ -967,6 +967,16 @@ public class Burg {
         code.decreaseIndent();
         code.appendln("}");
         
+        // mov
+        code.appendln("@Override public AbstractMachineCode genMove(MCOperand dest, MCOperand src) {");
+        code.increaseIndent();        
+        code.appendStmtln(String.format("%s ret = new %s()", mov, mov));
+        code.appendStmtln("ret.setOperand0(src)");
+        code.appendStmtln("ret.setDefine(dest)");
+        code.appendStmtln("return ret");        
+        code.decreaseIndent();
+        code.appendln("}");
+        
         // dp mov
         code.appendln("@Override public AbstractMachineCode genDPMove(MCRegister dest, MCOperand src) {");
         code.increaseIndent();
@@ -978,10 +988,30 @@ public class Burg {
         code.decreaseIndent();
         code.appendln("}");
         
+        // dp mov
+        code.appendln("@Override public AbstractMachineCode genDPMove(MCOperand dest, MCOperand src) {");
+        code.increaseIndent();
+        code.appendStmtln(String.format("%s ret = new %s()", dpmov, dpmov));
+        code.appendStmtln("ret.setOperand0(src)");
+        code.appendStmtln("ret.setDefine(dest)");
+        code.appendStmtln("return ret");
+        code.decreaseIndent();
+        code.appendln("}");
+        
         // sp mov
         code.appendln("@Override public AbstractMachineCode genSPMove(MCRegister dest, MCOperand src) {");
         code.increaseIndent();
         String spmov = targetName + MC_SPMOV.get(0);
+        code.appendStmtln(String.format("%s ret = new %s()", spmov, spmov));
+        code.appendStmtln("ret.setOperand0(src)");
+        code.appendStmtln("ret.setDefine(dest)");
+        code.appendStmtln("return ret");
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        // sp mov
+        code.appendln("@Override public AbstractMachineCode genSPMove(MCOperand dest, MCOperand src) {");
+        code.increaseIndent();
         code.appendStmtln(String.format("%s ret = new %s()", spmov, spmov));
         code.appendStmtln("ret.setOperand0(src)");
         code.appendStmtln("ret.setDefine(dest)");

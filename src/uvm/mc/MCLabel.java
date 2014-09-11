@@ -26,4 +26,9 @@ public class MCLabel extends MCOperand {
     public String prettyPrint() {
         return "#" + name;
     }
+
+	@Override
+	public String prettyPrintREPOnly() {
+		return prettyPrint();
+	}
 }

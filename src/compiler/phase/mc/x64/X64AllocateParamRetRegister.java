@@ -4,9 +4,9 @@ import uvm.CompiledFunction;
 
 import compiler.phase.mc.AbstractMCCompilationPhase;
 
-public class AllocateParamRetRegister extends AbstractMCCompilationPhase{
+public class X64AllocateParamRetRegister extends AbstractMCCompilationPhase{
 
-    public AllocateParamRetRegister(String name, boolean verbose) {
+    public X64AllocateParamRetRegister(String name, boolean verbose) {
         super(name, verbose);
     }
     

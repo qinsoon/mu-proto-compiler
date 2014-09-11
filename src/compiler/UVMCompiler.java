@@ -21,9 +21,8 @@ import compiler.phase.mc.linearscan.InstructionNumbering;
 import compiler.phase.mc.linearscan.LinearScan;
 import compiler.phase.mc.linearscan.RegisterCoalescing;
 import compiler.phase.mc.linearscan.ReplaceRegisterOperand;
-import compiler.phase.mc.x64.AllocateParamRetRegister;
-import compiler.phase.mc.x64.ExpandCallSequence;
-import compiler.phase.mc.x64.InsertSpillingCode;
+import compiler.phase.mc.x64.X64AllocateParamRetRegister;
+import compiler.phase.mc.x64.X64ExpandCallSequence;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
@@ -98,9 +97,8 @@ public class UVMCompiler {
              */
             new CombineReturns("combineret", Verbose.COMBINE_RET).execute();
             new BBReconstruction("reconstbb", Verbose.RECONSTRUCT_BB).execute();
-            new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();
-            
-            new ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
+            new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();            
+            new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
             
             /*
              *  register allocation
@@ -113,21 +111,17 @@ public class UVMCompiler {
              */
             new GenMovForPhi("genmovforphi", Verbose.GEN_MOV_FOR_PHI).execute();                    //*
             new InstructionNumbering("instnumbering", Verbose.INST_NUMBERING).execute();            //*
-            new AllocateParamRetRegister("allocparamret", Verbose.ALLOC_PARAM_RET_REG).execute();
+            new X64AllocateParamRetRegister("allocparamret", Verbose.ALLOC_PARAM_RET_REG).execute();
             new ComputeLiveInterval("compinterval", Verbose.COMPUTE_INTERVAL).execute();            //*
             new RegisterCoalescing("regcoalesc", Verbose.REG_COALESC).execute();                    //*
             new LinearScan("linearscan", Verbose.LINEAR_SCAN).execute();                            //*
-
+            new ReplaceRegisterOperand("replaceregop", Verbose.REPLACE_MEM_OP).execute();
+            
             /*
              *  code emission
              */
             new SimpleBranchAlignment("simplebralign", Verbose.SIMPLE_BRANCH_ALIGN).execute();
-            
-            new ReplaceRegisterOperand("replaceregop", Verbose.REPLACE_MEM_OP).execute();
             new MachineCodeCleanup("mccleanup", Verbose.MC_CLEANUP).execute();
-            
-//            new RegisterSpillingReplaceMemOp("replacememop", Verbose.REPLACE_MEM_OP).execute();
-            new InsertSpillingCode("insertspilling", Verbose.INSERT_SPILLING).execute();
             
             /*
              * machine dependent transformation

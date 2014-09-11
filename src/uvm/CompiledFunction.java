@@ -9,6 +9,8 @@ import java.util.Queue;
 
 import compiler.UVMCompiler;
 import compiler.util.DotGraph;
+import compiler.util.MultiValueMap;
+import compiler.util.Pair;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCRegister;
@@ -38,6 +40,9 @@ public class CompiledFunction {
     // register
     private HashMap<String, MCRegister> regs = new HashMap<String, MCRegister>();
     public List<MCRegister> calleeSavedRegs = new ArrayList<MCRegister>();      // in push order
+    
+    public HashMap<Integer, List<Pair<Interval, Interval>>> regMoveCodeInsertion;
+    public StackManager stackManager;
     
     public MCRegister findOrCreateRegister(String name, int type, int dataType) {
         if (regs.containsKey(name))
@@ -82,7 +87,7 @@ public class CompiledFunction {
         
         while (!traverse.isEmpty()) {
             MCBasicBlock bb = traverse.poll();
-            str.append(bb.prettyPrintWithPreAndSucc());
+            str.append(bb.prettyPrintREPOnly());
             str.append('\n');
             traversed.add(bb.getName());
             

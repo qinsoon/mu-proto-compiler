@@ -230,12 +230,7 @@ public class X64CallConvention {
         }
         
         // save return value to designated reg or memory location
-        MCRegister retResult = null;
-        if (!callMC.getDefineAsReg().REP().isSpilled())
-            retResult = callMC.getDefineAsReg().REP();
-        else {
-            UVMCompiler.error("unimplemented: return value is spilled onto stack");
-        }
+        MCRegister retResult = callMC.getDefineAsReg().REP();
         
         Type returnType = callee.getSig().getReturnType();
         
@@ -288,20 +283,9 @@ public class X64CallConvention {
         prologue.add(UVMCompiler.MCDriver.genMove(rbp, rsp));
         
         // allocate space for local storage
-        int stackDisp = 0;
-        for (MCRegister reg : cf.intervals.keySet()) {
-            if (cf.intervals.get(reg).hasValidRange() && reg.isSpilled()) {
-                if (reg.getDataType() == MCRegister.DATA_GPR) {
-                    stackDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
-                }
-                else if (reg.getDataType() == MCRegister.DATA_DP ||
-                        reg.getDataType() == MCRegister.DATA_SP) {
-                    UVMCompiler.error("unimplemented: calculate stack disp for spilled fp regs");
-                } else {
-                    UVMCompiler.error("unimplemented: calculate stack disp");
-                }
-            }
-        }
+        // FIXME: we will patch this displacement after register allocation
+        int stackDisp = -1;
+
         if (stackDisp != 0) {
             X64add dispRSP = new X64add();
             dispRSP.setOperand0(rsp);
@@ -319,6 +303,11 @@ public class X64CallConvention {
                 prologue.add(pushStack(reg));
             }
         }
+    }
+    
+    public static void postRegAllocPatching(CompiledFunction cf) {
+    	X64add dispRSP = (X64add) cf.prologue.get(2);
+    	dispRSP.setOperand(1, new MCIntImmediate(cf.stackManager.getStackDisp()));
     }
     
     public void genEpilogue(CompiledFunction cf) {

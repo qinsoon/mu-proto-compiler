@@ -61,6 +61,16 @@ public class MCBasicBlock {
         return ret.toString();
     }
     
+    public String prettyPrintREPOnly() {
+    	StringBuilder ret = new StringBuilder();
+    	ret.append("#" + label.name + ": {\n");
+    	for (AbstractMachineCode c : mc) {
+    		ret.append(" " + c.prettyPrintREPOnly() + "\n");
+    	}
+    	ret.append("}");
+    	return ret.toString();
+    }
+    
     public String prettyPrint() {
         StringBuilder ret = new StringBuilder();
         ret.append("#" + label.name + ": {\n");

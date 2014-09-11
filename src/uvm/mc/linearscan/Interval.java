@@ -109,22 +109,6 @@ public class Interval {
         else return -1;
     }
     
-    public int firstRegOnlyPos() {
-    	Position ret = liveness.nextRegOnlyPosAfter(0);
-    	if (ret != null)
-    		return ret.index;
-    	else return -1;
-    }
-    
-    public boolean isRegOnlyPosAt(int pos) {
-    	Position p = liveness.getPosition(pos);
-    	if (p == null)
-    		return false;
-    	else if (p.regOnly)
-    		return true;
-    	else return false;
-    }
-    
     public int regOnlyUses(int pos) {
     	return liveness.regOnlyUses(pos);
     }
@@ -133,7 +117,7 @@ public class Interval {
     	Position p = liveness.getPosition(pos);
     	if (p == null)
     		return false;
-    	else if (p.isUse() && p.regOnly)
+    	else if (p.regOnly)
     		return true;
     	else return false;
     }
@@ -160,17 +144,18 @@ public class Interval {
 
     public String prettyPrint() {
         StringBuilder ret = new StringBuilder();
-        ret.append("Interval([");
+        ret.append("Interval(");
+        ret.append(orig.prettyPrint());
+        ret.append(")[");
         ret.append(getBegin());
         ret.append(",");
         ret.append(getEnd());
-        ret.append("],orig=");
-        ret.append(orig.prettyPrint());
-        ret.append(",type=");
+        ret.append("]");
+        ret.append(" type=");
         ret.append(dataType);
-        ret.append(",reg=");
+        ret.append(" reg=");
         ret.append(physical == null ? "null" : physical.prettyPrint());
-        ret.append(",spill=");
+        ret.append(" spill=");
         ret.append(spill == null ? "null" : spill.prettyPrint());
         ret.append(")");
         ret.append(liveness.prettyPrint());
@@ -186,11 +171,6 @@ public class Interval {
         liveness.addPosition(pos);
     }
     
-    /**
-     * two intervals have no overlapping length
-     * @param another
-     * @return
-     */
     public boolean doesIntersectWith(Interval another) {
     	return liveness.firstIntersect(another.liveness) != -1;
     }
