@@ -15,6 +15,9 @@ import compiler.phase.AbstractCompilationPhase;
 import compiler.phase.mc.AbstractMCCompilationPhase;
 
 public class InstructionNumbering extends AbstractMCCompilationPhase {
+	
+	// instructions start at 2. Param registers are defined at 0. So this allows a valid interval for param registers. 
+	public static final int INITIAL_SEQUENCE = 2;
 
     public InstructionNumbering(String name, boolean verbose) {
         super(name, verbose);
@@ -43,7 +46,7 @@ public class InstructionNumbering extends AbstractMCCompilationPhase {
         }
 
         verboseln("\ninstruction numbering for " + cf.getOriginFunction().getName() + "\n");
-        int sequence = 0;
+        int sequence = INITIAL_SEQUENCE;
         for (MCBasicBlock cur : topologicalOrder) {
             cf.topologicalBBs.add(cur);
             for (AbstractMachineCode mc : cur.getMC()) {

@@ -69,6 +69,11 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
     private void buildIntervals(CompiledFunction cf) { 
         verboseln("----- build intervals for " + cf.getOriginFunction().getName() + " -----");
         
+        // add positions for param regs
+        for (MCRegister reg : cf.usedParamRegs) {
+        	addPosition("param reg", cf, reg, new Position(0, Position.DEFINE, null, -1, false));
+        }
+        
         for (MCBasicBlock bb : cf.BBs) {
             // in reverse order
             for (int i = bb.getMC().size() - 1; i >= 0; i--) {
@@ -77,37 +82,37 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
                 if (mc.isPhi()) {
                 	// mc is phi inst, then we ignore its use operands
                 	// and its defining reg has its start as the first 'ordinary' inst in this block
-                	addPosition(mc.prettyPrintOneline(), cf, bb, mc.getDefineAsReg().REP(), new Position(bb.getFirstNonPhiMC().sequence + 1, Position.DEFINE, mc, -1, false));
+                	addPosition(mc.prettyPrintOneline(), cf, mc.getDefineAsReg().REP(), new Position(bb.getFirstNonPhiMC().sequence + 1, Position.DEFINE, mc, -1, false));
                 } else {
                 	// mc is not a phi inst
 	                for (int j = 0; j < mc.getNumberOfOperands(); j++) {
 	                    MCOperand op = mc.getOperand(j);
 	                    // this mc uses a register, so the register has a range that ends with this mc
 	                    if (op instanceof MCRegister) {
-	                        addPosition(mc.prettyPrintOneline(), cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, j, mc.isOpRegOnly(j)));
+	                        addPosition(mc.prettyPrintOneline(), cf, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, j, mc.isOpRegOnly(j)));
 	                    }
 	                }
 	                
 	                for (int j = 0; j < mc.getNumberOfImplicitUses(); j++) {
 	                    MCOperand op = mc.getImplicitUse(j);
 	                    if (op instanceof MCRegister) {
-	                        addPosition(mc.prettyPrintOneline(), cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, -1, false));
+	                        addPosition(mc.prettyPrintOneline(), cf, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, -1, false));
 	                    }
 	                }
 	                
 	                if (mc.getDefine() != null) {
 	                    // this mc defines a register, so the register has a range that starts before _next_ mc
 	                    if (mc.sequence + 1 <= bb.getLast().sequence)
-	                        addPosition(mc.prettyPrintOneline(), cf, bb, mc.getDefineAsReg().REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, mc.isDefineRegOnly()));
+	                        addPosition(mc.prettyPrintOneline(), cf, mc.getDefineAsReg().REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, mc.isDefineRegOnly()));
 	                    else {
-	                    	addPosition(mc.prettyPrintOneline(), cf, bb, mc.getDefineAsReg().REP(), new Position(mc.sequence, Position.DEFINE, mc, -1, mc.isDefineRegOnly()));
+	                    	addPosition(mc.prettyPrintOneline(), cf, mc.getDefineAsReg().REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, mc.isDefineRegOnly()));
 	                    }
 	                }
 	                
 	                for (int j = 0; j < mc.getNumberOfImplicitDefines(); j++) {
 	                    MCOperand op = mc.getImplicitDefine(j);
 	                    if (op instanceof MCRegister) {
-	                        addPosition(mc.prettyPrintOneline() + "(IMPLICITLY)", cf, bb, ((MCRegister) op).REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, false));
+	                        addPosition(mc.prettyPrintOneline() + "(IMPLICITLY)", cf, ((MCRegister) op).REP(), new Position(mc.sequence + 1, Position.DEFINE, mc, -1, false));
 	                    }
 	                }
                 
@@ -116,13 +121,13 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
             
             // add define if a register is live-in
             for (MCRegister livein : bb.liveIn) {
-                addPosition("livein for " + bb.getName(), cf, bb, livein.REP(), new Position(bb.getFirst().sequence, Position.USE, null, -1, false));
+                addPosition("livein for " + bb.getName(), cf, livein.REP(), new Position(bb.getFirst().sequence, Position.USE, null, -1, false));
             }
             
             // add use if a register is live-in for successor blocks
             for (MCBasicBlock succBB : bb.getSuccessor()) {
                 for (MCRegister reg : succBB.liveIn) {
-                    addPosition("liveout for " + bb.getName(), cf, bb, reg.REP(), new Position(bb.getLast().sequence, Position.USE, null, -1, false));
+                    addPosition("liveout for " + bb.getName(), cf, reg.REP(), new Position(bb.getLast().sequence, Position.USE, null, -1, false));
                 }
             }
         }
@@ -142,7 +147,7 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         cf.intervals = validIntervals;
     }
 
-    public void addPosition(String msg, CompiledFunction cf, MCBasicBlock bb, MCRegister reg, Position pos) {
+    public void addPosition(String msg, CompiledFunction cf, MCRegister reg, Position pos) {
         verboseln(msg + " adds position " + (pos.isDefine() ? "DEFINE" : "USE") + "[" + pos.getIndex() + "] for " + reg.prettyPrint());
         
         if (cf.intervals.containsKey(reg)) {

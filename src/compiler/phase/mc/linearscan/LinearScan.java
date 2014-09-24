@@ -10,6 +10,8 @@ import java.util.Set;
 
 import uvm.CompiledFunction;
 import uvm.mc.AbstractMachineCode;
+import uvm.mc.MCBasicBlock;
+import uvm.mc.MCLabel;
 import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
@@ -39,9 +41,42 @@ public class LinearScan extends AbstractMCCompilationPhase {
     protected void visitCompiledFunction(CompiledFunction cf) {
         linearScan(cf);
         resolution(cf);
+        
+        verboseln("=== Register Mapping table ===");
+        for (MCRegister vReg : cf.intervals.keySet()) {
+        	verboseln(vReg.prettyPrintREPOnly() + ":");
+        	Interval cur = cf.intervals.get(vReg);
+        	verboseln(cur.prettyPrint());
+        	verboseln("");
+        }
     }
     
     private void resolution(CompiledFunction cf) {
+    	// for loop back edge, we need to insert reg transfer moves:
+    	// i.e. if there is a jump instruction that jumps to an earlier inst, it is a back edge
+    	
+//    	HashMap<MCLabel, MCBasicBlock> labelBBMap = new HashMap<MCLabel, MCBasicBlock>();
+//    	for (MCBasicBlock bb : cf.BBs) {
+//    		labelBBMap.put(bb.getLabel(), bb);
+//    	}
+//    	
+//    	List<MCBasicBlock> newBBs = new ArrayList<MCBasicBlock>();
+//    	for (MCBasicBlock bb : cf.BBs) {
+//    		for (AbstractMachineCode mc : bb.getMC()) {
+//    			if (mc.isBranchingCode()) {
+//    				MCLabel label = (MCLabel) mc.getOperand(0);
+//    				MCBasicBlock targetBB = labelBBMap.get(label);
+//    				if (targetBB.getMC().get(0).sequence < mc.sequence) {
+//    					// its a back edge
+//    					
+//    					// 1) if there is only one successor (the target), we add moves before the jumping instruction if needed
+//    					
+//    					// or 2) if there are more than one successors, we create a new BB for the backedge and add moves there
+//    				}
+//    			}
+//    		}
+//    	}
+    	
     	cf.regMoveCodeInsertion = moves;
     	cf.stackManager = stack;
     }
@@ -250,17 +285,21 @@ public class LinearScan extends AbstractMCCompilationPhase {
         Set<MCRegister> physRegisters = getAllPhysicalRegisters(current.getDataType());
         
         HashMap<MCRegister, Integer> freeUntilPos = new HashMap<MCRegister, Integer>();
+        HashMap<MCRegister, Interval> intervalMap = new HashMap<MCRegister, Interval>();
+        
         // set freeUntilPos of all physical registers to max int
         for (MCRegister reg : physRegisters)
             freeUntilPos.put(reg, Integer.MAX_VALUE);
         
         for (Interval it : active) {
         	freeUntilPos.put(it.getPhysicalReg(), 0);
+        	intervalMap.put(it.getPhysicalReg(), it);
         }
         
         for (Interval it : inactive) {
         	if (it.isFixed()) {
         		freeUntilPos.put(it.getPhysicalReg(), 0);
+        		intervalMap.put(it.getPhysicalReg(), it);
         		continue;
         	}
         	
@@ -271,6 +310,8 @@ public class LinearScan extends AbstractMCCompilationPhase {
             	// use the minimum
             	if (newValue < oldValue) {
             		freeUntilPos.put(it.getPhysicalReg(), newValue);
+            		intervalMap.put(it.getPhysicalReg(), it);
+            		verboseln("inactive: " + it.getPhysicalReg().prettyPrint() + ".freeUntilPos=" + newValue + " from " + it.getOrig().prettyPrint());
             	}
             }
         }
@@ -300,11 +341,27 @@ public class LinearScan extends AbstractMCCompilationPhase {
             current.setPhysicalReg(candidate);
             verboseln("Allocate " + candidate.prettyPrint() + " to virtual reg " + current.getOrig().prettyPrint());
             
-            // split current before freeUntilPos
-            Interval afterSplit = current.splitAt(highestFreeUntilPos);
-            unhandled.add(afterSplit);
-            informSplitActiveInterval(current, afterSplit);
-            verboseln("Split " + current.getOrig().prettyPrint() + " at " + highestFreeUntilPos);
+            Interval candidateInterval = intervalMap.get(candidate);
+            
+            // if we use the reg from active set, split current before freeUntilPos
+            if (active.contains(candidateInterval)) {
+	            Interval afterSplit = current.splitAt(highestFreeUntilPos);
+	            unhandled.add(afterSplit);
+	            informSplitActiveInterval(current, afterSplit);
+	            verboseln("Split " + current.getOrig().prettyPrint() + " at " + highestFreeUntilPos);
+            } 
+            // if we use the reg from inactive set, split candidate at the end of this lifetime hole
+            else if (inactive.contains(candidateInterval)) {
+            	int endOfHole = candidateInterval.skipLifetimeHole(current.getBegin());
+            	
+            	Interval afterSplit = candidateInterval.splitAt(endOfHole);
+            	inactive.remove(candidateInterval);
+            	unhandled.add(afterSplit);
+            	verboseln("Split and move " + candidateInterval.getOrig().prettyPrint() + " from inactive to active");
+            }
+            else {
+            	UVMCompiler.error("trying to allocate a physical reg which is not either in active set or inactive set. Problem!!");
+            }
             return true;
         }
     }

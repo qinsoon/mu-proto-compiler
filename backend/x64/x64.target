@@ -7,7 +7,7 @@
 .mc_cond_jump {je jne} {jl jge} {jle jg} {jb jae}
 .mc_uncond_jump jmp
 .mc_ret ret
-.mc_mov mov cmovlt cmovgt cmoveq movsd movss
+.mc_mov mov cmovlt cmovgt cmoveq movsd movss movapd movaps
 .mc_dpmov movsd
 .mc_spmov movss
 .mc_phi imcphi dpmcphi spmcphi
@@ -524,9 +524,19 @@ label : LABEL
 	"movsd %s,%s", OP[0], OP_REG;
 }
 
+.mc_def movapd = {
+	DP = DP/MEM;
+	"movapd %s,%s", OP[0], OP_REG;
+}
+
 .mc_def movss = {
 	SP = SP/MEM;
 	"movss %s,%s", OP[0], OP_REG;
+}
+
+.mc_def movaps = {
+	SP = SP/MEM;
+	"movaps %s,%s", OP[0], OP_REG;
 }
 
 .mc_def addsd = {

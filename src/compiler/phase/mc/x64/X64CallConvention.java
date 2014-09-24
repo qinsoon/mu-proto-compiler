@@ -44,6 +44,8 @@ public class X64CallConvention {
                     MCRegister realParamReg = cf.findOrCreateRegister(UVMCompiler.MCDriver.getGPRParamName(usedGPRParamReg), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
                     usedGPRParamReg++;
                     
+                    cf.usedParamRegs.add(realParamReg);
+                    
                     symbolParamReg.setREP(realParamReg);
                 } else {
                     // fits in several GPRs
@@ -55,6 +57,8 @@ public class X64CallConvention {
                     MCRegister symbolParamReg = cf.findRegister("param_reg"+i, MCRegister.PARAM_REG);
                     MCRegister realParamReg = cf.findOrCreateRegister(UVMCompiler.MCDriver.getFPRParamName(usedFPRParamReg), MCRegister.MACHINE_REG, MCRegister.DATA_DP);
                     usedFPRParamReg++;
+                    
+                    cf.usedParamRegs.add(realParamReg);
                     
                     symbolParamReg.setREP(realParamReg);
                 } else {

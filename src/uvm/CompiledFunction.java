@@ -40,6 +40,7 @@ public class CompiledFunction {
     // register
     private HashMap<String, MCRegister> regs = new HashMap<String, MCRegister>();
     public List<MCRegister> calleeSavedRegs = new ArrayList<MCRegister>();      // in push order
+    public List<MCRegister> usedParamRegs = new ArrayList<MCRegister>();		// those gets a define USE_POS at 0
     
     public HashMap<Integer, List<Pair<Interval, Interval>>> regMoveCodeInsertion;
     public StackManager stackManager;

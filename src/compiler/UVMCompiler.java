@@ -15,9 +15,11 @@ import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
 import compiler.phase.MCRepresentationGeneration;
 import compiler.phase.mc.*;
+import compiler.phase.mc.linearscan.AddingJumpInstruction;
 import compiler.phase.mc.linearscan.ComputeLiveInterval;
 import compiler.phase.mc.linearscan.GenMovForPhi;
 import compiler.phase.mc.linearscan.InstructionNumbering;
+import compiler.phase.mc.linearscan.JoinPhiNode;
 import compiler.phase.mc.linearscan.LinearScan;
 import compiler.phase.mc.linearscan.RegisterCoalescing;
 import compiler.phase.mc.linearscan.ReplaceRegisterOperand;
@@ -110,6 +112,8 @@ public class UVMCompiler {
              *  - Christian Wimmer's work in CGO10: http://doi.acm.org/10.1145/1772954.1772979
              */
             new GenMovForPhi("genmovforphi", Verbose.GEN_MOV_FOR_PHI).execute();                    //*
+            new JoinPhiNode("joinphi", false).execute();
+            new AddingJumpInstruction("addingjmp", false).execute();
             new InstructionNumbering("instnumbering", Verbose.INST_NUMBERING).execute();            //*
             new X64AllocateParamRetRegister("allocparamret", Verbose.ALLOC_PARAM_RET_REG).execute();
             new ComputeLiveInterval("compinterval", Verbose.COMPUTE_INTERVAL).execute();            //*

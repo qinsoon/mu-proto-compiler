@@ -61,6 +61,11 @@ class BenchmarkResults(object):
 			sys.exit(1)
 		
 		correct_rv = self.result_entry_list1[0].return_value
+		for entry in self.result_entry_list2:
+			if entry.return_value != correct_rv:
+				print "Incorrect return value:"
+				print entry.pretty_print()
+				sys.exit(1)
 		
 		print
 		
@@ -254,7 +259,7 @@ if len(sys.argv) != 0:
 	UIR_EXEC_TIMES = int(sys.argv[1])
 	print "User defined UVM BM invocations = " + str(UIR_EXEC_TIMES)
 
-BEARABLE_PERFORMANCE = 1.5
+BEARABLE_PERFORMANCE = 10
 
 print "===== uVM compiler automated tests ====="
 
