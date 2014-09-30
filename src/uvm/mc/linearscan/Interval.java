@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+import compiler.util.Pair;
+
 import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCRegister;
 
@@ -214,4 +216,32 @@ public class Interval {
     public void setFixed(boolean fixed) {
         this.fixed = fixed;
     }
+    
+	public static Pair<Interval, Interval> firstAndLastEncountingInterval(Interval i, int start, int end) {
+		Interval cur = i;
+		
+		Pair<Interval, Interval> ret = new Pair<Interval, Interval>();
+		
+		while(cur != null) {
+			// check if this is the first one
+			if (ret.getFirst() == null) {
+				if (cur.isLiveAt(start))
+					ret.setFirst(cur);
+				else if (cur.getBegin() > start && cur.getBegin() < end) 
+					ret.setFirst(cur);
+			}
+			
+			// check if this is the last one
+			if (ret.getFirst() != null) {
+				if (cur.isLiveAt(end))
+					ret.setSecond(cur);
+				else if (cur.getEnd() > start && cur.getEnd() < end)
+					ret.setSecond(cur);
+			}
+			
+			cur = cur.next;
+		}
+		
+		return ret;
+	}
 }

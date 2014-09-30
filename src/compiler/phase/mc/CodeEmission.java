@@ -102,6 +102,10 @@ public class CodeEmission extends AbstractMCCompilationPhase {
         }
         writer.write('\t');
         writer.write(mc.emit());
+        if (mc.getComment() != null) {
+        	writer.write("\t\t#");
+        	writer.write(mc.getComment());
+        }
         writer.write('\n');
     }
 }

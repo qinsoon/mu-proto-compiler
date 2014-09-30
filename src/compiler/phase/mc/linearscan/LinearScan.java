@@ -52,30 +52,57 @@ public class LinearScan extends AbstractMCCompilationPhase {
     }
     
     private void resolution(CompiledFunction cf) {
-    	// for loop back edge, we need to insert reg transfer moves:
-    	// i.e. if there is a jump instruction that jumps to an earlier inst, it is a back edge
+    	verboseln("--- resolution for " + cf.getOriginFunction().getName() + " ---");
+    	// build live in and out
+    	// i.e. for every BB, what is the first and last interval for virtual registers
+    	HashMap<MCBasicBlock, HashMap<MCRegister, Pair<Interval, Interval>>> map = 
+    			new HashMap<MCBasicBlock, HashMap<MCRegister, Pair<Interval, Interval>>>();
     	
-//    	HashMap<MCLabel, MCBasicBlock> labelBBMap = new HashMap<MCLabel, MCBasicBlock>();
-//    	for (MCBasicBlock bb : cf.BBs) {
-//    		labelBBMap.put(bb.getLabel(), bb);
-//    	}
-//    	
-//    	List<MCBasicBlock> newBBs = new ArrayList<MCBasicBlock>();
-//    	for (MCBasicBlock bb : cf.BBs) {
-//    		for (AbstractMachineCode mc : bb.getMC()) {
-//    			if (mc.isBranchingCode()) {
-//    				MCLabel label = (MCLabel) mc.getOperand(0);
-//    				MCBasicBlock targetBB = labelBBMap.get(label);
-//    				if (targetBB.getMC().get(0).sequence < mc.sequence) {
-//    					// its a back edge
-//    					
-//    					// 1) if there is only one successor (the target), we add moves before the jumping instruction if needed
-//    					
-//    					// or 2) if there are more than one successors, we create a new BB for the backedge and add moves there
-//    				}
-//    			}
-//    		}
-//    	}
+    	for (MCBasicBlock bb : cf.BBs) {
+    		int start = bb.getFirst().sequence;
+    		int end = bb.getLast().sequence;
+    		
+    		HashMap<MCRegister, Pair<Interval, Interval>> liveInAndOut
+    			= cf.getLiveInAndOutBetween(start, end);
+    		
+    		if (liveInAndOut != null)
+    			map.put(bb, liveInAndOut);
+    	}
+    	
+    	// find out back edges
+    	for (MCBasicBlock bb : cf.BBs) {
+    		List<MCBasicBlock> backedgeList = bb.getBackEdges();
+    		int insertPoint = bb.getLast().sequence;
+    		List<Pair<Interval, Interval>> inserts = moves.get(insertPoint);
+    		
+    		for (MCBasicBlock target : backedgeList) {
+    			verboseln("for backedge " + bb.getName() + "->" + target.getName());
+    			verboseln(" from " + bb.getLast().sequence + " jumping to " + target.getFirst().sequence);
+    			
+    			UVMCompiler._assert(bb.getSuccessor().size() == 1, "a BB has backedge, but has more than one successors, cant insert reg transfer moves");
+    			HashMap<MCRegister, Pair<Interval, Interval>> currentLiveOut = map.get(bb);
+    			HashMap<MCRegister, Pair<Interval, Interval>> targetLiveIn = map.get(target);
+
+    			for(MCRegister vReg : currentLiveOut.keySet()) {
+    				if (!targetLiveIn.containsKey(vReg))
+    					continue;
+
+    				Interval liveOutInterval = currentLiveOut.get(vReg).getSecond();    				
+    				Interval liveInInterval = targetLiveIn.get(vReg).getFirst();
+    				
+    				if (liveOutInterval != null && liveInInterval != null) {
+	    				if (inserts == null)
+	    					inserts = new ArrayList<Pair<Interval, Interval>>();
+	    				
+	    				verboseln(" " + liveOutInterval.prettyPrint() + " -> " + liveInInterval.prettyPrint());
+	    				inserts.add(new Pair<Interval, Interval>(liveOutInterval, liveInInterval));
+    				}
+    			}
+    		}
+    		
+    		if (inserts != null)
+    			moves.put(insertPoint, inserts);
+    	}
     	
     	cf.regMoveCodeInsertion = moves;
     	cf.stackManager = stack;

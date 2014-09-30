@@ -51,11 +51,21 @@ public class ReplaceRegisterOperand extends AbstractMCCompilationPhase {
             				UVMCompiler.error("error on getting physical reg/spill location for " + p.getSecond().prettyPrint());
             			}
             			
+            			if (src == dst)
+            				continue;
+            			
             			if (p.getFirst().getOrig().getDataType() == MCRegister.DATA_GPR) {
-                			AbstractMachineCode mov = UVMCompiler.MCDriver.genMove(dst, src); 
+                			AbstractMachineCode mov = UVMCompiler.MCDriver.genMove(dst, src);
+                			mov.setComment(p.getFirst().getOrig().prettyPrint());
                 			verboseln("inserting code at " + mc.sequence + " for " + p.getFirst().getOrig().prettyPrint() + " -> " + p.getSecond().getOrig().prettyPrint());
                 			verboseln("  " + mov.prettyPrintREPOnly());
                 			newMC.add(mov);
+            			} else if (p.getFirst().getOrig().getDataType() == MCRegister.DATA_DP) {
+            				AbstractMachineCode mov = UVMCompiler.MCDriver.genDPMove(dst, src);
+            				mov.setComment(p.getFirst().getOrig().prettyPrint());
+                			verboseln("inserting code at " + mc.sequence + " for " + p.getFirst().getOrig().prettyPrint() + " -> " + p.getSecond().getOrig().prettyPrint());
+                			verboseln("  " + mov.prettyPrintREPOnly());
+            				newMC.add(mov);
             			} else {
             				UVMCompiler.error("unimplemented for other data types than GPR types");
             			}

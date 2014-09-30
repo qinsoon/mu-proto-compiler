@@ -15,6 +15,8 @@ public class MCBasicBlock {
     List<MCBasicBlock> successors   = new ArrayList<MCBasicBlock>();
     List<MCBasicBlock> predecessors = new ArrayList<MCBasicBlock>();
     
+    List<MCBasicBlock> backEdges 	= new ArrayList<MCBasicBlock>();
+    
     AbstractMachineCode phi;            // first phi instruction
     List<AbstractMachineCode> mc = new ArrayList<AbstractMachineCode>();    // first/last instruction can be found here
     
@@ -92,6 +94,12 @@ public class MCBasicBlock {
     }
     public void addPredecessors(MCBasicBlock predecessor) {
         this.predecessors.add(predecessor);
+    }
+    public List<MCBasicBlock> getBackEdges() {
+    	return backEdges;
+    }
+    public void addBackEdge(MCBasicBlock edge) {
+    	this.backEdges.add(edge);
     }
     public AbstractMachineCode getPhi() {
         return phi;

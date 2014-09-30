@@ -211,4 +211,21 @@ public class CompiledFunction {
         
         return null;
     }
+
+	public HashMap<MCRegister, Pair<Interval, Interval>> getLiveInAndOutBetween(
+			int start, int end) {
+		HashMap<MCRegister, Pair<Interval, Interval>> ret = 
+				new HashMap<MCRegister, Pair<Interval, Interval>>();
+		
+		for (MCRegister virtualReg : intervals.keySet()) {
+			Interval i = intervals.get(virtualReg);
+			Pair<Interval, Interval> pair = Interval.firstAndLastEncountingInterval(i, start, end);
+			if (pair.getFirst() != null || pair.getSecond() != null)
+				ret.put(virtualReg, pair);
+		}
+		
+		return ret;
+	}
+	
+
 }

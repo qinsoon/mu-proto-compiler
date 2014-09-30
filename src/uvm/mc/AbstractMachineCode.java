@@ -21,7 +21,17 @@ public abstract class AbstractMachineCode {
     
     protected uvm.IRTreeNode highLevelIR;
     
-    public abstract String emit();
+    protected String comment;
+    
+    public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
+
+	public abstract String emit();
     
     public String getName() {
         return name;

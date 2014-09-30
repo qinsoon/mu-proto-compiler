@@ -101,7 +101,6 @@ public class UVMCompiler {
             new BBReconstruction("reconstbb", Verbose.RECONSTRUCT_BB).execute();
             new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();            
             new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
-            
             /*
              *  register allocation
              *  
@@ -111,11 +110,12 @@ public class UVMCompiler {
              *  - Vivek Sarkar's work in CC07: http://dl.acm.org/citation.cfm?id=1759937.1759950
              *  - Christian Wimmer's work in CGO10: http://doi.acm.org/10.1145/1772954.1772979
              */
+            new X64AllocateParamRetRegister("allocparamret", Verbose.ALLOC_PARAM_RET_REG).execute();
             new GenMovForPhi("genmovforphi", Verbose.GEN_MOV_FOR_PHI).execute();                    //*
             new JoinPhiNode("joinphi", false).execute();
             new AddingJumpInstruction("addingjmp", false).execute();
+            new DetectBackEdge("detectbedge", Verbose.DETECT_BACK_EDGE).execute();
             new InstructionNumbering("instnumbering", Verbose.INST_NUMBERING).execute();            //*
-            new X64AllocateParamRetRegister("allocparamret", Verbose.ALLOC_PARAM_RET_REG).execute();
             new ComputeLiveInterval("compinterval", Verbose.COMPUTE_INTERVAL).execute();            //*
             new RegisterCoalescing("regcoalesc", Verbose.REG_COALESC).execute();                    //*
             new LinearScan("linearscan", Verbose.LINEAR_SCAN).execute();                            //*
