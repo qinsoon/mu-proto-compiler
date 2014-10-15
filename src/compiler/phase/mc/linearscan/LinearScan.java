@@ -39,6 +39,10 @@ public class LinearScan extends AbstractMCCompilationPhase {
 
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
+    	verboseln("=== linear scan on " + cf.getOriginFunction().getName() + " === ");
+    	for (MCBasicBlock bb : cf.BBs)
+    		verboseln(bb.prettyPrintREPOnly());
+    	
         linearScan(cf);
         resolution(cf);
         

@@ -10,27 +10,11 @@
   %v2 = PHI <int<32>> {%.lr.ph: %v2.new ; %entry: 0;}
   %v3 = PHI <int<32>> {%.lr.ph: %v3.new ; %entry: 0;}
   %v4 = PHI <int<32>> {%.lr.ph: %v4.new ; %entry: 0;}  
-  %v5 = PHI <int<32>> {%.lr.ph: %v5.new ; %entry: 0;}  
-  %v6 = PHI <int<32>> {%.lr.ph: %v6.new ; %entry: 0;}
-  %v7 = PHI <int<32>> {%.lr.ph: %v7.new ; %entry: 0;}
-  %v8 = PHI <int<32>> {%.lr.ph: %v8.new ; %entry: 0;}
-  %v9 = PHI <int<32>> {%.lr.ph: %v9.new ; %entry: 0;}
-  %v10 = PHI <int<32>> {%.lr.ph: %v10.new ; %entry: 0;}
-  %v11 = PHI <int<32>> {%.lr.ph: %v11.new ; %entry: 0;}
-  %v12 = PHI <int<32>> {%.lr.ph: %v12.new ; %entry: 0;}
   
   %v1.new = ADD <int<32>> %i %v1
   %v2.new = ADD <int<32>> %v2 %v1.new
   %v3.new = ADD <int<32>> %v3 %v2.new
   %v4.new = ADD <int<32>> %v4 %v3.new
-  %v5.new = ADD <int<32>> %v5 %v4.new
-  %v6.new = ADD <int<32>> %v6 %v5.new
-  %v7.new = ADD <int<32>> %v7 %v6.new
-  %v8.new = ADD <int<32>> %v8 %v7.new
-  %v9.new = ADD <int<32>> %v9 %v8.new
-  %v10.new = ADD <int<32>> %v10 %v9.new
-  %v11.new = ADD <int<32>> %v11 %v10.new
-  %v12.new = ADD <int<32>> %v12 %v11.new
   %i.new = ADD <int<32>> %i 1
   
   %cond = SLT <int<32>> %i.new 10
@@ -40,14 +24,6 @@
   %sum.1 = ADD <int<32>> %v1.new %v2.new
   %sum.2 = ADD <int<32>> %sum.1 %v3.new
   %sum.3 = ADD <int<32>> %sum.2 %v4.new
-  %sum.4 = ADD <int<32>> %sum.3 %v5.new
-  %sum.5 = ADD <int<32>> %sum.4 %v6.new
-  %sum.6 = ADD <int<32>> %sum.5 %v7.new
-  %sum.7 = ADD <int<32>> %sum.6 %v8.new
-  %sum.8 = ADD <int<32>> %sum.7 %v9.new
-  %sum.9 = ADD <int<32>> %sum.8 %v10.new
-  %sum.10 = ADD <int<32>> %sum.9 %v11.new
-  %sum.11 = ADD <int<32>> %sum.10 %v12.new
-  
-  RET <int<32>> %sum.11
+  %ret = SREM <int<32>> %sum.3 125
+  RET <int<32>> %ret
 }

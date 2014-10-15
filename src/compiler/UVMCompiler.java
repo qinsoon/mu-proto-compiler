@@ -23,6 +23,7 @@ import compiler.phase.mc.linearscan.JoinPhiNode;
 import compiler.phase.mc.linearscan.LinearScan;
 import compiler.phase.mc.linearscan.RegisterCoalescing;
 import compiler.phase.mc.linearscan.ReplaceRegisterOperand;
+import compiler.phase.mc.linearscan.SimpleLinearScan;
 import compiler.phase.mc.x64.X64AllocateParamRetRegister;
 import compiler.phase.mc.x64.X64ExpandCallSequence;
 import parser.uIRLexer;
@@ -101,6 +102,7 @@ public class UVMCompiler {
             new BBReconstruction("reconstbb", Verbose.RECONSTRUCT_BB).execute();
             new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();            
             new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
+            
             /*
              *  register allocation
              *  
@@ -118,8 +120,9 @@ public class UVMCompiler {
             new InstructionNumbering("instnumbering", Verbose.INST_NUMBERING).execute();            //*
             new ComputeLiveInterval("compinterval", Verbose.COMPUTE_INTERVAL).execute();            //*
             new RegisterCoalescing("regcoalesc", Verbose.REG_COALESC).execute();                    //*
-            new LinearScan("linearscan", Verbose.LINEAR_SCAN).execute();                            //*
-            new ReplaceRegisterOperand("replaceregop", Verbose.REPLACE_MEM_OP).execute();
+//            new LinearScan("linearscan", Verbose.LINEAR_SCAN).execute();                            //*
+//            new ReplaceRegisterOperand("replaceregop", Verbose.REPLACE_MEM_OP).execute();
+            new SimpleLinearScan("simplelinearscan", Verbose.LINEAR_SCAN).execute();
             
             /*
              *  code emission

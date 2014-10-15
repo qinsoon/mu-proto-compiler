@@ -6,8 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import compiler.util.Pair;
-
 import uvm.mc.MCMemoryOperand;
+import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
 
 public class Interval {
@@ -243,5 +243,11 @@ public class Interval {
 		}
 		
 		return ret;
+	}
+	
+	public MCOperand getPhysicalLocation() {
+		if (spill != null)
+			return spill;
+		else return physical;
 	}
 }

@@ -45,7 +45,21 @@ public class CompiledFunction {
     public HashMap<Integer, List<Pair<Interval, Interval>>> regMoveCodeInsertion;
     public StackManager stackManager;
     
-    public MCRegister findOrCreateRegister(String name, int type, int dataType) {
+    int reserveScratchRegs = 0;
+    
+    public boolean hasSpilledValues() {
+    	return reserveScratchRegs != 0;
+    }
+    
+    public int getReserveScratchRegs() {
+		return reserveScratchRegs;
+	}
+
+	public void setReserveScratchRegs(int reserveScratchRegs) {
+		this.reserveScratchRegs = reserveScratchRegs;
+	}
+
+	public MCRegister findOrCreateRegister(String name, int type, int dataType) {
         if (regs.containsKey(name))
             return regs.get(name);
         
