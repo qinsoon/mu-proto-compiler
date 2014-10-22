@@ -66,6 +66,13 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 		freeFPRs	= new LinkedList<MCRegister>();
 		initFreeRegisters();
 		
+		for (int i = UVMCompiler.MCDriver.getNumberOfGPR() - RESERVE_SCRATCH_REGS; i < UVMCompiler.MCDriver.getNumberOfGPR(); i++) {
+			verboseln("Reserved " + UVMCompiler.MCDriver.getGPRName(i) + " as scratch GPR registers");
+		}
+		for (int i = UVMCompiler.MCDriver.getNumberOfFPR() - RESERVE_SCRATCH_REGS; i < UVMCompiler.MCDriver.getNumberOfFPR(); i++) {
+			verboseln("Reserved " + UVMCompiler.MCDriver.getFPRName(i) + " as scratch FPR registers");
+		}
+		
 		while (!unhandled.isEmpty()) {			
 			Interval cur = unhandled.poll();
 			
@@ -85,6 +92,8 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 				assignPhysReg(cur, f);
 			}
 		}
+		
+		cf.stackManager = stack;
 	}	
 
 	private void checkAcitveIntervals(int pos) {
@@ -272,22 +281,16 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 		// for all intervals in active, inactive and (fixed) unhandled do
 		//   if i overlaps cur then w[i.reg]<-w[i.reg]+i.weight
 		for (Interval i : active) {
-//			verboseln(i.prettyPrint());
-//			verboseln(cur.prettyPrint());
 			if (i.nextIntersectionWith(cur) != -1)
 				increaseRegWeight(weight, i.getPhysicalReg(), i);
 		}
 		
 		for (Interval i : inactive) {
-//			verboseln(i.prettyPrint());
-//			verboseln(cur.prettyPrint());
 			if (i.nextIntersectionWith(cur) != -1)
 				increaseRegWeight(weight, i.getPhysicalReg(), i);
 		}
 		
 		for (Interval i : unhandled) {
-//			verboseln(i.prettyPrint());
-//			verboseln(cur.prettyPrint());
 			if (i.isFixed() && i.nextIntersectionWith(cur) != -1)
 				increaseRegWeight(weight, i.getPhysicalReg(), i);
 		}
@@ -450,11 +453,6 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 		
 		if (i == null)
 			return;
-//		if (i == null) {
-//			System.out.println("trying to find interval for " + reg.prettyPrintREPOnly());
-//			System.out.println("but didnt find it");
-//			UVMCompiler.error("error");
-//		}
 		
 		Integer weight = null;
 		if (intervalWeight.containsKey(i))
@@ -506,19 +504,15 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 		Interval cachedSpilledGPR = null;
 		Interval cachedSpilledFPR = null;
 
-
 		for (MCBasicBlock bb : cf.BBs) {
 			ArrayList<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
 			
+			cachedSpilledGPR = null;
+			cachedSpilledFPR = null;
+			
 			for (AbstractMachineCode mc : bb.getMC()) {
 				verboseln("checking mc: " + mc.prettyPrintREPOnly());
-				
-				// we wont emit phi anyway
-//				if (mc.isPhi()) {
-//					newMC.add(mc);
-//					continue;
-//				}
-				
+							
 				// if this mc leaves a basic block (call/jump/fall-through/exception)
 				// store back the cached value
 				if (mc.isBranchingCode() || mc.isCall() || mc.isRet()) {
@@ -534,6 +528,26 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 					}
 				}
 				
+				// precheck how many spilled temporaries in this mc
+				int spilledTemps = 0;
+				int spilledTempsThatNeedsReg = 0;
+				for (int i = 0; i < mc.getNumberOfOperands(); i++) {
+					MCOperand op = mc.getOperand(i);
+					if (op instanceof MCRegister) {
+						MCRegister reg = (MCRegister) op;
+						Interval interval = cf.intervals.get(reg.REP());
+						
+						if (interval.getSpill() != null)
+							spilledTemps ++;
+						if (interval.isRegOnlyUseAt(mc.sequence))
+							spilledTempsThatNeedsReg++;
+					}
+				}
+				
+				UVMCompiler._assert(spilledTempsThatNeedsReg <= RESERVE_SCRATCH_REGS, "mc requires more scratch registers than provided");
+				
+				boolean useMemOpWheneverPossible = (spilledTempsThatNeedsReg <= RESERVE_SCRATCH_REGS) && spilledTemps > spilledTempsThatNeedsReg;
+				
 				// check all the temporaries used
 				boolean usingScratchRegisterInThisMC = false;
 				
@@ -548,53 +562,74 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 						MCRegister reg = (MCRegister) mc.getOperand(i);
 						Interval it = cf.intervals.get(reg.REP());
 						
+						boolean allowMemOp = !it.isRegOnlyUseAt(mc.sequence);
+						
 						// if this temporary gets a physical reg, simply replace
 						if (it.getSpill() == null) {
 							mc.setOperand(i, it.getPhysicalReg());
-						} else if (it.getSpill() != null) {
-							// if this mc allows mem locations, simply replace
-							if (!it.isRegOnlyUseAt(mc.sequence)) {
+						} 
+						// if this temporary is already in a scratch register, simply replace
+						else if (it == cachedSpilledGPR) {
+							if (useMemOpWheneverPossible && allowMemOp) {
 								mc.setOperand(i, it.getSpill());
 							} else {
 								usingScratchRegisterInThisMC = true;
+								mc.setOperand(i, scratchGPR);
+								verboseln("  *** using scratch register! " + scratchGPR.prettyPrint());
+							}
+						} else if (it == cachedSpilledFPR) {
+							if (useMemOpWheneverPossible && allowMemOp) {
+								mc.setOperand(i, it.getSpill());
+							} else {
+								usingScratchRegisterInThisMC = true;
+								mc.setOperand(i, scratchFPR);
+								verboseln("  *** using scratch register! " + scratchFPR.prettyPrint());
+							}
+						}
+						// otherwise, we either use the mem loc if allowed, or load the temporary into scratch registers
+						else {
+							// if this mc allows mem locations, simply replace
+							if (allowMemOp) {
+								mc.setOperand(i, it.getSpill());
+							} else {
+								usingScratchRegisterInThisMC = true;								
 								
-								
-								// if this temporary already in a scratch reg, simply use it
 								if (it.getDataType() == MCRegister.DATA_GPR) {
 									verboseln("  *** using scratch register! " + scratchGPR.prettyPrint());
 									
-									if (cachedSpilledGPR == it)
-										mc.setOperand(i, scratchGPR);
-									else {
-										// store current scratch GPR
+									// store current scratch GPR
+									if (cachedSpilledGPR != null) {
 										AbstractMachineCode store = UVMCompiler.MCDriver.genMove(cachedSpilledGPR.getSpill(), scratchGPR);
-										AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchGPR, it.getSpill());
-										
 										verboseln("  insert store:" + store.prettyPrintREPOnly());
-										verboseln("  insert load :" + load.prettyPrintREPOnly());
 										newMC.add(store);
-										newMC.add(load);
-										
-										cachedSpilledGPR = it;
-										
-										mc.setOperand(i, scratchGPR);
 									}
+									
+									// load
+									AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchGPR, it.getSpill());									
+									verboseln("  insert load :" + load.prettyPrintREPOnly());									
+									newMC.add(load);
+									
+									cachedSpilledGPR = it;
+									
+									mc.setOperand(i, scratchGPR);
 								} else if (it.getDataType() == MCRegister.DATA_DP) {
 									verboseln("  *** using scratch register! " + scratchFPR.prettyPrint());
 									
-									if (cachedSpilledFPR == it)
-										mc.setOperand(i, scratchFPR);
-									else {
+									// store current scratch FPR
+									if (cachedSpilledFPR != null) {
 										AbstractMachineCode store = UVMCompiler.MCDriver.genMove(cachedSpilledFPR.getSpill(), scratchFPR);
-										AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchFPR, it.getSpill());
-										
 										verboseln("  insert store:" + store.prettyPrintREPOnly());
-										verboseln("  insert load :" + load.prettyPrintREPOnly());
 										newMC.add(store);
-										newMC.add(load);
-										
-										cachedSpilledFPR = it;
 									}
+									
+									// load
+									AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchFPR, it.getSpill());
+									verboseln("  insert load :" + load.prettyPrintREPOnly());
+									newMC.add(load);
+									
+									cachedSpilledFPR = it;
+									
+									mc.setOperand(i, scratchFPR);
 								} else {
 									UVMCompiler.error("unimplemented data type in inserting spilling code");
 								}
@@ -609,12 +644,15 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 					verboseln("  checking def:" + def.prettyPrint());
 					
 					Interval it = cf.intervals.get(def.REP());
+					
+					boolean allowMemOp = !it.isRegOnlyUseAt(mc.sequence + 1);
+					
 					// if this temporary gets a physical reg, simply replace
 					if (it.getSpill() == null) {
 						mc.setDefine(it.getPhysicalReg());
 					} else if (it.getSpill() != null) {
 						// if this mc allows mem locations, simply replace
-						if (!it.isRegOnlyUseAt(mc.sequence + 1)) {
+						if (allowMemOp) {
 							mc.setDefine(it.getSpill());
 						} else {
 							
@@ -639,13 +677,7 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 										newMC.add(store);
 									}
 									
-									// do not need to load since we will put value into scratch register
-//									AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchGPR, it.getSpill());;
-//									verboseln("  insert load :" + load.prettyPrintREPOnly());
-//									newMC.add(load);
-									
-									cachedSpilledGPR = it;
-									
+									cachedSpilledGPR = it;									
 									mc.setDefine(scratchGPR);
 								}
 							} else if (it.getDataType() == MCRegister.DATA_DP) {
@@ -667,11 +699,8 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 										newMC.add(store);
 									}
 									
-//									AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchFPR, it.getSpill());;
-//									verboseln("  insert load :" + load.prettyPrintREPOnly());
-//									newMC.add(load);
-									
 									cachedSpilledFPR = it;
+									mc.setDefine(scratchFPR);
 								}
 							} else {
 								UVMCompiler.error("unimplemented data type in inserting spilling code");

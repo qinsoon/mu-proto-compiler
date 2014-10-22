@@ -26,6 +26,7 @@ import compiler.phase.mc.linearscan.ReplaceRegisterOperand;
 import compiler.phase.mc.linearscan.SimpleLinearScan;
 import compiler.phase.mc.x64.X64AllocateParamRetRegister;
 import compiler.phase.mc.x64.X64ExpandCallSequence;
+import compiler.phase.mc.x64.X64PostRegisterAllocPatching;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
@@ -124,6 +125,7 @@ public class UVMCompiler {
 //            new ReplaceRegisterOperand("replaceregop", Verbose.REPLACE_MEM_OP).execute();
             new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
             new SimpleLinearScan("simplelinearscan", Verbose.LINEAR_SCAN).execute();
+            new X64PostRegisterAllocPatching("postregallocpatching", false).execute();
             
             /*
              *  code emission
