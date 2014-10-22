@@ -511,16 +511,16 @@ label : LABEL
 .mc_def idiv = {
 	GPR/MEM;
 	"idivq %s", OP[0];
-	uses: rax(GPR);
+	uses: rax(GPR) rdx(GPR);
 }
 
 .mc_def add = {
-	GPR = GPR/MEM GPR;
+	GPR = GPR GPR/MEM;
 	"addq %s,%s", OP[1], OP[0];
 }
 
 .mc_def xor = {
-	GPR = GPR/MEM GPR;
+	GPR = GPR GPR/MEM;
 	"xorq %s,%s", OP[1], OP[0];
 }
 
@@ -549,12 +549,12 @@ label : LABEL
 }
 
 .mc_def addsd = {
-	DP = DP/MEM DP;
+	DP = DP DP/MEM;
 	"addsd %s,%s", OP[1], OP[0];
 }
 
 .mc_def divsd = {
-	DP = DP/MEM DP;
+	DP = DP DP/MEM;
 	"divsd %s,%s", OP[1], OP[0];
 }
 

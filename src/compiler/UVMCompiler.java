@@ -101,7 +101,7 @@ public class UVMCompiler {
             new CombineReturns("combineret", Verbose.COMBINE_RET).execute();
             new BBReconstruction("reconstbb", Verbose.RECONSTRUCT_BB).execute();
             new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();            
-            new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
+
             
             /*
              *  register allocation
@@ -122,6 +122,7 @@ public class UVMCompiler {
             new RegisterCoalescing("regcoalesc", Verbose.REG_COALESC).execute();                    //*
 //            new LinearScan("linearscan", Verbose.LINEAR_SCAN).execute();                            //*
 //            new ReplaceRegisterOperand("replaceregop", Verbose.REPLACE_MEM_OP).execute();
+            new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
             new SimpleLinearScan("simplelinearscan", Verbose.LINEAR_SCAN).execute();
             
             /*

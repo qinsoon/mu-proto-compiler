@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import uvm.CompiledFunction;
@@ -65,8 +66,13 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 		freeFPRs	= new LinkedList<MCRegister>();
 		initFreeRegisters();
 		
-		while (!unhandled.isEmpty()) {
+		while (!unhandled.isEmpty()) {			
 			Interval cur = unhandled.poll();
+			
+			verboseln("");
+			verboseln("Polling " + cur.getOrig().prettyPrintREPOnly());
+			
+			verboseFreeRegisters();
 			
 			checkAcitveIntervals(cur.getBegin());
 			checkInactiveIntervals(cur.getBegin());
@@ -79,187 +85,82 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 				assignPhysReg(cur, f);
 			}
 		}
-	}
+	}	
 
-	private void assignPhysReg(Interval cur, LinkedList<MCRegister> f) {
-		if (cur.getPhysicalReg() == null)
-			cur.setPhysicalReg(f.poll());
-		
-		if (cur.getDataType() == MCRegister.DATA_GPR)
-			freeGPRs.remove(cur.getPhysicalReg());
-		else if (cur.getDataType() == MCRegister.DATA_DP)
-			freeFPRs.remove(cur.getPhysicalReg());
-		else {
-			UVMCompiler.error("unimplemented data type in assignPhysReg()");
-		}
-	}
-	
-	HashMap<Interval, Integer> intervalWeight = new HashMap<Interval, Integer>();
-
-	private void assignMemLoc(Interval cur) {
-		Set<MCRegister> allRegisters = getAllPhysicalRegisters(cur.getDataType());
-		HashMap<MCRegister, Integer> weight = new HashMap<MCRegister, Integer>();
-		
-		// for all registers r do w[r]<-0
-		for (MCRegister reg : allRegisters) {
-			weight.put(reg, 0);
-		}
-		
-		// we need to init interval weights
-		if (intervalWeight.isEmpty())
-			initIntervalWeight();		
-		
-		// for all intervals in active, inactive and (fixed) unhandled do
-		//   if i overlaps cur then w[i.reg]<-w[i.reg]+i.weight
-		for (Interval i : active) {
-			if (i.nextIntersectionWith(cur) != -1)
-				increaseRegWeight(weight, i.getPhysicalReg(), i);
-		}
-		
-		for (Interval i : inactive) {
-			if (i.nextIntersectionWith(cur) != -1)
-				increaseRegWeight(weight, i.getPhysicalReg(), i);
-		}
-		
-		for (Interval i : unhandled) {
-			if (i.isFixed() && i.nextIntersectionWith(cur) != -1)
-				increaseRegWeight(weight, i.getPhysicalReg(), i);
-		}
-		
-		// find r such that w[r] is minimum
-		Integer minimumWeight = Integer.MAX_VALUE;
-		MCRegister candidateReg = null;
-		for (MCRegister reg : weight.keySet()) {
-			Integer i = weight.get(reg);
-			if (i < minimumWeight) {
-				minimumWeight = i;
-				candidateReg = reg;
-			}
-		}
-		
-		// if cur.weight < w[r] then
-		//   assign a memory location to cur and move cur to handled
-		if (intervalWeight.get(cur) < minimumWeight) {
-			MCMemoryOperand mem = stack.spillInterval(cur);
-			cur.setSpill(mem);
+	private void checkAcitveIntervals(int pos) {
+		for (int i = 0; i < active.size(); ) {
+			Interval it = active.get(i);
+			verbose("check active:" + it.getOrig().prettyPrintREPOnly());
 			
-			currentCF.setReserveScratchRegs(1);
-			
-			handled.add(cur);
-		} else {
-			// move all active or inactive intervals to which r was assigned to handled
-			// assign mem locations to them
-			for (int i = 0; i < active.size(); ) {
-				Interval it = active.get(i);
-				if (it.getPhysicalReg().equals(candidateReg)) {
-					active.remove(i);
-					
-					MCMemoryOperand mem = stack.spillInterval(it);
-					it.setSpill(mem);
-					handled.add(it);
-					
-					currentCF.setReserveScratchRegs(1);
-					
-					continue;
-				}
+			if (it.getEnd() < pos) {
+				verbose(" -> handled, ");
+				active.remove(i);
+				handled.add(it);
+				returnPhysicalReg(it);
 				
-				i++;
-			}
-			for (int i = 0; i < inactive.size(); ) {
-				Interval it = inactive.get(i);
-				if (it.getPhysicalReg().equals(candidateReg)) {
-					inactive.remove(i);
-					
-					MCMemoryOperand mem = stack.spillInterval(it);
-					it.setSpill(mem);
-					handled.add(it);
-					
-					continue;
-				}
+				verboseln(it.getPhysicalReg().prettyPrint() + " freed");
+				verboseFreeRegisters();
 				
-				i++;
+				continue;
+			} else if (!it.isLiveAt(pos)) {
+				verbose(" -> inactive，");
+				active.remove(i);
+				inactive.add(it);
+				returnPhysicalReg(it);
+				
+				verboseln(it.getPhysicalReg().prettyPrint() + " freed");
+				verboseFreeRegisters();
+				
+				continue;
 			}
 			
-			// cur.reg <- r
-			cur.setPhysicalReg(candidateReg);
-			active.add(cur);
+			verboseln("");
+			i++;
+		}
+	}
+
+	private void checkInactiveIntervals(int pos) {
+		for (int i = 0; i < inactive.size(); ) {
+			Interval it = inactive.get(i);
+			verbose("check inactive:" + it.getOrig().prettyPrintREPOnly());
+			
+			if (it.getEnd() < pos) {
+				verboseln(" -> handled， ");
+				inactive.remove(i);
+				handled.add(it);
+				
+				continue;
+			} else if (it.isLiveAt(pos)) {
+				verbose(" -> active, ");
+				verboseln(it.getPhysicalReg().prettyPrint() + " used");
+				inactive.remove(i);
+				active.add(it);
+				
+				removePhysicalRegFromFree(it.getPhysicalReg());
+				verboseFreeRegisters();
+				
+				continue;
+			}
+			
+			verboseln("");
+			i++;
 		}
 	}
 	
-	private void increaseRegWeight(HashMap<MCRegister, Integer> weight, MCRegister reg, Interval i) {
-		reg = reg.REP();
-		Integer w = null;
-		if (weight.containsKey(reg))
-			w = weight.get(reg);
-		else w = 0;
-		
-		w += intervalWeight.get(i);
-		weight.put(reg, w);
-	}
-	
-	private void initIntervalWeight() {		
-		for (AbstractMachineCode mc : currentCF.mc) {
-			// ops
-			for (int i = 0; i < mc.getNumberOfOperands(); i++) {
-				MCRegister reg = (MCRegister) mc.getOperand(i);
-				increaseIntervalWeightForReg(reg);				
-			}
-			
-			// define
-			MCRegister def = mc.getDefineAsReg();
-			increaseIntervalWeightForReg(def);
-			
-			// implicit uses
-			for (int i = 0; i < mc.getNumberOfImplicitUses(); i++) {
-				MCRegister reg = (MCRegister) mc.getImplicitUse(i);
-				increaseIntervalWeightForReg(reg);
-			}
-			
-			// implicit defs
-			for (int i = 0; i < mc.getNumberOfImplicitDefines(); i++) {
-				MCRegister reg = (MCRegister) mc.getImplicitDefine(i);
-				increaseIntervalWeightForReg(reg);
-			}
+	private void verboseFreeRegisters() {
+		verbose("free GPR: {");
+		for (MCRegister reg : freeGPRs) {
+			verbose(reg.prettyPrint() + ",");
 		}
+		verboseln("}");
+		
+		verbose("free FPR: {");
+		for (MCRegister reg : freeFPRs) {
+			verbose(reg.prettyPrint() + ",");
+		}
+		verboseln("}");
 	}
 	
-	private void increaseIntervalWeightForReg(MCRegister reg) {
-		Interval i = currentCF.intervals.get(reg.REP());
-		
-		Integer weight = null;
-		if (intervalWeight.containsKey(i))
-			weight = intervalWeight.get(i);
-		else weight = new Integer(0);
-		
-		weight += 1;
-		intervalWeight.put(i, weight);
-	}
-
-	private Set<MCRegister> getAllPhysicalRegisters(int dataType) {
-        HashSet<MCRegister> physRegisters = new HashSet<MCRegister>();
-        
-        if (dataType == MCRegister.DATA_GPR) {
-            // init physRegisters to all GPRs
-            for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfGPR() - RESERVE_SCRATCH_REGS; i++) {
-                MCRegister reg = currentCF.findOrCreateRegister(UVMCompiler.MCDriver.getGPRName(i), MCRegister.MACHINE_REG, dataType);
-                physRegisters.add(reg);
-            }
-        } else if (dataType == MCRegister.DATA_DP) {
-            // init physRegisters to double-precision FPRs
-            for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfFPR() - RESERVE_SCRATCH_REGS; i++) {
-                MCRegister reg = currentCF.findOrCreateRegister(UVMCompiler.MCDriver.getFPRName(i), MCRegister.MACHINE_REG, dataType);
-                physRegisters.add(reg);
-            }
-        } else if (dataType == MCRegister.DATA_SP) {
-            // init physRegisters to single-precision FPRs
-            UVMCompiler.error("unimplemented reg alloc for sp FPR");
-        } else {
-            UVMCompiler.error("unexpected interval data type: MEM");
-        }
-        
-        return physRegisters;
-    }
-
 	private LinkedList<MCRegister> collectAvailableRegisters(Interval cur) {
 		LinkedList<MCRegister> ret = null;
 		
@@ -280,6 +181,12 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 			if (i.isFixed() && i.nextIntersectionWith(cur) != -1)
 				ret.remove(i.getPhysicalReg());
 		}
+		
+		verboseln("Getting available registers:");
+		verbose("{");
+		for (MCRegister reg : ret)
+			verbose(reg.prettyPrint() + ",");
+		verboseln("}");
 		
 		return ret;
 	}
@@ -321,48 +228,269 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 		}
 	}
 
-	private void checkAcitveIntervals(int pos) {
-		for (int i = 0; i < active.size(); ) {
-			Interval it = active.get(i);
-			if (it.getEnd() < pos) {
-				active.remove(i);
-				handled.add(it);
-				returnPhysicalReg(it);
+	private void assignPhysReg(Interval cur, LinkedList<MCRegister> f) {
+		MCRegister candidate = null;
+		
+		if (cur.isFixed()) {
+			if (f.contains(cur.getPhysicalReg()))
+				candidate = cur.getPhysicalReg();
+			else UVMCompiler.error("Trying to assign a physical reg to fixed interval " + cur.getPhysicalReg().prettyPrint() + " but it is not available");
+		} else {
+			candidate = f.poll();
+			cur.setPhysicalReg(candidate);
+		}
+		
+		if (cur.getDataType() == MCRegister.DATA_GPR)
+			freeGPRs.remove(cur.getPhysicalReg());
+		else if (cur.getDataType() == MCRegister.DATA_DP)
+			freeFPRs.remove(cur.getPhysicalReg());
+		else {
+			UVMCompiler.error("unimplemented data type in assignPhysReg()");
+		}
+		
+		active.add(cur);
+		verboseln("Assign " + candidate.prettyPrintREPOnly() + " to " + cur.getOrig().prettyPrintREPOnly());
+	}
+	
+	HashMap<Interval, Integer> intervalWeight = new HashMap<Interval, Integer>();
+
+	private void assignMemLoc(Interval cur) {
+		verboseln("Finding evacuating candidate for " + cur.getOrig().prettyPrintREPOnly());
+		
+		Set<MCRegister> allRegisters = getAllPhysicalRegisters(cur.getDataType());
+		HashMap<MCRegister, Integer> weight = new HashMap<MCRegister, Integer>();
+		
+		// for all registers r do w[r]<-0
+		for (MCRegister reg : allRegisters) {
+			weight.put(reg, 0);
+		}
+		
+		// we need to init interval weights
+		if (intervalWeight.isEmpty())
+			initIntervalWeight();		
+		
+		// for all intervals in active, inactive and (fixed) unhandled do
+		//   if i overlaps cur then w[i.reg]<-w[i.reg]+i.weight
+		for (Interval i : active) {
+//			verboseln(i.prettyPrint());
+//			verboseln(cur.prettyPrint());
+			if (i.nextIntersectionWith(cur) != -1)
+				increaseRegWeight(weight, i.getPhysicalReg(), i);
+		}
+		
+		for (Interval i : inactive) {
+//			verboseln(i.prettyPrint());
+//			verboseln(cur.prettyPrint());
+			if (i.nextIntersectionWith(cur) != -1)
+				increaseRegWeight(weight, i.getPhysicalReg(), i);
+		}
+		
+		for (Interval i : unhandled) {
+//			verboseln(i.prettyPrint());
+//			verboseln(cur.prettyPrint());
+			if (i.isFixed() && i.nextIntersectionWith(cur) != -1)
+				increaseRegWeight(weight, i.getPhysicalReg(), i);
+		}
+		
+		verboseln("Register weight:");
+		for (Entry<MCRegister, Integer> e : weight.entrySet()) {
+			verboseln(e.getKey().prettyPrintREPOnly() + "=" + e.getValue());
+		}
+		
+		// find r such that w[r] is minimum
+		Integer minimumWeight = Integer.MAX_VALUE;
+		MCRegister candidateReg = null;
+		for (MCRegister reg : weight.keySet()) {
+			Integer i = weight.get(reg);
+			if (i < minimumWeight) {
+				minimumWeight = i;
+				candidateReg = reg;
+			}
+		}
+		
+		verboseln("Picking candidate:" + candidateReg.prettyPrintREPOnly());
+		
+		// if cur.weight < w[r] then
+		//   assign a memory location to cur and move cur to handled
+		if (intervalWeight.get(cur) < minimumWeight) {
+			verbose("Spill current: " + cur.getOrig().prettyPrintREPOnly());
+			
+			MCMemoryOperand mem = stack.spillInterval(cur);
+			cur.setSpill(mem);
+			
+			verboseln(" to " + mem.prettyPrint());
+			
+			currentCF.setReserveScratchRegs(1);
+			
+			handled.add(cur);
+		} else {
+			// move all active or inactive intervals to which r was assigned to handled
+			// assign mem locations to them
+			verboseln("Assign " + candidateReg.prettyPrintREPOnly() + " to current:" + cur.getOrig().prettyPrintREPOnly());
+			verboseln("Evacuating any active/inactive interval that is using " + candidateReg.prettyPrintREPOnly());
+			
+			for (int i = 0; i < active.size(); ) {
+				Interval it = active.get(i);
+				if (it.getPhysicalReg().equals(candidateReg)) {
+					verbose("Spill active:" + it.getOrig().prettyPrintREPOnly());
+					
+					active.remove(i);
+					
+					MCMemoryOperand mem = stack.spillInterval(it);
+					it.setSpill(mem);
+					handled.add(it);
+					
+					verboseln(" to " + mem.prettyPrint());
+					
+					currentCF.setReserveScratchRegs(1);
+					
+					continue;
+				}
 				
-				continue;
-			} else if (it.isLiveAt(pos)) {
-				active.remove(i);
-				inactive.add(it);
-				returnPhysicalReg(it);
+				i++;
+			}
+			for (int i = 0; i < inactive.size(); ) {
+				Interval it = inactive.get(i);
+				if (it.getPhysicalReg().equals(candidateReg)) {
+					verbose("Spill inactive:" + it.getOrig().prettyPrintREPOnly());
+					
+					inactive.remove(i);
+					
+					MCMemoryOperand mem = stack.spillInterval(it);
+					it.setSpill(mem);
+					handled.add(it);
+					
+					verboseln(" to " + mem.prettyPrint());
+					
+					currentCF.setReserveScratchRegs(1);
+					
+					continue;
+				}
 				
-				continue;
+				i++;
 			}
 			
-			i++;
+			// assert
+			if (cur.isFixed() && !cur.getPhysicalReg().equals(candidateReg)) {
+				UVMCompiler.error("Trying to reassign another register " + candidateReg.prettyPrintREPOnly() + " to a fixed interval " + cur.getOrig().prettyPrintREPOnly());
+			}
+			
+			// cur.reg <- r
+			cur.setPhysicalReg(candidateReg);
+			active.add(cur);
+			
+			if (cur.getDataType() == MCRegister.DATA_GPR)
+				freeGPRs.remove(candidateReg);
+			else if (cur.getDataType() == MCRegister.DATA_DP)
+				freeFPRs.remove(candidateReg);
+			else {
+				UVMCompiler.error("unimplemented data type when evacuating and re-assigning physical register");
+			}
 		}
+	}
+	
+	private void increaseRegWeight(HashMap<MCRegister, Integer> weight, MCRegister reg, Interval i) {
+		verboseln("increase reg weight for " + reg.prettyPrint() + " " + reg.hashCode() + " of interval " + i.hashCode());
+		
+		Integer w = null;
+		if (weight.containsKey(reg))
+			w = weight.get(reg);
+		else w = 0;
+		
+		if (w == Integer.MAX_VALUE || intervalWeight.get(i) == Integer.MAX_VALUE)
+			w = Integer.MAX_VALUE;
+		else w += intervalWeight.get(i);
+		weight.put(reg, w);
+	}
+	
+	private void initIntervalWeight() {		
+		for (AbstractMachineCode mc : currentCF.mc) {
+			if (mc.isPhi())
+				continue;
+			
+			// ops
+			for (int i = 0; i < mc.getNumberOfOperands(); i++) {
+				MCOperand op = mc.getOperand(i);
+				if (op instanceof MCRegister) {
+					MCRegister reg = (MCRegister) mc.getOperand(i);
+					increaseIntervalWeightForReg(reg);
+				}
+			}
+			
+			// define
+			MCRegister def = mc.getDefineAsReg();
+			if (def != null)
+				increaseIntervalWeightForReg(def);
+			
+			// implicit uses
+			for (int i = 0; i < mc.getNumberOfImplicitUses(); i++) {
+				MCRegister reg = (MCRegister) mc.getImplicitUse(i);
+				increaseIntervalWeightForReg(reg);
+			}
+			
+			// implicit defs
+			for (int i = 0; i < mc.getNumberOfImplicitDefines(); i++) {
+				MCRegister reg = (MCRegister) mc.getImplicitDefine(i);
+				increaseIntervalWeightForReg(reg);
+			}
+		}
+		
+		verboseln("--- Interval Weight --- initialized as:");
+		for (Entry<Interval, Integer> e : intervalWeight.entrySet()) {
+			verbose("Interval " + e.getKey().hashCode() + " with reg ");
+			verbose(e.getKey().getOrig().prettyPrint());
+			verbose("(" + e.getKey().getOrig().hashCode() + ")");
+			verbose("=");
+			verboseln(e.getValue());
+		}
+	}
+	
+	private void increaseIntervalWeightForReg(MCRegister reg) {
+		Interval i = currentCF.intervals.get(reg.REP());
+		
+		if (i == null)
+			return;
+//		if (i == null) {
+//			System.out.println("trying to find interval for " + reg.prettyPrintREPOnly());
+//			System.out.println("but didnt find it");
+//			UVMCompiler.error("error");
+//		}
+		
+		Integer weight = null;
+		if (intervalWeight.containsKey(i))
+			weight = intervalWeight.get(i);
+		else weight = new Integer(0);
+		
+		if (i.isFixed())
+			weight = Integer.MAX_VALUE;
+		else weight += 1;
+		intervalWeight.put(i, weight);
 	}
 
-	private void checkInactiveIntervals(int pos) {
-		for (int i = 0; i < inactive.size(); ) {
-			Interval it = inactive.get(i);
-			
-			if (it.getEnd() < pos) {
-				inactive.remove(i);
-				handled.add(it);
-				
-				continue;
-			} else if (it.isLiveAt(pos)) {
-				inactive.remove(i);
-				active.add(it);
-				
-				removePhysicalRegFromFree(it.getPhysicalReg());
-				
-				continue;
-			}
-			
-			i++;
-		}
-	}
+	private Set<MCRegister> getAllPhysicalRegisters(int dataType) {
+        HashSet<MCRegister> physRegisters = new HashSet<MCRegister>();
+        
+        if (dataType == MCRegister.DATA_GPR) {
+            // init physRegisters to all GPRs
+            for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfGPR() - RESERVE_SCRATCH_REGS; i++) {
+                MCRegister reg = currentCF.findOrCreateRegister(UVMCompiler.MCDriver.getGPRName(i), MCRegister.MACHINE_REG, dataType);
+                physRegisters.add(reg);
+            }
+        } else if (dataType == MCRegister.DATA_DP) {
+            // init physRegisters to double-precision FPRs
+            for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfFPR() - RESERVE_SCRATCH_REGS; i++) {
+                MCRegister reg = currentCF.findOrCreateRegister(UVMCompiler.MCDriver.getFPRName(i), MCRegister.MACHINE_REG, dataType);
+                physRegisters.add(reg);
+            }
+        } else if (dataType == MCRegister.DATA_SP) {
+            // init physRegisters to single-precision FPRs
+            UVMCompiler.error("unimplemented reg alloc for sp FPR");
+        } else {
+            UVMCompiler.error("unexpected interval data type: MEM");
+        }
+        
+        return physRegisters;
+    }
 
 	/**
 	 * https://www.usenix.org/legacy/event/jvm02/full_papers/alpern/alpern_html/node15.html
@@ -382,12 +510,14 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 		for (MCBasicBlock bb : cf.BBs) {
 			ArrayList<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
 			
-			for (AbstractMachineCode mc : cf.mc) {
+			for (AbstractMachineCode mc : bb.getMC()) {
 				verboseln("checking mc: " + mc.prettyPrintREPOnly());
 				
 				// we wont emit phi anyway
-				if (mc.isPhi())
-					continue;
+//				if (mc.isPhi()) {
+//					newMC.add(mc);
+//					continue;
+//				}
 				
 				// if this mc leaves a basic block (call/jump/fall-through/exception)
 				// store back the cached value
@@ -395,10 +525,12 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 					if (cachedSpilledGPR != null) {
 						AbstractMachineCode store = UVMCompiler.MCDriver.genMove(cachedSpilledGPR.getSpill(), scratchGPR);
 						newMC.add(store);
+						verboseln("  inserting store before jump: " + store.prettyPrintREPOnly());
 					}
 					if (cachedSpilledFPR != null) {
 						AbstractMachineCode store = UVMCompiler.MCDriver.genDPMove(cachedSpilledFPR.getSpill(), scratchFPR);
 						newMC.add(store);
+						verboseln("  inserting store before jump: " + store.prettyPrintREPOnly());
 					}
 				}
 				
@@ -408,6 +540,9 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 				for (int i = 0; i < mc.getNumberOfOperands(); i++) {
 					MCOperand op = mc.getOperand(i);
 					verboseln("  checking op: " + op.prettyPrint());
+					
+					if (op instanceof MCRegister && ((MCRegister) op).getType() == MCRegister.MACHINE_REG)
+						continue;
 					
 					if (op instanceof MCRegister) {
 						MCRegister reg = (MCRegister) mc.getOperand(i);
@@ -423,14 +558,20 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 							} else {
 								usingScratchRegisterInThisMC = true;
 								
+								
 								// if this temporary already in a scratch reg, simply use it
 								if (it.getDataType() == MCRegister.DATA_GPR) {
+									verboseln("  *** using scratch register! " + scratchGPR.prettyPrint());
+									
 									if (cachedSpilledGPR == it)
 										mc.setOperand(i, scratchGPR);
 									else {
 										// store current scratch GPR
 										AbstractMachineCode store = UVMCompiler.MCDriver.genMove(cachedSpilledGPR.getSpill(), scratchGPR);
 										AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchGPR, it.getSpill());
+										
+										verboseln("  insert store:" + store.prettyPrintREPOnly());
+										verboseln("  insert load :" + load.prettyPrintREPOnly());
 										newMC.add(store);
 										newMC.add(load);
 										
@@ -439,11 +580,16 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 										mc.setOperand(i, scratchGPR);
 									}
 								} else if (it.getDataType() == MCRegister.DATA_DP) {
+									verboseln("  *** using scratch register! " + scratchFPR.prettyPrint());
+									
 									if (cachedSpilledFPR == it)
 										mc.setOperand(i, scratchFPR);
 									else {
 										AbstractMachineCode store = UVMCompiler.MCDriver.genMove(cachedSpilledFPR.getSpill(), scratchFPR);
 										AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchFPR, it.getSpill());
+										
+										verboseln("  insert store:" + store.prettyPrintREPOnly());
+										verboseln("  insert load :" + load.prettyPrintREPOnly());
 										newMC.add(store);
 										newMC.add(load);
 										
@@ -459,7 +605,9 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 				
 				// check define
 				MCRegister def = mc.getDefineAsReg();
-				if (def != null) {
+				if (def != null && def.getType() != MCRegister.MACHINE_REG) {
+					verboseln("  checking def:" + def.prettyPrint());
+					
 					Interval it = cf.intervals.get(def.REP());
 					// if this temporary gets a physical reg, simply replace
 					if (it.getSpill() == null) {
@@ -472,6 +620,8 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 							
 							// if this temporary already in a scratch reg, simply use it
 							if (it.getDataType() == MCRegister.DATA_GPR) {
+								verboseln("  *** using scratch register! " + scratchGPR.prettyPrint());
+								
 								if (cachedSpilledGPR == it)
 									mc.setDefine(scratchGPR);
 								else {
@@ -483,16 +633,24 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 									}
 									
 									// store current scratch GPR
-									AbstractMachineCode store = UVMCompiler.MCDriver.genMove(cachedSpilledGPR.getSpill(), scratchGPR);
-									AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchGPR, it.getSpill());
-									newMC.add(store);
-									newMC.add(load);
+									if (cachedSpilledGPR != null) {
+										AbstractMachineCode store = UVMCompiler.MCDriver.genMove(cachedSpilledGPR.getSpill(), scratchGPR);
+										verboseln("  insert store:" + store.prettyPrintREPOnly());
+										newMC.add(store);
+									}
+									
+									// do not need to load since we will put value into scratch register
+//									AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchGPR, it.getSpill());;
+//									verboseln("  insert load :" + load.prettyPrintREPOnly());
+//									newMC.add(load);
 									
 									cachedSpilledGPR = it;
 									
 									mc.setDefine(scratchGPR);
 								}
 							} else if (it.getDataType() == MCRegister.DATA_DP) {
+								verboseln("  *** using scratch register! " + scratchFPR.prettyPrint());
+								
 								if (cachedSpilledFPR == it)
 									mc.setDefine(scratchFPR);
 								else {
@@ -503,10 +661,15 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 										UVMCompiler.error("already using the scratch register in this mc, increase number of reserved registers");
 									}
 									
-									AbstractMachineCode store = UVMCompiler.MCDriver.genMove(cachedSpilledFPR.getSpill(), scratchFPR);
-									AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchFPR, it.getSpill());
-									newMC.add(store);
-									newMC.add(load);
+									if (cachedSpilledFPR != null) {
+										AbstractMachineCode store = UVMCompiler.MCDriver.genMove(cachedSpilledFPR.getSpill(), scratchFPR);
+										verboseln("  insert store:" + store.prettyPrintREPOnly());
+										newMC.add(store);
+									}
+									
+//									AbstractMachineCode load  = UVMCompiler.MCDriver.genMove(scratchFPR, it.getSpill());;
+//									verboseln("  insert load :" + load.prettyPrintREPOnly());
+//									newMC.add(load);
 									
 									cachedSpilledFPR = it;
 								}
@@ -517,6 +680,7 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 					} // end of checking define
 				}
 				
+				verboseln("  => " + mc.prettyPrintOneline());
 				newMC.add(mc);
 			}
 			
