@@ -91,6 +91,10 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
         if (isFixedRegister(x) && !isFixedRegister(y))
             return join(cf, bb, mc, y, x);
         
+        if (isNonGeneralPurposeMachineReg(x) || isNonGeneralPurposeMachineReg(y)) {
+        	return false;
+        }
+        
         // i <- interval[REP(x).n]
         Interval intervalX = cf.intervals.get(x.REP());
         LivenessRange i = intervalX.getLiveness();
@@ -176,5 +180,19 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
         if (reg.getREPType() == MCRegister.OTHER_SYMBOL_REG ||  reg.getREPType() == MCRegister.RES_REG)
             return false;
         else return true;
+    }
+    
+    
+    public static boolean isNonGeneralPurposeMachineReg(MCRegister reg) {
+    	if (reg.getREPType() == MCRegister.MACHINE_REG) {
+    		for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfGPR(); i++) {
+    			if (reg.REP().getName().equals(UVMCompiler.MCDriver.getGPRName(i)))
+    				return false;
+    		}
+    		
+    		return true;
+    	}
+    	
+    	return false;
     }
 }

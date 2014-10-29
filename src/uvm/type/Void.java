@@ -24,4 +24,9 @@ public class Void extends Type {
         return 0;
     }
 
+	@Override
+	public int alignmentInBytes() {
+		return 0;
+	}
+
 }

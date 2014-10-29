@@ -12,7 +12,7 @@ public class X64AllocateParamRetRegister extends AbstractMCCompilationPhase{
     
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
-        X64CallConvention cc = new X64CallConvention();
+        X64UVMCallConvention cc = new X64UVMCallConvention();
         cc.calleeInitParameterRegisters(cf);
         cc.calleeInitReturnRegister(cf);
     }

@@ -28,4 +28,9 @@ public class Float extends Type {
         return 1;
     }
 
+	@Override
+	public int alignmentInBytes() {
+		return 4;
+	}
+
 }

@@ -30,7 +30,7 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 	@Override
 	protected void visitCompiledFunction(CompiledFunction cf) {
 		linearScan(cf);
-		insertSpillingCode(cf);
+		replaceRegistersAndInsertSpillingCode(cf);
 	}
 
 	StackManager stack;
@@ -238,6 +238,11 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 	}
 
 	private void assignPhysReg(Interval cur, LinkedList<MCRegister> f) {
+		// if cur is fixed with special registers		
+		if (cur.isFixed() && RegisterCoalescing.isNonGeneralPurposeMachineReg(cur.getPhysicalReg())) {
+			return;
+		}
+		
 		MCRegister candidate = null;
 		
 		if (cur.isFixed()) {
@@ -494,7 +499,7 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 	 * https://www.usenix.org/legacy/event/jvm02/full_papers/alpern/alpern_html/node15.html
 	 * @param cf
 	 */
-	private void insertSpillingCode(CompiledFunction cf) {
+	private void replaceRegistersAndInsertSpillingCode(CompiledFunction cf) {
 		verboseln("--- inserting spilling code and replace op for " + cf.getOriginFunction().getName() + " ---");
 		
 		MCRegister scratchGPR = cf.findOrCreateRegister(
@@ -543,8 +548,6 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 							spilledTempsThatNeedsReg++;
 					}
 				}
-				
-				UVMCompiler._assert(spilledTempsThatNeedsReg <= RESERVE_SCRATCH_REGS, "mc requires more scratch registers than provided");
 				
 				boolean useMemOpWheneverPossible = (spilledTempsThatNeedsReg <= RESERVE_SCRATCH_REGS) && spilledTemps > spilledTempsThatNeedsReg;
 				
@@ -632,6 +635,23 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 									mc.setOperand(i, scratchFPR);
 								} else {
 									UVMCompiler.error("unimplemented data type in inserting spilling code");
+								}
+							}
+						}
+					} // end of (if op instanceof MCRegister)
+					else if (op instanceof MCMemoryOperand) {
+						MCMemoryOperand memOp = (MCMemoryOperand) op;
+						
+						if (memOp.getBase() != null) {
+							MCRegister base = memOp.getBase();
+							
+							if (base.getREPType() != MCRegister.MACHINE_REG) {
+								Interval it = cf.intervals.get(base.REP());
+								if (it.getPhysicalReg() != null) {
+									memOp.setBase(it.getPhysicalReg());
+								} else {
+									System.out.println(base.prettyPrintREPOnly() + " in " + memOp.prettyPrint() + " hasnt been assigned a phys reg");
+									UVMCompiler.error("Error in replacing register");
 								}
 							}
 						}

@@ -8,6 +8,8 @@ import java.util.Set;
 import uvm.CompiledFunction;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
+import uvm.mc.MCDispMemoryOperand;
+import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
 import uvm.mc.linearscan.Interval;
@@ -53,7 +55,7 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
                 }
                 
                 if (mc.getDefine() != null) {
-                    defined.add(mc.getDefineAsReg().REP());                    
+                    defined.add(mc.getDefineAsReg().REP());
                 }
             }
             
@@ -90,6 +92,8 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
 	                    // this mc uses a register, so the register has a range that ends with this mc
 	                    if (op instanceof MCRegister) {
 	                        addPosition(mc.prettyPrintOneline(), cf, ((MCRegister) op).REP(), new Position(mc.sequence, Position.USE, mc, j, mc.isOpRegOnly(j)));
+	                    } else if (op instanceof MCMemoryOperand) {
+	                    	addPosition(mc.prettyPrintOneline(), cf, ((MCMemoryOperand)op).getBase(), new Position(mc.sequence, Position.USE, mc, j, true));
 	                    }
 	                }
 	                

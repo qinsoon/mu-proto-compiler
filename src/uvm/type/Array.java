@@ -32,4 +32,9 @@ public class Array extends Type {
         return 0;
     }
 
+	@Override
+	public int alignmentInBytes() {
+		return eleType.alignmentInBytes();
+	}
+
 }

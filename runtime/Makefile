@@ -1,12 +1,20 @@
-C_FILES := $(wildcard **/*.c)
-OBJ_FILES := $(addprefix obj/, $(notdir $(C_FILES:.c=.o)))
-CC_FLAGS := -O3
-CC := gcc
+LIBS  = 
+CFLAGS = -O3
+CC = gcc
+LD = $(CC)
+AR = ar
 
-all : dir $(OBJ_FILES)
+# Should be equivalent to your list of C files, if you don't build selectively
+SRC = $(wildcard *.c)
+OBJ = $(patsubst %.c, %.o, $(SRC))
 
-dir:
-	mkdir -p obj
+all : uvmrt.a
 
-$(OBJ_FILES) : $(C_FILES)
-	$(CC) $(CC_FLAGS) -c -o $@ $<
+clean :
+	rm *.o uvmrt.a
+	
+uvmrt.a : $(OBJ)
+	$(AR) rcs $@ $^
+	
+$(OBJ) : $(SRC)
+	$(CC) -c $^ $(CFLAGS) $(LIBS)

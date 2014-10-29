@@ -24,7 +24,7 @@ import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
 import uvm.mc.linearscan.Interval;
 
-public class X64CallConvention {
+public class X64UVMCallConvention {
     public void calleeInitParameterRegisters(CompiledFunction cf) {
         // set param_regi to the ith of param registers if suitable
         

@@ -1,0 +1,13 @@
+// alloca
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+  BRANCH %body
+
+  .label %body:
+  %ret = ALLOCA <int<64>>
+  STORE <int<64>> %ret 1021
+  %ld = LOAD <int<64>> %ret
+  
+  RET <int<32>> %ld
+}

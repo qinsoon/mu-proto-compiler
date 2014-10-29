@@ -6,6 +6,9 @@ import uvm.MicroVM;
 import uvm.Type;
 
 public class Int extends Type {
+	public static final Int I1 = findOrCreate(1);
+	public static final Int I64 = findOrCreate(64);
+	
     int size;
     
     public static Int findOrCreate(int size) {
@@ -57,4 +60,14 @@ public class Int extends Type {
     public int fitsInFPR() {
         return 0;
     }
+
+	@Override
+	public int alignmentInBytes() {
+		int size = sizeInBytes();
+		int align = 1;
+		while (align < size) {
+			align *= 2;
+		}
+		return align;
+	}
 }

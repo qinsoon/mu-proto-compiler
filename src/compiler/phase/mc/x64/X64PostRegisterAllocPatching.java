@@ -11,7 +11,7 @@ public class X64PostRegisterAllocPatching extends AbstractMCCompilationPhase {
 
 	@Override
 	protected void visitCompiledFunction(CompiledFunction cf) {
-		X64CallConvention.postRegAllocPatching(cf);
+		X64UVMCallConvention.postRegAllocPatching(cf);
 	}
 
 }

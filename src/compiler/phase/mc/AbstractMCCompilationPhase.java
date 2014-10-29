@@ -12,10 +12,13 @@ public abstract class AbstractMCCompilationPhase extends AbstractCompilationPhas
     
     @Override
     public void execute() {
-        verboseln("=========== " + name + " ===========\n");
+    	verboseln("=========== " + name + " ===========\n");
+    	
+    	preChecklist();
         for (CompiledFunction cf : MicroVM.v.compiledFuncs) {
             visitCompiledFunction(cf);
         }
+        postChecklist();
     }
 
     protected abstract void visitCompiledFunction(CompiledFunction cf);

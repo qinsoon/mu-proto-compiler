@@ -6,6 +6,7 @@ import java.util.List;
 import org.antlr.v4.runtime.misc.NotNull;
 
 import burg.Burg.*;
+import burg.Burg.CCTOperand;
 import burg.burgParser.McOperandContext;
 import burg.burgParser.McRegContext;
 import burg.burgParser.NodeContext;
@@ -318,6 +319,9 @@ public class burgListenerImpl extends burgBaseListener {
             else if (mcRegCtx instanceof burgParser.McOpdMachineRegContext) {
                 ret = OpdRegister.findOrCreate(mcRegCtx.getText(), OpdRegister.MACHINE_REG);
             }
+        } else if (operandCtx instanceof burgParser.McOpdAddressContext) {
+        	CCTOperand base = getOperand(((burgParser.McOpdAddressContext) operandCtx).mcOperand());
+        	ret = new OpdMemOperand(base, 0);
         }
         
         return ret;

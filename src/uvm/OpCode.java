@@ -83,6 +83,7 @@ public abstract class OpCode {
     // call
     public static final int CALL    = 0x60;
     public static final int TAILCALL= 0x61;
+    public static final int CCALL	= 0x62;
     
     // exception
     public static final int THROW   = 0x70;

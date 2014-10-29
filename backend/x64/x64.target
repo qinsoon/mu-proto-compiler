@@ -279,6 +279,36 @@ ireg : CALL(label)
 > call P[0] -> %res_reg
 6
 
+op : CCALL(label)
+> call P[0] -> %res_reg
+5
+
+ireg : CCALL(label)
+> call P[0] -> %res_reg
+6
+
+// ********************************
+// MEMORY ALLOCATION / ACCESS
+// ********************************
+
+ireg : ALLOCA(iimm)
+> sub %rsp, P[0] -> %rsp
+> mov %rsp -> %res_reg
+2
+
+op : ALLOCA(iimm)
+> sub %rsp, P[0] -> %rsp
+> mov %rsp -> %res_reg
+2
+
+ireg : LOAD(ireg)
+> load_mov *P[0] -> %res_reg
+5
+
+op : STORE(ireg ivalue)
+> store_mov *P[0], P[1]
+6
+
 // ********************************
 // NON-EMIT RULEs
 // ********************************
@@ -428,6 +458,16 @@ label : LABEL
 	"cmoveqq %s,%s", OP[0], OP_REG;
 }
 
+.mc_def load_mov = {
+	GPR = GPR/MEM;
+	"movq %s,%s", OP[0], OP_REG;
+}
+
+.mc_def store_mov = {
+	GPR/MEM GPR;
+	"movq %s,%s", OP[1], OP[0];
+}
+
 // ********************************
 // COMPARISON
 // ********************************
@@ -522,6 +562,11 @@ label : LABEL
 .mc_def xor = {
 	GPR = GPR GPR/MEM;
 	"xorq %s,%s", OP[1], OP[0];
+}
+
+.mc_def sub = {
+	GPR = GPR GPR/MEM;
+	"subq %s,%s", OP[1], OP[0];
 }
 
 // ********************************

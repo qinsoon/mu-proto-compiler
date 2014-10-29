@@ -14,6 +14,12 @@ public abstract class MCMemoryOperand extends MCOperand {
     // number of bytes being accessed (1,2,4,8)
     byte size;
     
+    public MCMemoryOperand() {}
+    
+    public MCMemoryOperand(MCRegister base) {
+    	this.base = base;
+    }
+    
     public MCRegister getBase() {
         return base;
     }

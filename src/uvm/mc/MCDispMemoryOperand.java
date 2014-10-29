@@ -1,7 +1,20 @@
 package uvm.mc;
 
 public class MCDispMemoryOperand extends MCMemoryOperand {
-    int disp = 0;
+	int disp = 0;
+	
+    public MCDispMemoryOperand(MCRegister base, int disp) {
+		super(base);
+		this.disp = disp;
+	}
+    
+    public MCDispMemoryOperand(MCRegister base) {
+    	super(base);
+    }
+    
+    public MCDispMemoryOperand() {
+    	super();
+    }
     
     @Override
     public String prettyPrint() {

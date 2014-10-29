@@ -4,6 +4,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 import burm.mc.X64Driver;
 import uvm.CompiledFunction;
@@ -12,6 +16,7 @@ import compiler.UVMCompiler;
 import compiler.phase.AbstractCompilationPhase;
 import uvm.*;
 import uvm.mc.*;
+import uvm.runtime.UVMRuntime;
 
 public class CodeEmission extends AbstractMCCompilationPhase {
     String dir;
@@ -19,7 +24,20 @@ public class CodeEmission extends AbstractMCCompilationPhase {
     public CodeEmission(String name, String dir, boolean verbose) {
         super(name, verbose);
         this.dir = dir;
-    }    
+    }
+    
+    @Override
+    protected void postChecklist() {
+    	File runtime = new File(UVMRuntime.LIB_PATH);
+    	Path dst = Paths.get(dir + "/" + UVMRuntime.LIB_NAME);
+    	
+    	try {
+			Files.copy(runtime.toPath(), dst, StandardCopyOption.REPLACE_EXISTING);
+		} catch (IOException e) {
+			e.printStackTrace();
+			UVMCompiler.error("error copying uvm runtime");
+		}
+    }
 
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {

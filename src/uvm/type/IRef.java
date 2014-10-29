@@ -3,18 +3,24 @@ package uvm.type;
 import uvm.MicroVM;
 import uvm.Type;
 
-public class IRef extends Type {
+public class IRef extends AbstractPointerType {
     Type referenced;
+    
+    public static IRef findOrCreateIRef(Type referencedType) {
+    	for (Type t : MicroVM.v.types.values()) {
+    		if (t instanceof IRef && ((IRef) t).referenced.equals(referencedType))
+    			return (IRef) t;
+    	}
+    	
+    	IRef ret = new IRef(referencedType);
+    	MicroVM.v.declareType(null, referencedType);
+    	
+    	return ret;
+    }
     
     protected IRef(Type referenced) {
         super();
         this.referenced = referenced;
-    }
-    
-    @Override
-    public int size() {
-        // actual pointer + base pointer
-        return MicroVM.POINTER_SIZE * 2;
     }
 
     @Override
@@ -22,14 +28,8 @@ public class IRef extends Type {
         return "iref<" + referenced.prettyPrint() + ">";
     }
 
-    @Override
-    public int fitsInGPR() {
-        return 1;
-    }
-
-    @Override
-    public int fitsInFPR() {
-        return 0;
-    }
+	public Type getReferenced() {
+		return referenced;
+	}
 
 }

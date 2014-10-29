@@ -27,14 +27,17 @@ import uvm.Register;
 import uvm.Type;
 import uvm.Value;
 import uvm.inst.InstAdd;
+import uvm.inst.InstAlloca;
 import uvm.inst.InstBranch;
 import uvm.inst.InstBranch2;
+import uvm.inst.InstCCall;
 import uvm.inst.InstCall;
 import uvm.inst.InstEq;
 import uvm.inst.InstFAdd;
 import uvm.inst.InstFDiv;
 import uvm.inst.InstFOlt;
 import uvm.inst.InstFPToSI;
+import uvm.inst.InstLoad;
 import uvm.inst.InstParam;
 import uvm.inst.InstPhi;
 import uvm.inst.InstRet;
@@ -43,8 +46,11 @@ import uvm.inst.InstSgt;
 import uvm.inst.InstShl;
 import uvm.inst.InstSlt;
 import uvm.inst.InstSrem;
+import uvm.inst.InstStore;
 import uvm.metadata.Const;
+import uvm.type.IRef;
 import uvm.type.Int;
+import uvm.type.Ref;
 
 public abstract class ASTHelper {
     private ASTHelper() {}
@@ -86,13 +92,24 @@ public abstract class ASTHelper {
         if (typeContext.typeConstructor() != null) {
             // defining a type via type descriptor
             TypeConstructorContext ctx = typeContext.typeConstructor();
+            // int
             if (ctx instanceof parser.uIRParser.IntTypeContext) {
                 int size = Integer.parseInt(
                         ((parser.uIRParser.IntTypeContext) ctx).intImmediate().getText());
                 return Int.findOrCreate(size);
-            } else if (ctx instanceof parser.uIRParser.DoubleTypeContext) {
+            } 
+            // double
+            else if (ctx instanceof parser.uIRParser.DoubleTypeContext) {
                 return uvm.type.Double.DOUBLE;
-            }            
+            }        
+            // ref
+            else if (ctx instanceof parser.uIRParser.RefTypeContext) {
+            	return Ref.findOrCreateRef(getType(((parser.uIRParser.RefTypeContext) ctx).type()));
+            }
+            // iref
+            else if (ctx instanceof parser.uIRParser.IRefTypeContext) {
+            	return IRef.findOrCreateIRef(getType(((parser.uIRParser.IRefTypeContext) ctx).type()));
+            }
             else {
                 throw new ASTParsingException("Missing implementation on " + ctx.getClass().toString());
             }
@@ -277,7 +294,55 @@ public abstract class ASTHelper {
             Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), toType);
             node.setDefReg(def);
             return node;
-        } else if (inst instanceof parser.uIRParser.InstCallContext) {
+        } 
+        /*
+         * memory allocation
+         */
+        else if (inst instanceof parser.uIRParser.InstAllocaContext) {
+        	parser.uIRParser.InstAllocaContext allocaCtx = (parser.uIRParser.InstAllocaContext) inst;
+        	
+        	Type t = getType(allocaCtx.type());
+        	
+        	Instruction node = new InstAlloca(t);
+        	
+        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), t);
+        	node.setDefReg(def);
+        	return node;
+        }
+        /*
+         * memory access
+         */
+        else if (inst instanceof parser.uIRParser.InstLoadContext) {
+        	parser.uIRParser.InstLoadContext loadCtx = (parser.uIRParser.InstLoadContext) inst;
+        	
+        	Type referentType = getType(loadCtx.type());
+        	IRef irefType = IRef.findOrCreateIRef(referentType);
+        	
+        	Value loc = getValue(f, loadCtx.value(), irefType);
+        	
+        	Instruction node = new InstLoad(irefType, loc);
+        	
+        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), referentType);
+        	node.setDefReg(def);
+        	return node;
+        }
+        else if (inst instanceof parser.uIRParser.InstStoreContext) {
+        	parser.uIRParser.InstStoreContext storeCtx = (parser.uIRParser.InstStoreContext) inst;
+        	
+        	Type referentType = getType(storeCtx.type());
+        	IRef irefType = IRef.findOrCreateIRef(referentType);
+        	
+        	Value loc = getValue(f, storeCtx.value(0), irefType);
+        	Value value = getValue(f, storeCtx.value(1), referentType);
+        	
+        	Instruction node = new InstStore(irefType, loc, value);
+        	
+        	return node;
+        }
+        /*
+         * call
+         */
+        else if (inst instanceof parser.uIRParser.InstCallContext) {
             parser.uIRParser.InstCallContext callCtx = (parser.uIRParser.InstCallContext) inst;
             
             parser.uIRParser.FuncCallBodyContext calleeCtx = callCtx.funcCallBody();
@@ -301,6 +366,36 @@ public abstract class ASTHelper {
             Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), sig.getReturnType());
             node.setDefReg(def);
             return node;
+        }
+        else if (inst instanceof parser.uIRParser.InstCCallContext) {
+        	parser.uIRParser.InstCCallContext ccallCtx = (parser.uIRParser.InstCCallContext) inst;
+        	
+        	parser.uIRParser.FuncCallBodyContext calleeCtx = ccallCtx.funcCallBody();
+        	
+        	// call conv
+        	int cc = -1;
+        	parser.uIRParser.CallConvContext ccCtx = ccallCtx.callConv();
+        	if (ccCtx instanceof parser.uIRParser.CCALL_DEFAULT_CCContext)
+        		cc = InstCCall.CC_DEFAULT;
+        	
+        	// func name
+        	String cFuncName = getIdentifierName(calleeCtx.value().IDENTIFIER(), true);
+        	
+        	// signature
+        	FunctionSignature sig = getFunctionSignature(calleeCtx.funcSig());
+        	
+        	parser.uIRParser.ArgsContext argsCtx = calleeCtx.args();
+        	List<uvm.Value> args = new ArrayList<uvm.Value>();
+        	for (int i = 0; i < argsCtx.value().size(); i++) {
+        		parser.uIRParser.ValueContext valueCtx = argsCtx.value(i);
+        		args.add(getValue(f, valueCtx, sig.getParamTypes().get(i)));
+        	}
+        	
+        	Instruction node = new InstCCall(cc, sig, cFuncName, args);
+        	
+        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), sig.getReturnType());
+        	node.setDefReg(def);
+        	return node;
         }
         
         else {

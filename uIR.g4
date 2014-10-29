@@ -166,7 +166,7 @@ args
     :   '(' value* ')'
     ;
 
-callConv : 'DEFAULT' ;
+callConv : 'DEFAULT'    # CCALL_DEFAULT_CC;
 
 binOps : iBinOps | fBinOps ;
 

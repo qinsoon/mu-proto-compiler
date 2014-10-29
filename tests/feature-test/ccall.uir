@@ -1,0 +1,10 @@
+// c call
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+  BRANCH %body
+
+  .label %body:
+  %ret = CCALL DEFAULT <int<32> (int<32>)> @_c_increase (1)
+  RET <int<32>> %ret
+}

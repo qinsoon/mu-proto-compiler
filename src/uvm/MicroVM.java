@@ -11,6 +11,9 @@ public class MicroVM {
     
     private MicroVM() {}
     
+    /*
+     * TYPES
+     */
     public HashMap<String, Type> types = new HashMap<String, Type>();
     
     public void declareType(String name, Type t) {
@@ -18,6 +21,9 @@ public class MicroVM {
         System.out.println("declared type: " + t);
     }
     
+    /*
+     * FUNCTIONS
+     */
     public HashMap<String, Function> funcs = new HashMap<String, Function>();
     
     public void declareFunc(String name, Function f) {
@@ -29,9 +35,27 @@ public class MicroVM {
         return funcs.get(name);
     }
     
+    /*
+     * COMPILED FUNCTIONS
+     */    
     public List<CompiledFunction> compiledFuncs = new ArrayList<CompiledFunction>();
     
     public void compiledFunc(CompiledFunction cf) {
         compiledFuncs.add(cf);
+    }
+    
+    /*
+     * GLOBAL LABELS
+     */
+    public HashMap<String, Label> globalLabels = new HashMap<String, Label>();
+    
+    public Label findOrCreateGlobalLabel(String label) {
+    	Label res = globalLabels.get(label);
+    	if (res == null) {
+    		res = new Label(label);
+    		globalLabels.put(label, res);
+    	}
+    	
+    	return res;
     }
 }

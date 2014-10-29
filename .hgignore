@@ -6,6 +6,8 @@ syntax: glob
 *.s
 *.class
 *.out
+*.o
+*.a
 bm_run
 bin
 emit

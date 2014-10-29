@@ -12,7 +12,24 @@ public abstract class Type {
         typeCount++;
     }
     
+    /**
+     * bits 
+     * @return
+     */
     public abstract int size();
+    
+    /**
+     * sizeof in bytes
+     */
+    public final int sizeInBytes() {
+    	return size() % 8 == 0 ? size() / 8 : size() / 8 + 1;
+    }
+    
+    /**
+     * alignment in bytes
+     * @return
+     */
+    public abstract int alignmentInBytes();
     
     public int getID() {
         return ID;

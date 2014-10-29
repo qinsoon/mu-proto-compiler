@@ -1,7 +1,15 @@
 package uvm.mc;
 
 public class MCLabeledMemoryOperand extends MCMemoryOperand {
-    // displacement
+    public MCLabeledMemoryOperand(MCRegister base) {
+		super(base);
+	}
+
+	public MCLabeledMemoryOperand() {
+		super();
+	}
+
+	// displacement
     MCLabel dispLabel = null; // displacement represented by a label
     
     @Override

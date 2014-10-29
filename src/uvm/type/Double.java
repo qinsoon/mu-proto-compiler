@@ -29,4 +29,9 @@ public class Double extends Type {
         return 1;
     }
 
+	@Override
+	public int alignmentInBytes() {
+		return 8;
+	}
+
 }

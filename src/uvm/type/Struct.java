@@ -44,4 +44,17 @@ public class Struct extends Type {
         return 0;
     }
 
+    int align = 0;
+	@Override
+	public int alignmentInBytes() {
+		if (align != 0)
+			return align;
+		
+		for (Type t : types)
+			if (align < t.alignmentInBytes())
+				align = t.alignmentInBytes();
+		
+		return align;
+	}
+
 }

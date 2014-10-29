@@ -6,12 +6,14 @@ import uvm.BasicBlock;
 import uvm.Function;
 import uvm.IRTreeNode;
 import uvm.Instruction;
+import uvm.IntImmediate;
 import uvm.Label;
 import uvm.MicroVM;
 import uvm.OpCode;
 import uvm.Register;
 import uvm.Value;
 import uvm.inst.*;
+import uvm.type.Int;
 
 public class IRTreeGeneration extends AbstractCompilationPhase{
     public IRTreeGeneration(String name, boolean verbose) {
@@ -76,6 +78,14 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
             InstCall call = (InstCall) inst;
             
             inst.addChild(call.getCallee().getFuncLabel());
+        } else if (inst instanceof InstCCall) {
+        	InstCCall ccall = (InstCCall) inst;
+        	
+        	inst.addChild(MicroVM.v.findOrCreateGlobalLabel(ccall.getFunc()));
+        } else if (inst instanceof InstAlloca) {
+        	InstAlloca alloca = (InstAlloca) inst;
+        	
+        	inst.addChild(new IntImmediate(Int.I64, (long) alloca.getType().alignmentInBytes()));
         }
         
         else {

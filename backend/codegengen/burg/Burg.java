@@ -389,7 +389,7 @@ public class Burg {
                     code.appendStmtln(String.format("%s.setNodeIndex(node.getId())", var));
                     
                     if (mc.reg != null)
-                        code.appendStmtln(String.format("%s.setDefine((MCRegister)%s)", var, getOperandCreation(mc.reg, mc.op.resDataType)));
+                        code.appendStmtln(String.format("%s.setDefine(%s)", var, getOperandCreation(mc.reg, mc.op.resDataType)));
                     
                     code.appendStmtln(String.format(
                             "ret.add(%s)", var));
@@ -542,7 +542,13 @@ public class Burg {
                         dataType);
                 break;
             }
-        } else {
+        }
+        else if (operand instanceof OpdMemOperand) {
+        	newOperandStr = String.format(
+        			"new MCDispMemoryOperand((MCRegister) %s)", getOperandCreation(((OpdMemOperand) operand).base, dataType));
+        }
+        
+        else {
             newOperandStr = getCompileTimeOperand(operand, dataType);
         }
         
@@ -704,6 +710,16 @@ public class Burg {
         OpdIntImmediate(long value) {
             this.value = value;
         }
+    }
+    
+    static class OpdMemOperand extends CCTOperand {
+    	CCTOperand base;
+    	long disp;
+    	
+    	OpdMemOperand(CCTOperand base, long disp) {
+    		this.base = base;
+    		this.disp = disp;
+    	}
     }
     
     static class OpdRegister extends CCTOperand {   
