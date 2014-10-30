@@ -8,6 +8,13 @@ public class Double extends Type {
     protected Double() {
         super();
     }
+    
+    @Override
+    public boolean equals(Object o) {
+    	if (o instanceof Double)
+    		return true;
+    	else return false;
+    }
 
     @Override
     public int size() {
@@ -28,10 +35,4 @@ public class Double extends Type {
     public int fitsInFPR() {
         return 1;
     }
-
-	@Override
-	public int alignmentInBytes() {
-		return 8;
-	}
-
 }

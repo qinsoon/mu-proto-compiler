@@ -12,6 +12,7 @@ import uvm.Function;
 import uvm.FunctionSignature;
 import uvm.Instruction;
 import uvm.MicroVM;
+import uvm.Type;
 import uvm.metadata.Const;
 import compiler.UVMCompiler;
 
@@ -22,6 +23,21 @@ public class uIRListenerImpl extends uIRBaseListener {
     List<BasicBlock> BBs;
     
     BasicBlock curBB;
+    
+    @Override
+    public void exitTypeDef(@NotNull uIRParser.TypeDefContext ctx) {
+    	try {
+	    	String typeID = ASTHelper.getIdentifierName(ctx.IDENTIFIER(), true);
+	    	if (MicroVM.v.types.containsKey(typeID)) {
+	    		UVMCompiler.error("duplicate type def on " + typeID);
+	    	} else {
+				Type t = ASTHelper.getType(ctx.type());
+				MicroVM.v.types.put(typeID, t);
+	    	}
+    	} catch (Exception e) {
+    		UVMCompiler.error("exception in processing typedef: " + e.getMessage());
+    	}
+    }
     
     @Override
     public void enterFuncDef(@NotNull uIRParser.FuncDefContext ctx) {

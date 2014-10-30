@@ -6,7 +6,15 @@ public class Array extends Type {
     Type eleType;
     int length;
     
-    protected Array(Type eleType, int length) {
+    public Type getEleType() {
+		return eleType;
+	}
+
+	public int getLength() {
+		return length;
+	}
+
+	protected Array(Type eleType, int length) {
         super();
         this.eleType = eleType;
         this.length = length;
@@ -31,10 +39,5 @@ public class Array extends Type {
     public int fitsInFPR() {
         return 0;
     }
-
-	@Override
-	public int alignmentInBytes() {
-		return eleType.alignmentInBytes();
-	}
 
 }

@@ -7,6 +7,13 @@ public class Float extends Type {
     protected Float() {
         super();
     }
+    
+    @Override
+    public boolean equals(Object o) {
+    	if (o instanceof Float)
+    		return true;
+    	return false;
+    }
 
     @Override
     public int size() {
@@ -27,10 +34,4 @@ public class Float extends Type {
     public int fitsInFPR() {
         return 1;
     }
-
-	@Override
-	public int alignmentInBytes() {
-		return 4;
-	}
-
 }

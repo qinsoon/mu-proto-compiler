@@ -37,6 +37,7 @@ import uvm.inst.InstFAdd;
 import uvm.inst.InstFDiv;
 import uvm.inst.InstFOlt;
 import uvm.inst.InstFPToSI;
+import uvm.inst.InstGetFieldIRef;
 import uvm.inst.InstLoad;
 import uvm.inst.InstParam;
 import uvm.inst.InstPhi;
@@ -51,6 +52,7 @@ import uvm.metadata.Const;
 import uvm.type.IRef;
 import uvm.type.Int;
 import uvm.type.Ref;
+import uvm.type.Struct;
 
 public abstract class ASTHelper {
     private ASTHelper() {}
@@ -110,12 +112,24 @@ public abstract class ASTHelper {
             else if (ctx instanceof parser.uIRParser.IRefTypeContext) {
             	return IRef.findOrCreateIRef(getType(((parser.uIRParser.IRefTypeContext) ctx).type()));
             }
+            // struct
+            else if (ctx instanceof parser.uIRParser.StructTypeContext) {
+            	ArrayList<Type> types = new ArrayList<Type>();
+            	for (TypeContext typeCtx : ((parser.uIRParser.StructTypeContext) ctx).type()) {
+            		types.add(getType(typeCtx));
+            	}
+            	return Struct.findOrCreateStruct(types);
+            }
             else {
                 throw new ASTParsingException("Missing implementation on " + ctx.getClass().toString());
             }
         } else {
             // referring a type via IDENTIFIER
-            throw new ASTParsingException("Missing implementation on type by IDENTIFIER");
+        	String id = getIdentifierName(typeContext.IDENTIFIER(), false);
+        	Type t = MicroVM.v.types.get(id);
+        	if (t == null)
+        		throw new ASTParsingException("Retrieving a type that is not defined before: " + id);
+        	return t;
         }
     }
     
@@ -302,10 +316,11 @@ public abstract class ASTHelper {
         	parser.uIRParser.InstAllocaContext allocaCtx = (parser.uIRParser.InstAllocaContext) inst;
         	
         	Type t = getType(allocaCtx.type());
+        	IRef irefT = IRef.findOrCreateIRef(t);
         	
         	Instruction node = new InstAlloca(t);
         	
-        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), t);
+        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), irefT);
         	node.setDefReg(def);
         	return node;
         }
@@ -336,6 +351,24 @@ public abstract class ASTHelper {
         	Value value = getValue(f, storeCtx.value(1), referentType);
         	
         	Instruction node = new InstStore(irefType, loc, value);
+        	
+        	return node;
+        }
+        else if (inst instanceof parser.uIRParser.InstGetFieldIRefContext) {
+        	parser.uIRParser.InstGetFieldIRefContext getFieldCtx = (parser.uIRParser.InstGetFieldIRefContext) inst;
+
+        	int index = (int) getIntImmediateValue(getFieldCtx.intImmediate());
+        	
+        	Struct structType = (Struct) getType(getFieldCtx.type());
+        	IRef irefType = IRef.findOrCreateIRef(structType);
+        	Type resType  = structType.getType(index);
+        	
+        	Value location = getValue(f, getFieldCtx.value(), irefType);
+        	
+        	Instruction node = new InstGetFieldIRef(structType, index, location);
+        	
+        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), resType);
+        	node.setDefReg(def);
         	
         	return node;
         }

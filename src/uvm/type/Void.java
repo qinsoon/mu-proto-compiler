@@ -23,10 +23,4 @@ public class Void extends Type {
     public int fitsInFPR() {
         return 0;
     }
-
-	@Override
-	public int alignmentInBytes() {
-		return 0;
-	}
-
 }

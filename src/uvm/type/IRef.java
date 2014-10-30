@@ -13,7 +13,7 @@ public class IRef extends AbstractPointerType {
     	}
     	
     	IRef ret = new IRef(referencedType);
-    	MicroVM.v.declareType(null, referencedType);
+    	MicroVM.v.declareType(null, ret);
     	
     	return ret;
     }
@@ -21,6 +21,13 @@ public class IRef extends AbstractPointerType {
     protected IRef(Type referenced) {
         super();
         this.referenced = referenced;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+    	if (o instanceof IRef && ((IRef) o).referenced.equals(referenced))
+    		return true;
+    	return false;
     }
 
     @Override

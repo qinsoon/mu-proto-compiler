@@ -61,13 +61,4 @@ public class Int extends Type {
         return 0;
     }
 
-	@Override
-	public int alignmentInBytes() {
-		int size = sizeInBytes();
-		int align = 1;
-		while (align < size) {
-			align *= 2;
-		}
-		return align;
-	}
 }

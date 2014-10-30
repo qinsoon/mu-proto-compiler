@@ -8,6 +8,10 @@ public class MCDispMemoryOperand extends MCMemoryOperand {
 		this.disp = disp;
 	}
     
+    public MCDispMemoryOperand(MCRegister base, MCOperand disp) {
+    	this(base, (int) ((MCIntImmediate)disp).value);
+    }
+    
     public MCDispMemoryOperand(MCRegister base) {
     	super(base);
     }

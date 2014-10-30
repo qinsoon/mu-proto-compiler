@@ -302,12 +302,21 @@ op : ALLOCA(iimm)
 2
 
 ireg : LOAD(ireg)
-> load_mov *P[0] -> %res_reg
-5
+> load_mov *(P[0]) -> %res_reg
+1
 
 op : STORE(ireg ivalue)
-> store_mov *P[0], P[1]
-6
+> store_mov *(P[0]), P[1]
+1
+
+ireg : GETFIELD (iimm, ireg)
+> add P[1], P[0] -> P[1]
+> mov P[1] -> %res_reg
+2
+
+ireg : LOAD(GETFIELD (iimm, ireg))
+> load_mov *(P[0][1] + P[0][0]) -> %res_reg
+1
 
 // ********************************
 // NON-EMIT RULEs

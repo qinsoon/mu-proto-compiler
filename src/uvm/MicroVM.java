@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import uvm.objectmodel.SimpleObjectModel;
+
 public class MicroVM {
     public static final int POINTER_SIZE = 64;
     
@@ -18,7 +20,7 @@ public class MicroVM {
     
     public void declareType(String name, Type t) {
         types.put(name, t);
-        System.out.println("declared type: " + t);
+        System.out.println("declared type: " + t.prettyPrint());
     }
     
     /*
@@ -58,4 +60,9 @@ public class MicroVM {
     	
     	return res;
     }
+    
+    /*
+     * OBJECT MODEL
+     */
+    public SimpleObjectModel objectModel = new SimpleObjectModel();
 }

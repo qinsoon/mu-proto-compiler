@@ -61,20 +61,31 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
 
     @Override
     protected void visitInstruction(Instruction inst) {
+    	/*
+    	 * BRANCH
+    	 */
         if (inst instanceof InstBranch)
             inst.addChild(((InstBranch)inst).getTarget());
         else if (inst instanceof InstBranch2) {
             checkAndAddValue(inst, ((InstBranch2) inst).getCond());
             inst.addChild(((InstBranch2) inst).getIfTrue());
             inst.addChild(((InstBranch2) inst).getIfFalse());;
-        } else if (inst instanceof InstPhi) {
+        } 
+        /*
+         * PHI
+         */
+        else if (inst instanceof InstPhi) {
             InstPhi phi = (InstPhi) inst;
             
             for (Entry<Label, Value> entry : phi.getValues().entrySet()) {
                 checkAndAddValue(phi, entry.getValue());
                 inst.addChild(entry.getKey());
             }
-        } else if (inst instanceof InstCall) {
+        } 
+        /*
+         * CALL
+         */
+        else if (inst instanceof InstCall) {
             InstCall call = (InstCall) inst;
             
             inst.addChild(call.getCallee().getFuncLabel());
@@ -82,12 +93,28 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         	InstCCall ccall = (InstCCall) inst;
         	
         	inst.addChild(MicroVM.v.findOrCreateGlobalLabel(ccall.getFunc()));
-        } else if (inst instanceof InstAlloca) {
+        } 
+        /*
+         * MEMORY ALLOCATION
+         */
+        else if (inst instanceof InstAlloca) {
         	InstAlloca alloca = (InstAlloca) inst;
         	
         	inst.addChild(new IntImmediate(Int.I64, (long) alloca.getType().alignmentInBytes()));
         }
+        /*
+         * MEMORY ACCESS
+         */
+        else if (inst instanceof InstGetFieldIRef) {
+        	InstGetFieldIRef getField = (InstGetFieldIRef) inst;
+        	
+        	inst.addChild(new IntImmediate(Int.I64, MicroVM.v.objectModel.getOffsetFromStructIRef(getField.getStructType(), getField.getIndex())));
+        	inst.addChild(getField.getLoc());
+        }
         
+        /*
+         * DEFAULT: add all operands as children
+         */
         else {
             for (Value v : inst.getOperands()) {
                 checkAndAddValue(inst, v);

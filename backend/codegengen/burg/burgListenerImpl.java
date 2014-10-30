@@ -320,8 +320,11 @@ public class burgListenerImpl extends burgBaseListener {
                 ret = OpdRegister.findOrCreate(mcRegCtx.getText(), OpdRegister.MACHINE_REG);
             }
         } else if (operandCtx instanceof burgParser.McOpdAddressContext) {
-        	CCTOperand base = getOperand(((burgParser.McOpdAddressContext) operandCtx).mcOperand());
-        	ret = new OpdMemOperand(base, 0);
+        	CCTOperand base = getOperand(((burgParser.McOpdAddressContext) operandCtx).mcOperand(0));
+        	CCTOperand disp = null;
+        	if (((burgParser.McOpdAddressContext) operandCtx).mcOperand().size() > 1)
+        		disp = getOperand(((burgParser.McOpdAddressContext) operandCtx).mcOperand(1));
+        	ret = new OpdMemOperand(base, disp);
         }
         
         return ret;

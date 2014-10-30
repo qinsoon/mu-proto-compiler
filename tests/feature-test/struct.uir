@@ -1,0 +1,22 @@
+// struct
+
+.typedef @point struct <int<64> int<64>>
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+  BRANCH %body
+
+  .label %body:
+  %p = ALLOCA <@point>
+  %px_ptr = GETFIELDIREF <@point 0> %p
+  STORE <int<64>> %px_ptr 1
+  %py_ptr = GETFIELDIREF <@point 1> %p
+  STORE <int<64>> %py_ptr 1
+
+  %px = LOAD <int<64>> %px_ptr
+  %py = LOAD <int<64>> %py_ptr
+
+  %res = ADD <int<64>> %px %py
+  
+  RET <int<32>> %res
+}

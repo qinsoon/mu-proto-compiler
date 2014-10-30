@@ -544,8 +544,15 @@ public class Burg {
             }
         }
         else if (operand instanceof OpdMemOperand) {
-        	newOperandStr = String.format(
-        			"new MCDispMemoryOperand((MCRegister) %s)", getOperandCreation(((OpdMemOperand) operand).base, dataType));
+        	if (((OpdMemOperand) operand).disp == null) {
+        		newOperandStr = String.format(
+        				"new MCDispMemoryOperand((MCRegister) %s)", getOperandCreation(((OpdMemOperand) operand).base, dataType));
+        	} else {
+        		newOperandStr = String.format(
+        				"new MCDispMemoryOperand((MCRegister) %s, %s)", 
+        				getOperandCreation(((OpdMemOperand) operand).base, dataType), 
+        				getCompileTimeOperand(((OpdMemOperand) operand).disp, 0));
+        	}
         }
         
         else {
@@ -714,9 +721,9 @@ public class Burg {
     
     static class OpdMemOperand extends CCTOperand {
     	CCTOperand base;
-    	long disp;
+    	CCTOperand disp;
     	
-    	OpdMemOperand(CCTOperand base, long disp) {
+    	OpdMemOperand(CCTOperand base, CCTOperand disp) {
     		this.base = base;
     		this.disp = disp;
     	}

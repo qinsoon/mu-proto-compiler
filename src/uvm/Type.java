@@ -25,11 +25,17 @@ public abstract class Type {
     	return size() % 8 == 0 ? size() / 8 : size() / 8 + 1;
     }
     
+    int align = -1;
     /**
      * alignment in bytes
      * @return
      */
-    public abstract int alignmentInBytes();
+    public final int alignmentInBytes() {
+    	if (align == -1)
+    		align = MicroVM.v.objectModel.getAlignment(this);
+    	
+    	return align;
+    }
     
     public int getID() {
         return ID;

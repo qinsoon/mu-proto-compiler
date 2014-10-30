@@ -216,7 +216,7 @@ mcOperand
     |   singleNodeFuncCall      # mcOpdNodeFunc
     |   '$' mcImmediate         # mcOpdImm
     |   '%' mcReg               # mcOpdReg
-    |   '*' mcOperand           # mcOpdAddress
+    |   '*(' mcOperand ('+' mcOperand)? ')'    # mcOpdAddress
     ;
 
 singleNodeFuncCall

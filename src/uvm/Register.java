@@ -82,6 +82,11 @@ public class Register extends Value{
             return OpCode.REG_DP;
         else if (type instanceof uvm.type.Float)
             return OpCode.REG_SP;
+        else if (type instanceof uvm.type.Ref || type instanceof uvm.type.IRef) {
+        	if (MicroVM.POINTER_SIZE == 64)
+        		return OpCode.REG_I64;
+        	else UVMCompiler.error("unexpected pointer size: " + MicroVM.POINTER_SIZE);
+        }
         else {
             UVMCompiler.error("unexpected register type: " + type.prettyPrint());
         }

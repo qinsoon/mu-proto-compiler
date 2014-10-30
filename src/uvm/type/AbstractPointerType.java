@@ -11,11 +11,6 @@ public abstract class AbstractPointerType extends Type {
 	}
 
 	@Override
-	public final int alignmentInBytes() {
-		return MicroVM.POINTER_SIZE / 8;
-	}
-
-	@Override
 	public final int fitsInGPR() {
 		return 1;
 	}
