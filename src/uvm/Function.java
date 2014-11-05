@@ -92,6 +92,10 @@ public class Function {
     public String getName() {
         return name;
     }
+    
+    public boolean isMain() {
+    	return name.equals("main");
+    }
 
     public FunctionSignature getSig() {
         return sig;

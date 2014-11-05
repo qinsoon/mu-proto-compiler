@@ -1,0 +1,9 @@
+// malloc
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+  BRANCH %body
+
+  .label %body:
+  RET <int<32>> 1
+}

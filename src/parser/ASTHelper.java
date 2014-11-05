@@ -58,7 +58,7 @@ public abstract class ASTHelper {
     private ASTHelper() {}
     
     public static String getIdentifierName(TerminalNode id, boolean expectGlobal) 
-            throws ASTParsingException {
+            throws ASTParsingException {    	
         String text = id.getText();
         
         if (expectGlobal && text.charAt(0) != '@')
@@ -119,6 +119,9 @@ public abstract class ASTHelper {
             		types.add(getType(typeCtx));
             	}
             	return Struct.findOrCreateStruct(types);
+            }
+            else if (ctx instanceof parser.uIRParser.VoidTypeContext) {
+            	return uvm.type.Void.T;
             }
             else {
                 throw new ASTParsingException("Missing implementation on " + ctx.getClass().toString());
@@ -426,8 +429,10 @@ public abstract class ASTHelper {
         	
         	Instruction node = new InstCCall(cc, sig, cFuncName, args);
         	
-        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), sig.getReturnType());
-        	node.setDefReg(def);
+        	if (ctx.IDENTIFIER() != null) {
+        		Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), sig.getReturnType());
+        		node.setDefReg(def);
+        	}
         	return node;
         }
         

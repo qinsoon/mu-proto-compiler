@@ -1,0 +1,14 @@
+Implementing a new instruction:
+
+1. uIR syntax: editing antlr syntax file - uIR.g4
+to allow the new instruction to be parsed
+
+2. uIR class: uvm.inst
+create a class to represent the new instruction, extending uvm.Instruction
+in the constructor, add operands, add opcode.
+
+3. frontend: parser/ASTHelper
+to allow uVM frontend to take the IR
+
+4.  Internal Tree IR: compiler.phase.IRTreeGeneration
+add operands/children that will be used in instruction selection

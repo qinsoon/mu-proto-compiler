@@ -192,7 +192,8 @@ def compile_uir(source, dir, output):
 		rv = subprocess.call(['java', \
 			'-cp', uvm_build_dir + ":" + antlr_jar, \
 			'compiler.UVMCompiler', \
-			source], stdout=devnull)
+			source, \
+			'-base', uvm_root], stdout=devnull)
 	os.chdir(current_dir)
 	
 	if rv == 0:
@@ -203,7 +204,7 @@ def compile_uir(source, dir, output):
 	
 	# invoke gcc to compile assembly
 	emit_dir = os.path.join(dir, "emit/")
-	assembly = get_file_list(emit_dir, '.s')
+	assembly = os.listdir(emit_dir)
 	assembly_abs_path = []
 	for a in assembly:
 		assembly_abs_path.append(os.path.join(emit_dir, a))

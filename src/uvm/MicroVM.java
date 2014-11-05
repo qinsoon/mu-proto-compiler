@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import uvm.objectmodel.SimpleObjectModel;
+import uvm.runtime.UVMRuntime;
 
 public class MicroVM {
     public static final int POINTER_SIZE = 64;
@@ -65,4 +66,9 @@ public class MicroVM {
      * OBJECT MODEL
      */
     public SimpleObjectModel objectModel = new SimpleObjectModel();
+    
+    /*
+     * RUNTIME
+     */
+    public UVMRuntime runtime = new UVMRuntime();
 }

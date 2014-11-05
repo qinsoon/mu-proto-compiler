@@ -287,7 +287,6 @@ public class X64UVMCallConvention {
         prologue.add(UVMCompiler.MCDriver.genMove(rbp, rsp));
         
         // allocate space for local storage
-        // FIXME: we will patch this displacement after register allocation
         int stackDisp = -1;
 
         if (stackDisp != 0) {
@@ -299,13 +298,26 @@ public class X64UVMCallConvention {
         }
         
         // callee-saved register
-        for (MCRegister reg : cf.intervals.keySet()) {
-            Interval li = cf.intervals.get(reg);
-            if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()) && li.hasValidRange()) {
-                cf.calleeSavedRegs.add(reg);
-                // need to save it
-                prologue.add(pushStack(reg));
-            }
+        if (cf.getOriginFunction().isMain()) {
+        	// push all general-purpose calleeSavedRegs
+        	for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfGPR(); i++) {
+        		String r = UVMCompiler.MCDriver.getGPRName(i);
+        		if (UVMCompiler.MCDriver.isCalleeSave(r)) {
+        			MCRegister reg = cf.findOrCreateRegister(r, MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+        			cf.calleeSavedRegs.add(reg);
+        			prologue.add(pushStack(reg));
+        		}
+        	}
+        } else {
+	        for (MCRegister reg : cf.intervals.keySet()) {
+	        	// FIXME: this is not correct
+	            Interval li = cf.intervals.get(reg);
+	            if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()) && li.hasValidRange()) {
+	                cf.calleeSavedRegs.add(reg);
+	                // need to save it
+	                prologue.add(pushStack(reg));
+	            }
+	        }
         }
     }
     

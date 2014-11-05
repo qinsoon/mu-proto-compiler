@@ -116,6 +116,9 @@
 		       classpath="${burg-impl-dir}:${antlr-jar}:${build}:${uvm-dir}"
 		       destdir="${build}">
 		</javac>
+		<echo message="Copying runtime..."/>
+		<mkdir dir="${build}/runtime"/>
+		<copy file="runtime/uvmrt.a" todir="${build}/runtime"/>
 	</target>
 	
 	<target name="build-eclipse" depends="gen-antlr, generate-BURM">

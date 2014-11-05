@@ -28,11 +28,12 @@ public class CodeEmission extends AbstractMCCompilationPhase {
     
     @Override
     protected void postChecklist() {
-    	File runtime = new File(UVMRuntime.LIB_PATH);
+    	File runtime = new File(UVMCompiler.BASE_DIR + "/" + UVMRuntime.LIB_PATH);
     	Path dst = Paths.get(dir + "/" + UVMRuntime.LIB_NAME);
     	
     	try {
 			Files.copy(runtime.toPath(), dst, StandardCopyOption.REPLACE_EXISTING);
+			System.out.println("copy uvmrt from " + runtime.getAbsolutePath() + " to " + dst.toString());
 		} catch (IOException e) {
 			e.printStackTrace();
 			UVMCompiler.error("error copying uvm runtime");
@@ -76,6 +77,11 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             if (!cf.prologue.isEmpty()) {
                 for (AbstractMachineCode mc : cf.prologue)
                     emitMC(writer, mc);
+            }
+            
+            if (cf.getOriginFunction().isMain() && MicroVM.v.runtime.needToInitRuntime()) {
+            	// emit call _initRuntime()
+            	emitMC(writer, UVMCompiler.MCDriver.genCall(new MCLabel(UVMRuntime.INIT_FUNC)));
             }
             
             for (AbstractMachineCode mc : cf.finalMC) {

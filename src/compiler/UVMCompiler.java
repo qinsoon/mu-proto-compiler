@@ -37,6 +37,7 @@ import uvm.MicroVM;
 import uvm.mc.AbstractMCDriver;
 
 public class UVMCompiler {
+	public static String BASE_DIR = ".";
 
     public static AbstractMCDriver MCDriver = new X64Driver();
     public static final int MC_REG_SIZE = 64;
@@ -48,7 +49,18 @@ public class UVMCompiler {
         if (args.length == 0)
             UVMCompiler.error("Missing source file name in arguments");
         
-        String file = args[0];
+        String file = null;
+        
+        for (int i = 0; i < args.length; i++) {
+        	if (args[i].equals("-base")) {
+        		BASE_DIR = args[i+1];
+        		i++;
+        	} else {
+        		if (file == null)
+        			file = args[i];
+        		else error("Only one source file allowed.");
+        	}
+        }
         
         try {
             // create a CharStream that reads from standard input
