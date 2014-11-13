@@ -44,4 +44,8 @@ public abstract class Instruction extends IRTreeNode {
     public List<Value> getOperands() {
         return operands;
     }
+    
+    public boolean needsToCallRuntimeService() {
+    	return false;
+    }
 }

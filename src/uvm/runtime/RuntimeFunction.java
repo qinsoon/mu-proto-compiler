@@ -1,23 +1,43 @@
 package uvm.runtime;
 
+import java.util.Arrays;
 import java.util.List;
 
-public class RuntimeFunction {
+import uvm.FunctionSignature;
+import uvm.Label;
+import uvm.inst.InstCCall;
+import uvm.type.Int;
+import uvm.type.Ref;
 
+public class RuntimeFunction {	
+	public static final RuntimeFunction allocObj;
 	
-    public static final int CALL_CONV_UVM 	= 0;
-    public static final int CALL_CONV_C		= 1;
-    public static final int CALL_CONV_RJAVA = 2;
-    
-    public static final RuntimeFunction ALLOC_STACK = new RuntimeFunction(CALL_CONV_C, "allocateStack", null);
+	static {
+		allocObj = new RuntimeFunction(InstCCall.CC_DEFAULT, 
+				"_allocObj", 
+				Ref.REF_VOID, 
+				Arrays.asList(Int.I64, Int.I64));
+	}
     
     int callConv;
-    String funcName;
-    List<uvm.Type> parameters;
+    String func;
+    FunctionSignature sig;
     
-    public RuntimeFunction(int cc, String funcName, List<uvm.Type> parameters) {
+    public RuntimeFunction(int cc, String func, uvm.Type returnType, List<uvm.Type> parameterTypes) {
         this.callConv = cc;
-        this.funcName = funcName;
-        this.parameters = parameters;
+        this.func = func;
+        this.sig = new FunctionSignature(returnType, parameterTypes);
     }
+
+	public int getCallConv() {
+		return callConv;
+	}
+
+	public String getFuncName() {
+		return func;
+	}
+
+	public FunctionSignature getFunctionSignature() {
+		return sig;
+	}
 }

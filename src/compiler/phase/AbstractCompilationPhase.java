@@ -1,5 +1,7 @@
 package compiler.phase;
 
+import compiler.UVMCompiler;
+import compiler.util.Pair;
 import uvm.BasicBlock;
 import uvm.Function;
 import uvm.IRTreeNode;
@@ -9,6 +11,9 @@ import uvm.MicroVM;
 public abstract class AbstractCompilationPhase {
     protected String name;
     protected final boolean verbose;
+    
+    protected long start;
+    protected long end;
     
     public AbstractCompilationPhase(String name, boolean verbose) {
         this.name = name;
@@ -31,6 +36,9 @@ public abstract class AbstractCompilationPhase {
     }
     
     public void execute() {
+    	if (UVMCompiler.TIMING_COMPILATION)
+    		recordStart();
+    	
         verboseln("=========== " + name + " ===========\n");
         preChecklist();
         
@@ -50,6 +58,18 @@ public abstract class AbstractCompilationPhase {
         }
         
         postChecklist();
+        
+        if (UVMCompiler.TIMING_COMPILATION)
+        	recordEnd();
+    }
+    
+    protected final void recordStart() {
+    	start = System.currentTimeMillis();
+    }
+    
+    protected final void recordEnd() {
+    	end = System.currentTimeMillis();
+    	UVMCompiler.ELAPSE_TIME.add(new Pair<String, Long>(name, end - start));
     }
     
     protected void preChecklist() {}

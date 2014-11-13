@@ -4,9 +4,15 @@ import uvm.MicroVM;
 import uvm.Type;
 
 public class Ref extends AbstractPointerType {
+	public static final Ref REF_VOID = findOrCreateRef(Void.T);
+	
     Type referenced;
     
-    public static Ref findOrCreateRef(Type referencedType) {
+    public Type getReferenced() {
+		return referenced;
+	}
+
+	public static Ref findOrCreateRef(Type referencedType) {
     	for (Type t : MicroVM.v.types.values()) {
     		if (t instanceof Ref && ((Ref) t).referenced.equals(referencedType))
     			return (Ref) t;

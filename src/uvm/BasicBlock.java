@@ -16,6 +16,10 @@ public class BasicBlock {
         this.insts.add(i);
     }
     
+    public void setInstructions(List<Instruction> insts) {
+    	this.insts = insts;
+    }
+    
     public Label getLabel() {
         return label;
     }

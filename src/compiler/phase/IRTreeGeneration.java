@@ -13,6 +13,7 @@ import uvm.OpCode;
 import uvm.Register;
 import uvm.Value;
 import uvm.inst.*;
+import uvm.runtime.RuntimeFunction;
 import uvm.type.Int;
 
 public class IRTreeGeneration extends AbstractCompilationPhase{
@@ -111,7 +112,14 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         	inst.addChild(new IntImmediate(Int.I64, MicroVM.v.objectModel.getOffsetFromStructIRef(getField.getStructType(), getField.getIndex())));
         	inst.addChild(getField.getLoc());
         }
-        
+        else if (inst instanceof InstGetIRef) {
+        	InstGetIRef getIRef = (InstGetIRef) inst;
+        	
+        	int headerSize = MicroVM.v.objectModel.getHeaderSize(getIRef.getReferentType());
+        	
+        	inst.addChild(getIRef.getRef());
+        	inst.addChild(new IntImmediate(Int.I64, (long) headerSize));
+        }
         /*
          * DEFAULT: add all operands as children
          */

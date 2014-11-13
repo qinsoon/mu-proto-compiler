@@ -2,6 +2,7 @@ package compiler.phase.mc;
 
 import uvm.CompiledFunction;
 import uvm.MicroVM;
+import compiler.UVMCompiler;
 import compiler.phase.AbstractCompilationPhase;
 
 public abstract class AbstractMCCompilationPhase extends AbstractCompilationPhase {
@@ -11,7 +12,10 @@ public abstract class AbstractMCCompilationPhase extends AbstractCompilationPhas
     }
     
     @Override
-    public void execute() {
+    public final void execute() {
+    	if (UVMCompiler.TIMING_COMPILATION)
+    		recordStart();
+    	
     	verboseln("=========== " + name + " ===========\n");
     	
     	preChecklist();
@@ -19,6 +23,9 @@ public abstract class AbstractMCCompilationPhase extends AbstractCompilationPhas
             visitCompiledFunction(cf);
         }
         postChecklist();
+        
+        if (UVMCompiler.TIMING_COMPILATION)
+        	recordEnd();
     }
 
     protected abstract void visitCompiledFunction(CompiledFunction cf);

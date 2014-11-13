@@ -3,32 +3,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdint.h>
 #include <sys/mman.h>
 
 typedef long Address;
 
-extern void initRuntime();
-extern void initHeap();
-
-#define DEBUG
-
-#ifdef DEBUG
-# define DEBUG_PRINT(x) printf x
-#else
-# define DEBUG_PRINT(x) do {} while (0)
-#endif
-
-/*
- * MEMORY
- */
-
-extern Address align(Address region, int align);
-extern void fillAlignmentGap(Address start, Address end);
-
 // general
 Address heapStart;
-Address immixSpaceStart;
-Address freelistSpaceStart;
 
 #define HEAP_SIZE (500 << 20)
 #define HEAP_IMMIX_FRACTION 0.7
@@ -44,10 +25,11 @@ Address freelistSpaceStart;
 #define IMMIX_LOG_BYTES_IN_LINE 8
 #define IMMIX_BYTES_IN_LINE (1 << IMMIX_LOG_BYTES_IN_LINE)
 
-#define IMMIX_LINES_IN_BLOCK (1 << (IMMIX_LOG_BYTES_IN_BLOCK - IMMIX_BYTES_IN_LINE))
+#define IMMIX_LINES_IN_BLOCK (1 << (IMMIX_LOG_BYTES_IN_BLOCK - IMMIX_LOG_BYTES_IN_LINE))
 
 typedef struct ImmixSpace {
-    
+    Address immixStart;
+    Address freelistStart;
 } ImmixSpace;
 
 typedef struct ImmixCollector {
@@ -83,3 +65,42 @@ typedef struct UVMThread {
     ImmixMutator _mutator;
     ImmixCollector _collector;
 } UVMThread;
+
+/*
+ * FUNCTIONS
+ */
+
+extern void initRuntime();
+extern void initThread();
+extern void initHeap();
+
+pthread_key_t currentUVMThread;
+
+/*
+ * new mutator context
+ */
+extern ImmixMutator* ImmixMutator_init(ImmixMutator* mutator, ImmixSpace* space);
+extern ImmixSpace* newSpace(Address, Address);
+
+ImmixSpace* immixSpace;
+
+/*
+ * create thread context and put it in local
+ */
+extern void setupThreadContext();
+extern UVMThread* getThreadContext();
+
+#define DEBUG
+
+#ifdef DEBUG
+# define DEBUG_PRINT(x) printf x
+#else
+# define DEBUG_PRINT(x) do {} while (0)
+#endif
+
+/*
+ * MEMORY
+ */
+
+extern Address align(Address region, int align);
+extern void fillAlignmentGap(Address start, Address end);

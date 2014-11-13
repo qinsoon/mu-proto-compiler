@@ -3,6 +3,8 @@ package compiler;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -11,6 +13,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import burm.mc.X64Driver;
 import compiler.phase.DefUseGeneration;
+import compiler.phase.ExpandRuntimeServices;
 import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
 import compiler.phase.MCRepresentationGeneration;
@@ -35,8 +38,15 @@ import uvm.Function;
 import uvm.Instruction;
 import uvm.MicroVM;
 import uvm.mc.AbstractMCDriver;
+import compiler.util.Pair;
 
 public class UVMCompiler {
+	public static final boolean TIMING_COMPILATION = true;
+	
+	public static final List<Pair<String, Long>> ELAPSE_TIME = new ArrayList<Pair<String, Long>>();
+	public static long startTime;
+	public static long endTime;
+	
 	public static String BASE_DIR = ".";
 
     public static AbstractMCDriver MCDriver = new X64Driver();
@@ -63,6 +73,12 @@ public class UVMCompiler {
         }
         
         try {
+        	long parsingStart = 0;
+        	if (TIMING_COMPILATION) {
+        		parsingStart = System.currentTimeMillis();
+        		startTime = parsingStart;
+        	}
+        	
             // create a CharStream that reads from standard input
             ANTLRInputStream input = new ANTLRInputStream(new FileInputStream(file));
             // create a lexer that feeds off of input CharStream
@@ -96,9 +112,14 @@ public class UVMCompiler {
                 System.out.println();
             }
             
+            if (TIMING_COMPILATION) {
+            	ELAPSE_TIME.add(new Pair<String, Long>("parsing", System.currentTimeMillis() - parsingStart));
+            }
+            
             /*
              *  generating IR tree
              */
+            new ExpandRuntimeServices("expandruntime", false).execute();
             new DefUseGeneration("defusegen", Verbose.DEF_USE_GEN).execute();            
             new IRTreeGeneration("treegen", Verbose.TREE_GEN).execute();
             
@@ -150,12 +171,35 @@ public class UVMCompiler {
              */
             new compiler.phase.mc.SpillConstantsToMemory("spillconstant", Verbose.SPILL_CONSTANT).execute();
             new CodeEmission("codeemit", "emit", Verbose.CODE_EMIT).execute();
+            
+            if (TIMING_COMPILATION) {
+            	endTime = System.currentTimeMillis();
+            	
+            	reportElapseTime();
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+    }
+    
+    private static final void reportElapseTime() {
+    	long total = endTime - startTime;
+    	reportTime("Total", total, total);
+    	
+    	System.out.println();
+    	System.out.println();
+    	
+    	for (Pair<String, Long> p : ELAPSE_TIME) {
+    		reportTime(p.getFirst(), p.getSecond(), total);
+    	}
+    }
+    
+    private static void reportTime(String category, long curTime, long totalTime) {
+    	String m = String.format("%30s\t\t\t\t\t%d(%f)", category, curTime, ((double)curTime)/totalTime);
+    	System.out.println(m);
     }
     
     public static final void error(String message) {

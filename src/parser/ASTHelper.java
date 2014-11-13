@@ -38,7 +38,9 @@ import uvm.inst.InstFDiv;
 import uvm.inst.InstFOlt;
 import uvm.inst.InstFPToSI;
 import uvm.inst.InstGetFieldIRef;
+import uvm.inst.InstGetIRef;
 import uvm.inst.InstLoad;
+import uvm.inst.InstNew;
 import uvm.inst.InstParam;
 import uvm.inst.InstPhi;
 import uvm.inst.InstRet;
@@ -327,6 +329,18 @@ public abstract class ASTHelper {
         	node.setDefReg(def);
         	return node;
         }
+        else if (inst instanceof parser.uIRParser.InstNewContext) {
+        	parser.uIRParser.InstNewContext newCtx = (parser.uIRParser.InstNewContext) inst;
+        	
+        	Type t = getType(newCtx.type());
+        	Ref refT = Ref.findOrCreateRef(t);
+        	
+        	Instruction node = new InstNew(t);
+        	
+        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), refT);
+        	node.setDefReg(def);
+        	return node;
+        }
         /*
          * memory access
          */
@@ -371,6 +385,22 @@ public abstract class ASTHelper {
         	Instruction node = new InstGetFieldIRef(structType, index, location);
         	
         	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), resType);
+        	node.setDefReg(def);
+        	
+        	return node;
+        }
+        else if (inst instanceof parser.uIRParser.InstGetIRefContext) {
+        	parser.uIRParser.InstGetIRefContext getIRefCtx = (parser.uIRParser.InstGetIRefContext) inst;
+        	
+        	Type referentT = getType(getIRefCtx.type());
+        	Ref refT = Ref.findOrCreateRef(referentT);
+        	IRef irefT = IRef.findOrCreateIRef(referentT);
+        	
+        	Value ref = getValue(f, getIRefCtx.value(), refT);
+        	
+        	Instruction node = new InstGetIRef(referentT, ref);
+        	
+        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), irefT);
         	node.setDefReg(def);
         	
         	return node;

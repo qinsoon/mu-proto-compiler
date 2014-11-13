@@ -2,6 +2,7 @@
 
 void initRuntime() {
     initHeap();
+    initThread();
 }
 
 Address align(Address region, int align) {
