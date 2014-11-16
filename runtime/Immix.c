@@ -44,5 +44,30 @@ ImmixMutator* ImmixMutator_init(ImmixMutator* mutator, ImmixSpace* space) {
 
 
 Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align) {
-    return (Address) malloc(size);
+    DEBUG_PRINT(("---alloc request---\n"));
+    DEBUG_PRINT(("size=%d, align=%d\n", size, align));
+    
+    if (size > IMMIX_BYTES_IN_LINE) {
+        DEBUG_PRINT(("Obj larger than a line, use allocLarge()\n"));
+        return ImmixMutator_allocLarge(mutator, size, align);
+    }
+    
+    Address start = align(mutator->cursor, align);
+    Address end = start + size;
+    DEBUG_PRINT(("cursor=%lx, limit=%lx\n", mutator->cursor, mutator->limit));
+    DEBUG_PRINT(("start=%lx, end=%lx\n", start, end));
+    
+    if (end > mutator->limit) {
+        DEBUG_PRINT(("current local lines are consumed, try get some from block\n"));
+        return ImmixMutator_tryAllocFromCurrentBlock(mutator, size, align);
+    }
+    
+    fillAlignmentGap(mutator->cursor, start);
+    mutator->cursor = end;
+    
+    return start;
+}
+
+Address ImmixMutator_tryAllocFromCurrentBlock(ImmixMutator* mutator, int64_t size, int64_t align) {
+    
 }
