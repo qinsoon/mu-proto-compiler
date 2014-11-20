@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <sys/mman.h>
 
-typedef long Address;
+typedef uint64_t Address;
 
 // general
 Address heapStart;
@@ -27,9 +27,34 @@ Address heapStart;
 
 #define IMMIX_LINES_IN_BLOCK (1 << (IMMIX_LOG_BYTES_IN_BLOCK - IMMIX_LOG_BYTES_IN_LINE))
 
+#define IMMIX_LINE_MARK_FREE            0
+#define IMMIX_LINE_MARK_LIVE            1
+#define IMMIX_LINE_MARK_FRESH_ALLOC     2
+#define IMMIX_LINE_MARK_CONSERV_LIVE    3
+
+#define IMMIX_BLOCK_MARK_USABLE         0
+#define IMMIX_BLOCK_MARK_FULL           1
+
+
+
+typedef struct ImmixBlock {
+    struct ImmixBlock* next;
+    struct ImmixBlock* prev;
+    
+    uint8_t state;
+    Address start;
+    uint8_t* lineMarkTable;
+} ImmixBlock;
+
 typedef struct ImmixSpace {
     Address immixStart;
     Address freelistStart;
+    uint8_t* lineMarkTable;
+    
+    ImmixBlock* usableBlocks;
+    ImmixBlock* usedBlocks;
+    
+    pthread_mutex_t lock;
 } ImmixSpace;
 
 typedef struct ImmixCollector {
@@ -41,16 +66,14 @@ typedef struct ImmixMutator {
     
     Address cursor;
     Address limit;
-    Address largeCursor;
-    Address largeLimit;
-    
-    Address markTable;
-    Address recyclableBlock;
-
     int line;
-    int lineUseCount;
     
-    bool recyclableExhausted;
+    Address blockStart;
+    Address blockEnd;
+    
+    uint8_t* lineMark;
+
+
 } ImmixMutator;
 
 /*
@@ -102,5 +125,11 @@ extern UVMThread* getThreadContext();
  * MEMORY
  */
 
-extern Address align(Address region, int align);
+extern Address alignUp(Address region, int align);
 extern void fillAlignmentGap(Address start, Address end);
+
+/*
+ * MISC
+ */
+
+extern void uVM_fail(const char* str);

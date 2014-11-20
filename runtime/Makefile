@@ -1,5 +1,5 @@
 LIBS  = 
-CFLAGS = -O3
+CFLAGS = -O3 -g
 CC = gcc
 LD = $(CC)
 AR = ar
