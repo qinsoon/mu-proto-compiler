@@ -22,7 +22,9 @@ void setupBootingThreadContext() {
 }
 
 UVMThread* getThreadContext() {
-    return (UVMThread*) pthread_getspecific(currentUVMThread);
+    UVMThread* ret = (UVMThread*) pthread_getspecific(currentUVMThread);
+    DEBUG_PRINT(("thread context (UVMThread) = %llx\n", (Address) ret));
+    return ret;
 }
 
 void freeThreadContext(void * chunk) {

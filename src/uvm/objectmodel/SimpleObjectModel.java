@@ -42,8 +42,8 @@ public class SimpleObjectModel {
 	 * 
 	 */
 	
-	public static final int BITMAP_LENGTH_SIZE = 4;
-	public static final int GC_HEADER_SIZE = 4;
+	public static final int BITMAP_LENGTH_SIZE_IN_BYTES = 4;
+	public static final int GC_HEADER_SIZE_IN_BYTES = 4;
 	
 	/*
 	 * >>>Object Header<<<
@@ -61,33 +61,54 @@ public class SimpleObjectModel {
 		
 		// how many bytes for bitmap
 		// we use one bit to represent 8 bytes(2^3) ref/non-ref
-		int bitmapSize = (int) Alignment.alignUp(size << 3, 8) >> 3;
+		int bitmapSizeInBits = size % 8 == 0? size / 8 : size /8 + 1;
+		int bitmapSizeInBytes = bitmapSizeInBits % 8 == 0 ? bitmapSizeInBits / 8 : bitmapSizeInBits / 8 + 1;
 		
-		return  BITMAP_LENGTH_SIZE + GC_HEADER_SIZE + bitmapSize;
+		return  BITMAP_LENGTH_SIZE_IN_BYTES + GC_HEADER_SIZE_IN_BYTES + bitmapSizeInBytes;
 	}
 	
 	public void layoutStruct(Struct struct) {
+		final boolean DEBUG = true;
+		
+		if (DEBUG)
+			System.out.println("layout struct " + struct.prettyPrint());
+		
 		List<Integer> offsets = new ArrayList<Integer>();
 		int cur = 0;
 		
 		for (int i = 0; i < struct.getTypes().size(); i++) {
 			Type t = struct.getType(i);
 			
+			if (DEBUG)
+				System.out.print("examining " + t.prettyPrint() + "...");
+			
 			if (cur % t.alignmentInBytes() != 0) {
 				// mov cur to next aligned offset
 				cur = (cur / t.alignmentInBytes() + 1) * t.alignmentInBytes();
+				if (DEBUG)
+					System.out.print("aligned to ");
 			}
 			offsets.add(cur);
+			if (DEBUG)
+				System.out.println("offset at " + cur);
 			
 			cur += t.sizeInBytes();
+			if (DEBUG)
+				System.out.println("  size is " + t.sizeInBytes());
 		}
 		
+		if (DEBUG)
+			System.out.println("struct size is " + cur);
+		
 		// if we need padding at the end
-		if (cur % struct.alignmentInBytes() != 0)
+		if (cur % struct.alignmentInBytes() != 0) {
 			cur  = (cur / struct.alignmentInBytes() + 1) * struct.alignmentInBytes();
+			if (DEBUG)
+				System.out.println("needs padding, after padding " + cur);
+		}
 		
 		struct.setOffsets(offsets);
-		struct.setSize(cur);
+		struct.setSize(cur * 8);	// from bytes to bits
 	}
 	
 	public int getAlignment(Type t) {

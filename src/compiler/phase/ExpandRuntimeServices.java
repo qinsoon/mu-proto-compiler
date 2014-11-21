@@ -32,8 +32,14 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 				if (inst instanceof InstNew) {
 					// for NEW, we emit a ccall to runtime allocator
 					InstNew instNew = (InstNew) inst;
+					
+					verboseln("Instrumenting for NEW " + instNew.getType().prettyPrint());
+					
 					int alignment = instNew.getType().alignmentInBytes();
 					int sizeRequired = instNew.getType().sizeInBytes() + MicroVM.v.objectModel.getHeaderSize(instNew.getType());
+					
+					verboseln("type size: " + instNew.getType().sizeInBytes() + ", header size: " + MicroVM.v.objectModel.getHeaderSize(instNew.getType()));
+					verboseln("alignment: " + alignment);
 					
 					List<Value> args = new ArrayList<Value>();					
 					args.add(new IntImmediate(Int.I64, (long)sizeRequired));

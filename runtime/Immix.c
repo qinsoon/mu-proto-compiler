@@ -5,7 +5,7 @@
  */
 
 void debug_printMutator(ImmixMutator* mutator) {
-    printf("Mutator status: \n");
+    printf("Mutator status (%llx): \n", (Address) mutator);
     printf(">>cursor=%llx, limit=%llx\n", mutator->cursor, mutator->limit);
     printf(">>line=%d\n", mutator->line);
     printf(">>blockStart=%llx, blockEnd=%llx\n", mutator->blockStart, mutator->blockEnd);
@@ -61,12 +61,6 @@ ImmixSpace* newSpace(Address immixStart, Address freelistStart) {
     return ret;
 }
 
-ImmixMutator* newMutator(ImmixSpace* space) {
-    ImmixMutator* m = (ImmixMutator*) malloc(sizeof(ImmixMutator));
-    m->globalSpace = space;
-    return m;
-}
-
 /*
  * Immix Mutator (Local)
  */
@@ -100,7 +94,6 @@ bool ImmixSpace_getNextBlock(ImmixMutator* mutator);
 Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align) {
     DEBUG_PRINT(("---alloc request---\n"));
     DEBUG_PRINT(("size=%lld, align=%lld\n", size, align));
-    DEBUG_PRINT(("-------------------\n"));
     
     debug_printMutator(mutator);
     
@@ -112,6 +105,8 @@ Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align) {
     Address start = alignUp(mutator->cursor, align);
     Address end = start + size;
     
+    DEBUG_PRINT(("after align: start=%llx, end=%llx\n", start, end));
+    
     if (end > mutator->limit) {
         DEBUG_PRINT(("current local lines are consumed, try get some from block\n"));
         return ImmixMutator_tryAllocFromLocal(mutator, size, align);
@@ -120,11 +115,12 @@ Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align) {
     fillAlignmentGap(mutator->cursor, start);
     mutator->cursor = end;
     
+    DEBUG_PRINT(("---alloc DONE: %llx---\n", start));
     return start;
 }
 
 Address ImmixMutator_tryAllocFromLocal(ImmixMutator* mutator, int64_t size, int64_t align) {
-    DEBUG_PRINT(("---tryAllocFromLocal---\n"));
+    DEBUG_PRINT(("tryAllocFromLocal\n"));
     
     if (mutator->line < IMMIX_LINES_IN_BLOCK) {
         int nextAvailableLine = ImmixSpace_getNextAvailableLine(mutator->lineMark, mutator->line);
@@ -170,7 +166,7 @@ int ImmixSpace_getNextAvailableLine(uint8_t* markTable, int currentLine) {
 
 int ImmixSpace_getNextUnavailableLine(uint8_t* markTable, int currentLine) {
     int i = currentLine;
-    while (markTable[i] == IMMIX_LINE_MARK_FREE && i <= IMMIX_LINES_IN_BLOCK)
+    while (markTable[i] == IMMIX_LINE_MARK_FREE && i < IMMIX_LINES_IN_BLOCK)
         i++;
     
     return i;
@@ -181,7 +177,7 @@ int ImmixSpace_getNextUnavailableLine(uint8_t* markTable, int currentLine) {
  */
 
 bool ImmixSpace_getNextBlock(ImmixMutator* mutator) {
-    DEBUG_PRINT(("---acquiring from global memory (getNextBlock())---\n"));
+    DEBUG_PRINT(("acquiring from global memory (getNextBlock())\n"));
     ImmixSpace* space = mutator->globalSpace;
     
     // lock acquired
@@ -218,11 +214,11 @@ bool ImmixSpace_getNextBlock(ImmixMutator* mutator) {
         mutator->blockEnd = newBlock->start + IMMIX_BYTES_IN_BLOCK;
         mutator->lineMark = newBlock->lineMarkTable;
         
-        DEBUG_PRINT(("---succ---\n"));
+        DEBUG_PRINT(("acquiring global succ\n"));
         pthread_mutex_unlock( &(space->lock));
         return true;
     } else {
-        DEBUG_PRINT(("---fail---\n"));
+        DEBUG_PRINT(("acquiring global fail\n"));
         // return false to require a GC
         pthread_mutex_unlock( &(space->lock));
         return false;

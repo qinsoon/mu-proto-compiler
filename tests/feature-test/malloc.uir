@@ -7,13 +7,21 @@
   BRANCH %body
 
   .label %body:
-  %ref = NEW <@point>
+  %i = PHI <int<64>> {%entry: 0; %body: %i.new; }
+  %ref  = NEW <@point>
+  
   %iref = GETIREF <@point> %ref
   %iref_x = GETFIELDIREF <@point 0> %iref
   STORE <int<64>> %iref_x 1
   %iref_y = GETFIELDIREF <@point 1> %iref
   STORE <int<64>> %iref_y 1
   
+  %i.new = ADD <int<64>> %i 1
+  
+  %cmp = SGT <int<64>> %i.new 100000000000
+  BRANCH2 %cmp %ret %body
+  
+  .label %ret:  
   %x = LOAD <int<64>> %iref_x
   %y = LOAD <int<64>> %iref_y
   %ret = ADD <int<64>> %x %y

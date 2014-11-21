@@ -119,7 +119,7 @@ public class UVMCompiler {
             /*
              *  generating IR tree
              */
-            new ExpandRuntimeServices("expandruntime", false).execute();
+            new ExpandRuntimeServices("expandruntime", Verbose.EXPAND_RT_SERVICE).execute();
             new DefUseGeneration("defusegen", Verbose.DEF_USE_GEN).execute();            
             new IRTreeGeneration("treegen", Verbose.TREE_GEN).execute();
             

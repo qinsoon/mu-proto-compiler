@@ -120,8 +120,6 @@ public class X64CDefaultCallConvention {
         // caller saved registers
         callerSavedRegs.clear();
         int callMCIndex = callMC.sequence;
-        System.out.println("setup call seq at " + callMCIndex);
-        caller.printInterval();
         List<MCRegister> liveRegs = caller.getLiveRegistersAt(callMCIndex);
         // add live-in regs
         MCBasicBlock callBB = caller.getBasicBlockFor(callMC);

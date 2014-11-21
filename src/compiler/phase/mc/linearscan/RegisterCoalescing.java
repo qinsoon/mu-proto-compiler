@@ -95,11 +95,16 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
         	return false;
         }
         
-        // i <- interval[REP(x).n]
+
         Interval intervalX = cf.intervals.get(x.REP());
+        Interval intervalY = cf.intervals.get(y.REP());
+
+        if (intervalX == null || intervalY == null)
+        	return false;
+        
+        // i <- interval[REP(x).n]
         LivenessRange i = intervalX.getLiveness();
         // j <- interval[REP(x).n]
-        Interval intervalY = cf.intervals.get(y.REP());
         LivenessRange j = intervalY.getLiveness();
         
 //        System.out.println(" i=" + (i == null ? "null" : i.prettyPrint()));

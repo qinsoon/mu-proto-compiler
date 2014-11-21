@@ -23,7 +23,10 @@ void initHeap() {
 extern Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align);
 
 Address allocObj(int64_t size, int64_t align) {
-    ImmixMutator mutator = getThreadContext()->_mutator;
+    DEBUG_PRINT(("========Calling on allocObj========\n"));
+                
+    ImmixMutator* mutator = &(getThreadContext()->_mutator);
+    DEBUG_PRINT(("pthread=%llx, mutator=%llx\n", (Address)pthread_self(), (Address)mutator));
     
-    return ImmixMutator_alloc(&mutator, size, align);
+    return ImmixMutator_alloc(mutator, size, align);
 }
