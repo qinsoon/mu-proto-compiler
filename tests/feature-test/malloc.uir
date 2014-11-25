@@ -18,13 +18,8 @@
   
   %i.new = ADD <int<64>> %i 1
   
-  %cmp = SGT <int<64>> %i.new 100000000000
-  BRANCH2 %cmp %ret %body
+  BRANCH %body
   
   .label %ret:  
-  %x = LOAD <int<64>> %iref_x
-  %y = LOAD <int<64>> %iref_y
-  %ret = ADD <int<64>> %x %y
-  
-  RET <int<32>> %ret
+  RET <int<32>> 1
 }

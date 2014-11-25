@@ -23,7 +23,7 @@ void setupBootingThreadContext() {
 
 UVMThread* getThreadContext() {
     UVMThread* ret = (UVMThread*) pthread_getspecific(currentUVMThread);
-    DEBUG_PRINT(("thread context (UVMThread) = %llx\n", (Address) ret));
+    DEBUG_PRINT(0, ("thread context (UVMThread) = %llx\n", (Address) ret));
     return ret;
 }
 

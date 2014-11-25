@@ -29,10 +29,10 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
                 Instruction merged = reg.getDef();
                 inst.addChild(reg.getDef());                
                 
-                if (merged.getLabel() != null) {
-                    inst.setLabel(merged.getLabel());
-                    merged.setLabel(null);
-                }
+//                if (merged.getLabel() != null) {
+//                    inst.setLabel(merged.getLabel());
+//                    merged.setLabel(null);
+//                }
             }
             else inst.addChild(v);
         } else inst.addChild(v);
@@ -43,6 +43,12 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
             verboseln(f);
             
             for (IRTreeNode node : f.tree) {
+            	if (node instanceof Instruction) {
+            		Instruction inst = (Instruction) node;
+            		if (inst.getLabel() != null)
+            			verboseln("#" + inst.getLabel().getName() + ":");            		
+            	}
+
                 verboseln("+" + node.printNode());
             }
         }
@@ -62,7 +68,28 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
 
     @Override
     protected void visitInstruction(Instruction inst) {
-    	/*
+    	// remove the label (we put label when we finish a basic block)
+    	if (inst.getLabel() != null)
+    		inst.setLabel(null);
+    	
+    	Instruction addedInst = TranslateIntoTreeNode(inst);
+    	if (addedInst != null && firstInBB == null)
+    		firstInBB = addedInst;
+        
+        verboseln(instIndex + ", curBB.getInsts().size()=" + curBB.getInsts().size());
+        verboseln(inst.prettyPrint());
+        if (instIndex == curBB.getInsts().size() - 1) {
+        	// we finished this BB
+        	firstInBB.setLabel(curBB.getLabel());
+        	
+        	verboseln("adding label#" + curBB.getLabel().getName() + " to " + firstInBB.prettyPrint());
+        } else {
+            instIndex++;
+        }
+    }
+
+	private Instruction TranslateIntoTreeNode(Instruction inst) {
+		/*
     	 * BRANCH
     	 */
         if (inst instanceof InstBranch)
@@ -133,7 +160,7 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
             // we dont need to define it
             // it becomes a subtree of another node
             if (inst.getDefReg().usesOnlyOnce()) {
-                return;
+                return null;
             }
             
             Instruction assign = new InstPseudoAssign(inst.getDefReg(), inst);
@@ -141,18 +168,24 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
             assign.addChild(inst);
             
             // check if the old inst has a label associated with it
-            if (inst.getLabel() != null) {
-                assign.setLabel(inst.getLabel());
-                inst.setLabel(null);
-            }                            
+//            if (inst.getLabel() != null) {
+//                assign.setLabel(inst.getLabel());
+//                inst.setLabel(null);
+//            }                            
             
             f.tree.add(assign);
+            return assign;
         } else {
             f.tree.add(inst);
+            return inst;
         }
-    }
+	}
     
     Function f;
+    BasicBlock curBB;
+    int instIndex;
+    Instruction firstInBB;
+    
     @Override
     protected void visitFunction(Function f) {
         this.f = f;
@@ -160,8 +193,11 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
 
     @Override
     protected void visitBasicBlock(BasicBlock bb) {
-        // TODO Auto-generated method stub
+        instIndex = 0;
+        curBB = bb;
+        firstInBB = null;
         
+        verboseln("Generating tree for BB " + bb.getName() + "...");
     }
 
     @Override

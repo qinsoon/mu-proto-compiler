@@ -540,6 +540,10 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 					MCOperand op = mc.getOperand(i);
 					if (op instanceof MCRegister) {
 						MCRegister reg = (MCRegister) op;
+						
+						if (reg.getType() == MCRegister.MACHINE_REG)
+							continue;
+						
 						Interval interval = cf.intervals.get(reg.REP());
 						
 						if (interval.getSpill() != null)

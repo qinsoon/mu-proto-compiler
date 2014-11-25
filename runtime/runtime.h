@@ -11,7 +11,7 @@ typedef uint64_t Address;
 // general
 Address heapStart;
 
-#define HEAP_SIZE (500 << 20)
+#define HEAP_SIZE (50 << 20)
 #define HEAP_IMMIX_FRACTION 0.7
 #define HEAP_FREELIST_FRACTION 0.3
 
@@ -113,12 +113,20 @@ ImmixSpace* immixSpace;
 extern void setupThreadContext();
 extern UVMThread* getThreadContext();
 
+/*
+ * 0 - for details of every allocation
+ * 1 - for rough verbose for every allocation
+ * 2 - for global allocation only
+ * 5 - for initializer
+ */
+
+#define DEBUG_VERBOSE_LEVEL 2
 #define DEBUG
 
 #ifdef DEBUG
-# define DEBUG_PRINT(x) printf x
+# define DEBUG_PRINT(l, x) if (l >= DEBUG_VERBOSE_LEVEL) printf x
 #else
-# define DEBUG_PRINT(x) do {} while (0)
+# define DEBUG_PRINT(l, x) do {} while (0)
 #endif
 
 /*

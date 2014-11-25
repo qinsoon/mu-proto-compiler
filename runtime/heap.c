@@ -3,18 +3,18 @@
 // heap include an immix space (blocks) and a free list space.
 
 void initHeap() {
-    DEBUG_PRINT(("initializing heap..\n"));
+    DEBUG_PRINT(5, ("initializing heap..\n"));
     
     heapStart = (Address) mmap(0, HEAP_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED | MAP_ANON, -1, 0);
-    DEBUG_PRINT(("-heap start at 0x%llx\n", heapStart));
+    DEBUG_PRINT(5, ("-heap start at 0x%llx\n", heapStart));
     
     Address immixSpaceStart = alignUp(heapStart, IMMIX_BYTES_IN_BLOCK);
-    DEBUG_PRINT(("-immix space start at 0x%llx (aligned to %d)\n", immixSpaceStart, IMMIX_BYTES_IN_BLOCK));
+    DEBUG_PRINT(5, ("-immix space start at 0x%llx (aligned to %d)\n", immixSpaceStart, IMMIX_BYTES_IN_BLOCK));
     fillAlignmentGap(heapStart, immixSpaceStart);
     
     Address endOfImmixSpace = immixSpaceStart + (HEAP_SIZE * HEAP_IMMIX_FRACTION);
     Address freelistSpaceStart = alignUp(endOfImmixSpace, IMMIX_BYTES_IN_BLOCK);
-    DEBUG_PRINT(("-freelist space start at 0x%llx (aligned to %d)\n", freelistSpaceStart, IMMIX_BYTES_IN_BLOCK));
+    DEBUG_PRINT(5, ("-freelist space start at 0x%llx (aligned to %d)\n", freelistSpaceStart, IMMIX_BYTES_IN_BLOCK));
     fillAlignmentGap(endOfImmixSpace, freelistSpaceStart);
     
     immixSpace = newSpace(immixSpaceStart, freelistSpaceStart);
@@ -23,10 +23,10 @@ void initHeap() {
 extern Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align);
 
 Address allocObj(int64_t size, int64_t align) {
-    DEBUG_PRINT(("========Calling on allocObj========\n"));
+    DEBUG_PRINT(0, ("========Calling on allocObj========\n"));
                 
     ImmixMutator* mutator = &(getThreadContext()->_mutator);
-    DEBUG_PRINT(("pthread=%llx, mutator=%llx\n", (Address)pthread_self(), (Address)mutator));
+    DEBUG_PRINT(0, ("pthread=%llx, mutator=%llx\n", (Address)pthread_self(), (Address)mutator));
     
     return ImmixMutator_alloc(mutator, size, align);
 }
