@@ -303,9 +303,10 @@ op : ALLOCA(iimm)
 2
 
 ireg : GETIREF(ireg iimm)
-> add P[0], P[1] -> P[0]
-> mov P[0] -> %res_reg
-2
+> mov P[0] -> %tmp_reg[0]
+> add %tmp_reg[0], P[1] -> %tmp_reg[0]
+> mov %tmp_reg[0] -> %res_reg
+3
 
 ireg : LOAD(ireg)
 > load_mov *(P[0]) -> %res_reg
@@ -316,11 +317,16 @@ op : STORE(ireg ivalue)
 1
 
 ireg : GETFIELD (iimm, ireg)
-> add P[1], P[0] -> P[1]
-> mov P[1] -> %res_reg
-2
+> mov P[1] -> %tmp_reg[0]
+> add %tmp_reg[0], P[0] -> %tmp_reg[0]
+> mov %tmp_reg[0] -> %res_reg
+3
 
-ireg : LOAD(GETFIELD (iimm, ireg))
+getFieldReg : GETFIELD (iimm, ireg)
+> nop	// intentionally keeping this - explicitly emit an nop, otherwise my compiler would emit regular sequence
+0
+
+ireg : LOAD(getFieldReg)
 > load_mov *(P[0][1] + P[0][0]) -> %res_reg
 1
 

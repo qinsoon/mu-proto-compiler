@@ -12,7 +12,7 @@ public class Void extends Type {
 
     @Override
     public String prettyPrint() {
-        return "";
+        return "void";
     }
 
     @Override
@@ -24,4 +24,9 @@ public class Void extends Type {
     public int fitsInFPR() {
         return 0;
     }
+
+	@Override
+	public boolean isReference() {
+		return true;
+	}
 }

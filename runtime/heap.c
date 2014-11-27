@@ -30,3 +30,14 @@ Address allocObj(int64_t size, int64_t align) {
     
     return ImmixMutator_alloc(mutator, size, align);
 }
+
+/*
+ * this method needs to cooperate with the object model 
+ * implemented in uVM compiler (currently uvm.objectmodel.SimpleObjectModel)
+ */
+void initObj(Address addr, uint64_t header) {
+    DEBUG_PRINT(0, ("========Calling on initObj========\n"));
+    DEBUG_PRINT(0, ("addr=0x%llx, header=0x%llx\n", addr, header));
+
+    *((uint64_t*) addr) = header;
+}

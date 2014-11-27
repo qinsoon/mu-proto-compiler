@@ -41,6 +41,8 @@ public abstract class Type {
         return ID;
     }
     
+    public abstract boolean isReference();
+    
     public abstract String prettyPrint();
     
     public abstract int fitsInGPR();

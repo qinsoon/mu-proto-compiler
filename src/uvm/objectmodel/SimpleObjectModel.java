@@ -7,6 +7,7 @@ import compiler.UVMCompiler;
 import compiler.util.Alignment;
 import uvm.MicroVM;
 import uvm.Type;
+import uvm.type.IRef;
 import uvm.type.Ref;
 import uvm.type.Struct;
 
@@ -22,28 +23,38 @@ public class SimpleObjectModel {
 	/*
 	 * >>>Type info<<< use simplest object type info for GC
 	 * 
-	 * 1. a length (4bytes) to describe bitmap length
-	 * 2. a bitmap to describe reference(0 = this 8bytes contains no ref, 1 = this 8bytes is a ref)
+	 * Use 8 bytes
+	 * 
+	 * (1) if the highest bit is 1
+	 * 
+	 * high                                                                     low
+	 * | 01xxxxxx xxxxxxxx | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx|
+	 *    GC bits            Reference Bitmap
+	 *  
+	 * (2) if the highest bit is 0
+	 * 
+	 * high																		 low
+	 * | 00xxxxxx xxxxxxxx | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx|
+	 *    GC bits            Pointer to external reference bitmap
+	 * 
 	 * 
 	 * E.g. int<32>
-	 * GCHeader
-	 * Length = 1
 	 * Bitmap = 0
 	 * 
 	 * E.g. ref<double>
-	 * GCHeader
-	 * Length = 1
 	 * Bitmap = 1
 	 * 
-	 * E.g. struct{int<32>, ref<int<32>>, int<64>, ref<int<64>>}
-	 * GCHeader
-	 * Length = 4      
+	 * E.g. struct{int<32>, int<32>, ref<int<32>>, int<64>, ref<int<64>>}  
 	 * Bitmap = 0101
 	 * 
 	 */
 	
-	public static final int BITMAP_LENGTH_SIZE_IN_BYTES = 4;
-	public static final int GC_HEADER_SIZE_IN_BYTES = 4;
+	public static final long BITMAP_MASK = 0x0000FFFFFFFFFFFFL;
+	public static final long GCBITS_MASK = 0x7FFF000000000000L;
+	
+//	public static final int BITMAP_LENGTH_SIZE_IN_BYTES = 4;
+	public static final int GC_HEADER_SIZE_IN_BYTES = 2;
+	public static final int BITMAP_SIZE_IN_BYTES = 6;
 	
 	/*
 	 * >>>Object Header<<<
@@ -51,20 +62,84 @@ public class SimpleObjectModel {
 	 * For simplicity, just put type info in object header
 	 */
 	
+	public long getHeaderInitialization(Type t) {
+		// we use 1 bit in the bitmap to represent 8bytes
+		// check if we can fit the type into a 48bits bitmap
+		if (t.sizeInBytes() > 48 * 8) {
+			// we use 48bits as pointer to an external bitmap
+			UVMCompiler.error("unimplemented for external bitmap");
+			return 0;
+		} else {
+			long ret = (1 << 62);
+			long gc = getGCBitsInitialization(t);
+			long bitmap = getReferenceBitMap(t);
+			ret |= gc;
+			ret |= bitmap;
+			return ret;
+		}
+
+	}
+	
+	private long getGCBitsInitialization(Type t) {
+		return 0;
+	}
+
+	/**
+	 * bits for first fields at least significant bits
+	 * @param t
+	 * @return
+	 */
+	public long getReferenceBitMap(Type t) {		
+		if (t instanceof Struct) {
+			long ret = 0;
+			
+			Struct struct = (Struct) t;
+			
+			int expectOffset = 0;
+			
+			for (int i = 0; i < struct.getTypes().size(); i++) {
+				Type ty = struct.getType(i);
+				int offset = struct.getOffset(i);
+				System.out.println("offset=" + offset + ",expect offset=" + expectOffset);
+				
+				if (offset < expectOffset) {
+					continue;
+				} else if (offset == expectOffset) {
+					int bit = expectOffset/8;
+					if (ty.isReference()) {
+						// set the (expectOffset/8) bit to 1
+						ret |= (1 << bit);
+					} else {
+						// set the bit to 0
+						// do nothing
+					}
+				} else if (offset > expectOffset) {
+					// do nothing
+				}
+				
+				expectOffset += MicroVM.POINTER_SIZE / 8;
+			}
+			
+			return ret;
+		} else if (t.isReference())
+			return 1;
+		else return 0;
+	}
+	
 	/**
 	 * how many bytes is needed for object header for Type t
 	 * @param t
 	 * @return
 	 */
 	public int getHeaderSize(Type t) {
-		int size = t.sizeInBytes();
+//		int size = t.sizeInBytes();
+//		
+//		// how many bytes for bitmap
+//		// we use one bit to represent 8 bytes(2^3) ref/non-ref
+//		int bitmapSizeInBits = size % 8 == 0? size / 8 : size /8 + 1;
+//		int bitmapSizeInBytes = bitmapSizeInBits % 8 == 0 ? bitmapSizeInBits / 8 : bitmapSizeInBits / 8 + 1;
 		
-		// how many bytes for bitmap
-		// we use one bit to represent 8 bytes(2^3) ref/non-ref
-		int bitmapSizeInBits = size % 8 == 0? size / 8 : size /8 + 1;
-		int bitmapSizeInBytes = bitmapSizeInBits % 8 == 0 ? bitmapSizeInBits / 8 : bitmapSizeInBits / 8 + 1;
-		
-		return  BITMAP_LENGTH_SIZE_IN_BYTES + GC_HEADER_SIZE_IN_BYTES + bitmapSizeInBytes;
+		return  GC_HEADER_SIZE_IN_BYTES + BITMAP_SIZE_IN_BYTES;
 	}
 	
 	public void layoutStruct(Struct struct) {

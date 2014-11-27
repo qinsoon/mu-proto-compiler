@@ -39,4 +39,9 @@ public class IRef extends AbstractPointerType {
 		return referenced;
 	}
 
+	@Override
+	public boolean isReference() {
+		return true;
+	}
+
 }

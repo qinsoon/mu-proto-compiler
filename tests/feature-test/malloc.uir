@@ -1,25 +1,22 @@
 // malloc
 
-.typedef @point struct<int<64> int<64>>
+.typedef @testStruct struct<int<32> int<32> ref<int<64>> int<64> int<64> ref<int<64>>>
 
 .funcdef @main <int<32> ()> {
   .label %entry:
   BRANCH %body
 
   .label %body:
-  %i = PHI <int<64>> {%entry: 0; %body: %i.new; }
-  %ref  = NEW <@point>
+  %ref  = NEW <@testStruct>  
+  %iref = GETIREF <@testStruct> %ref
+  %iref_x = GETFIELDIREF <@testStruct 0> %iref
+  %x = LOAD <int<64>> %iref_x
+  %iref_y = GETFIELDIREF <@testStruct 2> %iref
+  %y = LOAD <int<64>> %iref_y
+  %ret = ADD <int<64>> %x %y
   
-  %iref = GETIREF <@point> %ref
-  %iref_x = GETFIELDIREF <@point 0> %iref
-  STORE <int<64>> %iref_x 1
-  %iref_y = GETFIELDIREF <@point 1> %iref
-  STORE <int<64>> %iref_y 1
-  
-  %i.new = ADD <int<64>> %i 1
-  
-  BRANCH %body
+  BRANCH %ret
   
   .label %ret:  
-  RET <int<32>> 1
+  RET <int<32>> %ret
 }

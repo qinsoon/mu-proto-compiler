@@ -24,13 +24,17 @@ public class MCRepresentationGeneration extends AbstractCompilationPhase{
             CompiledFunction cf = new CompiledFunction(f);
             
             for (IRTreeNode node : f.tree) {
+            	verboseln("For node: " + node.printNode());
                 List<AbstractMachineCode> mc = BURM_GENERATED.emitCode(node);
                 if (node instanceof Instruction) {
                     if (((Instruction) node).getLabel() != null) {
                         mc.get(0).setLabel(new uvm.mc.MCLabel(((Instruction) node).getLabel().getName()));
                     }
                 } else UVMCompiler.error("node " + node.prettyPrint() + " is not an inst");
-                
+                verboseln("Emit:");
+                for (AbstractMachineCode code : mc)
+                	verboseln(code.prettyPrintOneline());
+                verboseln();
                 cf.addMachineCode(mc);
             }
             

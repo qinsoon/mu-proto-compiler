@@ -40,4 +40,9 @@ public class Ref extends AbstractPointerType {
     public String prettyPrint() {
         return "ref<" + referenced.prettyPrint() + ">";
     }
+
+	@Override
+	public boolean isReference() {
+		return true;
+	}
 }

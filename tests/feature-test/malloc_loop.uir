@@ -1,0 +1,25 @@
+// malloc
+
+.typedef @point struct<int<64> int<64>>
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+  BRANCH %body
+
+  .label %body:
+  %i = PHI <int<64>> {%entry: 0; %body: %i.new; }
+  %ref  = NEW <@point>
+  
+  %iref = GETIREF <@point> %ref
+  %iref_x = GETFIELDIREF <@point 0> %iref
+  STORE <int<64>> %iref_x 1
+  %iref_y = GETFIELDIREF <@point 1> %iref
+  STORE <int<64>> %iref_y 1
+  
+  %i.new = ADD <int<64>> %i 1
+  
+  BRANCH %body
+  
+  .label %ret:  
+  RET <int<32>> 1
+}

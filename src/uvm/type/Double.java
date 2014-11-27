@@ -35,4 +35,9 @@ public class Double extends Type {
     public int fitsInFPR() {
         return 1;
     }
+
+	@Override
+	public boolean isReference() {
+		return false;
+	}
 }

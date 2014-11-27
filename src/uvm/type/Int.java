@@ -61,4 +61,9 @@ public class Int extends Type {
         return 0;
     }
 
+	@Override
+	public boolean isReference() {
+		return false;
+	}
+
 }

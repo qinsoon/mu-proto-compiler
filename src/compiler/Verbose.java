@@ -2,10 +2,10 @@ package compiler;
 
 public abstract class Verbose {
     public static final boolean DEF_USE_GEN         = false;
-    public static final boolean TREE_GEN            = true;
+    public static final boolean TREE_GEN            = false;
     public static final boolean EXPAND_RT_SERVICE	= true;
     
-    public static final boolean INST_SEL            = false;
+    public static final boolean INST_SEL            = true;
     public static final boolean MC_REP_GEN          = true;
     
     public static final boolean COMBINE_RET         = false;

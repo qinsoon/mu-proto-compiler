@@ -33,6 +33,7 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
     protected void visitCompiledFunction(CompiledFunction cf) {
         buildLiveIn(cf);
         buildIntervals(cf);
+        checkIntervals(cf);
         
         if (verbose) {
         	verboseln("");
@@ -40,7 +41,12 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         }
     }
     
-    public void buildLiveIn(CompiledFunction cf) {
+    private void checkIntervals(CompiledFunction cf) {
+//		verboseln("----- check if every temporaries gets an interval -----");
+//		for (MCBasicBlock bb : )
+	}
+
+	public void buildLiveIn(CompiledFunction cf) {
         verboseln("----- build live-in for " + cf.getOriginFunction().getName() + " -----");
         // arbitrary order
         for (MCBasicBlock bb : cf.BBs) {

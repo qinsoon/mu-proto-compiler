@@ -104,4 +104,9 @@ public class Struct extends Type {
     public int fitsInFPR() {
         return 0;
     }
+
+	@Override
+	public boolean isReference() {
+		return false;
+	}
 }
