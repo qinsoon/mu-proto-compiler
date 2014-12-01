@@ -8,6 +8,11 @@
 
 typedef uint64_t Address;
 
+// yieldpoint
+Address yieldpoint_protect_page;
+#define LOG_BYTES_IN_PAGE 12
+#define BYTES_IN_PAGE (1 << LOG_BYTES_IN_PAGE)
+
 // general
 Address heapStart;
 
@@ -140,4 +145,6 @@ extern void fillAlignmentGap(Address start, Address end);
  * MISC
  */
 
+extern void disableYieldpoint();
+extern void enableYieldpoint();
 extern void uVM_fail(const char* str);

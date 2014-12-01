@@ -133,7 +133,7 @@ public class UVMCompiler {
              *  mc code transform
              */
             new CombineReturns("combineret", Verbose.COMBINE_RET).execute();
-            new BBReconstruction("reconstbb", Verbose.RECONSTRUCT_BB).execute();
+            new MCControlFlowAnalysis("mccfa", Verbose.RECONSTRUCT_BB).execute();
             new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();            
 
             
@@ -159,6 +159,8 @@ public class UVMCompiler {
             new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
             new SimpleLinearScan("simplelinearscan", Verbose.LINEAR_SCAN).execute();
             new X64PostRegisterAllocPatching("postregallocpatching", false).execute();
+            
+            new InsertYieldpoint("insertYP", Verbose.INSERT_YIELDPOINT).execute();            
             
             /*
              *  code emission

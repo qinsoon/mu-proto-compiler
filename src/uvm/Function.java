@@ -25,6 +25,8 @@ public class Function {
     HashMap<String, Const> constPool;
     List<BasicBlock> BBs;
     
+    BasicBlock CFG;
+    
     // IR tree
     public List<IRTreeNode> tree = new ArrayList<IRTreeNode>();
     
@@ -104,6 +106,15 @@ public class Function {
     public HashMap<String, Const> getConstPool() {
         return constPool;
     }
+    
+    public BasicBlock getBB(String name) {
+    	for (BasicBlock bb : BBs) {
+    		if (bb.getName().equals(name))
+    			return bb;
+    	}
+    	
+    	return null;
+    }
 
     public List<BasicBlock> getBBs() {
         return BBs;
@@ -111,5 +122,13 @@ public class Function {
 
     public uvm.Label getFuncLabel() {
         return funcLabel;
+    }
+    
+    public void setCFGEntry(BasicBlock bb) {
+    	this.CFG = bb;
+    }
+    
+    public BasicBlock getCFG() {
+    	return CFG;
     }
 }

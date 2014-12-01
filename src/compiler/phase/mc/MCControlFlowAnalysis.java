@@ -8,9 +8,9 @@ import uvm.mc.MCLabel;
 import compiler.UVMCompiler;
 import compiler.phase.AbstractCompilationPhase;
 
-public class BBReconstruction extends AbstractMCCompilationPhase{
+public class MCControlFlowAnalysis extends AbstractMCCompilationPhase{
 
-    public BBReconstruction(String name, boolean verbose) {
+    public MCControlFlowAnalysis(String name, boolean verbose) {
         super(name, verbose);
     }
 

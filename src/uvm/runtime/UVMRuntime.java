@@ -6,6 +6,9 @@ public class UVMRuntime {
 	
 	public static final String INIT_FUNC = "_initRuntime";
 	
+	public static final String YIELDPOINT_PROTECT_AREA = "_yieldpoint_protect_page";
+	public static final long YIELDPOINT_WRITE = 1L;
+	
 	boolean heapUsed;
 	boolean exceptionUsed;
 	

@@ -22,6 +22,7 @@ import compiler.util.MultiValueMap;
 import compiler.util.OrderedList;
 import compiler.util.Pair;
 
+@Deprecated
 public class LinearScan extends AbstractMCCompilationPhase {
 
     public LinearScan(String name, boolean verbose) {

@@ -22,4 +22,9 @@ public class InstBranch extends Instruction {
     public Label getTarget() {
         return target;
     }
+    
+    @Override
+    public boolean isBranching() {
+    	return true;
+    }
 }

@@ -48,4 +48,12 @@ public abstract class Instruction extends IRTreeNode {
     public boolean needsToCallRuntimeService() {
     	return false;
     }
+    
+    /**
+     * a uIR basic block ends with a branching instruction
+     * @return
+     */
+    public boolean isBranching() {
+    	return false;
+    }
 }

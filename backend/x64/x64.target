@@ -293,18 +293,18 @@ ireg : CCALL(label)
 // ********************************
 
 ireg : ALLOCA(iimm)
-> sub %rsp, P[0] -> %rsp
+> sub %rsp P[0] -> %rsp
 > mov %rsp -> %res_reg
 2
 
 op : ALLOCA(iimm)
-> sub %rsp, P[0] -> %rsp
+> sub %rsp P[0] -> %rsp
 > mov %rsp -> %res_reg
 2
 
 ireg : GETIREF(ireg iimm)
 > mov P[0] -> %tmp_reg[0]
-> add %tmp_reg[0], P[1] -> %tmp_reg[0]
+> add %tmp_reg[0] P[1] -> %tmp_reg[0]
 > mov %tmp_reg[0] -> %res_reg
 3
 
@@ -313,16 +313,16 @@ ireg : LOAD(ireg)
 1
 
 op : STORE(ireg ivalue)
-> store_mov *(P[0]), P[1]
+> store_mov *(P[0]) P[1]
 1
 
-ireg : GETFIELD (iimm, ireg)
+ireg : GETFIELD(iimm ireg)
 > mov P[1] -> %tmp_reg[0]
-> add %tmp_reg[0], P[0] -> %tmp_reg[0]
+> add %tmp_reg[0] P[0] -> %tmp_reg[0]
 > mov %tmp_reg[0] -> %res_reg
 3
 
-getFieldReg : GETFIELD (iimm, ireg)
+getFieldReg : GETFIELD(iimm ireg)
 > nop	// intentionally keeping this - explicitly emit an nop, otherwise my compiler would emit regular sequence
 0
 
@@ -449,6 +449,10 @@ label : LABEL
 	"%d(%%%s)", P(MCDispMemoryOperand).getDisp(), P(MCDispMemoryOperand).getBase().REP().getName();
 }
 
+.emit_op MCCGlobal = {
+	"%s", P(MCCGlobal).getName();
+}
+
 // _|      _|    _|_|_|      _|_|_|    _|_|_|_|  _|_|_|_|  _|_|_|  _|      _|  _|_|_|_|
 // _|_|  _|_|  _|            _|    _|  _|        _|          _|    _|_|    _|  _|      
 // _|  _|  _|  _|            _|    _|  _|_|_|    _|_|_|      _|    _|  _|  _|  _|_|_|  
@@ -509,7 +513,7 @@ label : LABEL
 
 .mc_def call = {
 	"call %s", OP[0];
-	uses: rdi(GPR) rsi(GPR) rdx(GPR) rcx(GPR) r8(GPR) r9(GPR) xmm0(DP) xmm1(DP) xmm2(DP) xmm3(DP) xmm4(DP) xmm5(DP) xmm6(DP) xmm7(DP)
+	uses: rdi(GPR) rsi(GPR) rdx(GPR) rcx(GPR) r8(GPR) r9(GPR) xmm0(DP) xmm1(DP) xmm2(DP) xmm3(DP) xmm4(DP) xmm5(DP) xmm6(DP) xmm7(DP);
 }
 
 .mc_def push(1) = {
@@ -562,7 +566,7 @@ label : LABEL
 
 .mc_def ret = {
 	"ret";
-	uses: rax(GPR) rdx(GPR) xmm0(DP) xmm1(DP)
+	uses: rax(GPR) rdx(GPR) xmm0(DP) xmm1(DP);
 }
 
 // ********************************

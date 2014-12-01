@@ -1,8 +1,24 @@
 #include "runtime.h"
 
+void initMisc();
+
 void initRuntime() {
     initHeap();
     initThread();
+    initMisc();
+}
+
+void initMisc() {
+    yieldpoint_protect_page = (Address) malloc(BYTES_IN_PAGE);
+    disableYieldpoint();
+}
+
+extern void disableYieldpoint() {
+    mprotect((void*) yieldpoint_protect_page, BYTES_IN_PAGE, PROT_WRITE);
+}
+
+extern void enableYieldpoint() {
+    mprotect((void*) yieldpoint_protect_page, BYTES_IN_PAGE, PROT_NONE);
 }
 
 Address alignUp(Address region, int align) {

@@ -25,9 +25,11 @@ public abstract class Verbose {
     
     public static final boolean EXPAND_CALL_SEQ     = false;
     
+    public static final boolean INSERT_YIELDPOINT   = true;
+    
     public static final boolean SIMPLE_BRANCH_ALIGN = false;
     public static final boolean MC_CLEANUP          = false;
     
     public static final boolean SPILL_CONSTANT      = false;
-    public static final boolean CODE_EMIT           = false;
+    public static final boolean CODE_EMIT           = true;
 }

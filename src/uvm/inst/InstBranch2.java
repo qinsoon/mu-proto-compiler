@@ -35,4 +35,9 @@ public class InstBranch2 extends Instruction {
     public Label getIfFalse() {
         return ifFalse;
     }
+    
+    @Override
+    public boolean isBranching() {
+    	return true;
+    }
 }
