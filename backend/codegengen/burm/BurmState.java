@@ -1,5 +1,9 @@
 package burm;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import uvm.IRTreeNode;
 
 public class BurmState {
@@ -8,11 +12,14 @@ public class BurmState {
     static final short INFINITE = Short.MAX_VALUE;
     short[] cost;
     short[] rule; 
+    List<List<Integer>> childNodes;
 
-	public void record(int nt, int cost, int ruleno) {
+	public void record(int nt, int cost, int ruleno, Integer[] child) {
       if (cost < this.cost[nt]) {
         this.cost[nt] = (short) cost;
         this.rule[nt] = (short) ruleno;
+        if (child != null)
+        	childNodes.set(nt, Arrays.asList(child));
       }
     }
     

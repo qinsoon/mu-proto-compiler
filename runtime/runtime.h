@@ -125,7 +125,7 @@ extern UVMThread* getThreadContext();
  * 5 - for initializer
  */
 
-#define DEBUG_VERBOSE_LEVEL 0
+#define DEBUG_VERBOSE_LEVEL 2
 #define DEBUG
 
 #ifdef DEBUG

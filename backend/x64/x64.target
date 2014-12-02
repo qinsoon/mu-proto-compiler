@@ -449,10 +449,6 @@ label : LABEL
 	"%d(%%%s)", P(MCDispMemoryOperand).getDisp(), P(MCDispMemoryOperand).getBase().REP().getName();
 }
 
-.emit_op MCCGlobal = {
-	"%s", P(MCCGlobal).getName();
-}
-
 // _|      _|    _|_|_|      _|_|_|    _|_|_|_|  _|_|_|_|  _|_|_|  _|      _|  _|_|_|_|
 // _|_|  _|_|  _|            _|    _|  _|        _|          _|    _|_|    _|  _|      
 // _|  _|  _|  _|            _|    _|  _|_|_|    _|_|_|      _|    _|  _|  _|  _|_|_|  

@@ -152,6 +152,22 @@ public class Burg {
     public static String targetName = null;
     
     private static String curCost = null;
+    private static ArrayList<String> curChildren = null;
+    
+    private static String genChildrenArray(ArrayList<String> children) {
+    	if (children == null)
+    		return "null";
+    	
+    	StringBuilder ret = new StringBuilder();
+    	ret.append("new Integer[]{");
+    	for (int i = 0; i < children.size(); i++) {
+    		ret.append(children.get(i));
+    		if (i != children.size() - 1)
+    			ret.append(',');
+    	}
+    	ret.append('}');
+    	return ret.toString();
+    }
     
     private static final String OPERAND_FROM_NODE = "operandFromNode";
     
@@ -206,148 +222,82 @@ public class Burg {
         code.appendStmtln("}");
         code.appendln();
         
-        /*
-         * first few lines of state()
-         */
-        code.appendln("public static BurmState state(IRTreeNode node, BurmState[] leaves) {");
-        code.increaseIndent();
-        code.appendStmtln("BurmState p = new BurmState()");
-        code.appendln();
-        code.appendStmtln("p.node = node");
-        code.appendStmtln("p.leaves = leaves");
+        generateBURM_f_state(code);
         
         /*
-         * rest of state()
+         * gen mc emission: List<MC> emitCode(IRTreeNode node, int supposedNT)
          */
-        code.append("p.cost = new short[]{");
-        int ntCount = ntNames.size();
-        for (int i = 0; i <= ntCount; i++)
-            if (i != ntCount)
-                code.appendNoIndent("INFINITE,");
-            else code.appendlnNoIndent("INFINITE};");
-        code.append("p.rule = new short[]{");
-        for (int i = 0; i <= ntCount; i++)
-            if (i != ntCount)
-                code.appendNoIndent("-1,");
-            else code.appendlnNoIndent("-1};");
-        
-        code.appendln();
-        code.appendStmtln("int c");
-        code.appendln();
-        
-        code.appendln("switch (node.getOpcode()) {");
-        
-        // for every terminal
-        for (String term : termNames.keySet()) {
-            code.appendln("case " + term + ":");
-            code.increaseIndent();
-            
-            // for every rule, this terminal is rhs
-            for (Rule rule : rules) {
-                if (rule.rhs.id == termNames.get(term)) {
-                    boolean needToMatchChildren = rule.rhs.children.size() != 0;
-                    
-                    if (needToMatchChildren) {
-                        curCost = "";
-                        code.append("if (");
-                        code.appendNoIndent(matchChildren(rule.rhs, null));
-                        code.appendNoIndent(") {");
-                        code.appendlnNoIndent();
-                        
-                        code.increaseIndent();
-                    }
-                    
-                    // current cost
-                    code.appendCommentln(rule.prettyPrint());
-                    code.append("c = ");
-                    if (curCost != null)
-                        code.appendNoIndent(curCost);
-                    code.appendNoIndent(Integer.toString(rule.cost));
-                    code.appendNoIndent(";\n");
-                    code.appendStmtln(String.format("p.record(%s, c, %d)", rule.lhs.name, rule.ruleno));
-                    
-                    // chain cost
-                    code.appendln();
-                    code.appendCommentln("chain cost");
-                    genChainCost(code, rule.lhs, "c");
-                    
-                    if (needToMatchChildren) {
-                        code.decreaseIndent();
-                        code.appendln("}");
-                        curCost = null;
-                    }
-                }
-            }
-            
-            code.appendln("break;");
-            code.decreaseIndent();
-        }
-        
-        // end of switch
-        code.appendln("}");
-        
-        code.appendStmtln("return p");
-        code.decreaseIndent();
-        
-        // end of function
-        code.appendln("}");
-        code.decreaseIndent();
-        
-        /*
-         * gen mc emission: List<MC> emitCode(IRTreeNode node)
-         */
-        code.appendln();
-        code.appendln(String.format("public static List<AbstractMachineCode> emitCode(%s node) {", IR_NODE_TYPE));
-        code.increaseIndent();
-        code.appendStmtln("int leastCostRuleNo = -1");
-        code.appendStmtln("short leastCost = Short.MAX_VALUE");
-        code.appendStmtln("List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>()");
-        code.appendln();
-        
-        code.appendStmtln("boolean unmatchedNode = true");
-        code.appendln();
-        
-        code.appendln("for (int i = 0; i < node.state.cost.length; i++)");
-        code.increaseIndent();
-        code.appendln("if (leastCost > node.state.cost[i]) {");
-        code.increaseIndent();
-        code.appendStmtln("unmatchedNode = false");
-        code.appendln("if (hasCodeEmission[node.state.rule[i]]) {");
-        code.increaseIndent();
-        code.appendStmtln("leastCost = node.state.cost[i]");
-        code.appendStmtln("leastCostRuleNo = node.state.rule[i]");
-        code.decreaseIndent();
-        code.appendln("}");
-        code.decreaseIndent();
-        code.appendln("}");
-        code.decreaseIndent();
-        
-        code.appendln();
-        code.appendln("if (unmatchedNode) {");
-        code.increaseIndent();
-        code.appendStmtln("System.out.println(\"node: \" + node.prettyPrint() + \"doesnt have a match in instr selection\")");
-        code.appendStmtln("System.exit(-1)");
-        code.decreaseIndent();
-        code.appendln("}");
-        
-        code.appendln();
-        code.appendln("for (int i = 0; i < node.getArity(); i++) ");
-        code.increaseIndent();
-        code.appendStmtln("ret.addAll(emitCode(node.getChild(i)))");
-        code.decreaseIndent();
-        
-        code.appendln();
-        code.appendStmtln("ret.addAll(emitCode(node, leastCostRuleNo))");
-        code.appendStmtln("return ret");
-        code.decreaseIndent();
-        code.appendln("}");
-        code.appendln();
+        generateBURM_f_emitCode(code);
         
         /*
          * gen mc emission: List<MC> emitCode(IRTreeNode node, int rule) 
          */
-        code.appendln(String.format(
-                "public static List<AbstractMachineCode> emitCode(%s node, int rule) {",
+        generateBURM_f_emitCodeByRule(code);
+        
+        /*
+         * TODO shouldnt hard-code it here
+         * operandFromNode()
+         * 
+         * there is another copy of this code in X64CallConvention
+         */
+        generateBURM_f_operandFromNode(code);
+
+        // end of class
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        System.out.println("========BURM Generated========");
+        System.out.println(code.toString());
+        
+        writeTo(output + BURM_FILE, code.toString());
+    }
+
+	private static void generateBURM_f_operandFromNode(CodeBuilder code) {
+		code.appendln(String.format(
+                "public static MCOperand operandFromNode(%s node, int dataType) {", IR_NODE_TYPE));
+        code.increaseIndent();
+        code.appendln("MCOperand ret;");
+        code.appendln("switch(node.getOpcode()) {");
+        code.appendln("case OpCode.INT_IMM:");
+        code.increaseIndent();
+        code.appendln("ret = new uvm.mc.MCIntImmediate(((uvm.IntImmediate)node).getValue()); break;");
+        code.decreaseIndent();
+        code.appendln("case OpCode.FP_SP_IMM:");
+        code.increaseIndent();
+        code.appendln("ret = new uvm.mc.MCSPImmediate(((uvm.FPImmediate)node).getFloat()); break;");
+        code.decreaseIndent();
+        code.appendln("case OpCode.FP_DP_IMM:");
+        code.increaseIndent();
+        code.appendln("ret = new uvm.mc.MCDPImmediate(((uvm.FPImmediate)node).getDouble()); break;");
+        code.decreaseIndent();
+        code.appendln("case OpCode.REG_I1:");
+        code.appendln("case OpCode.REG_I8:");
+        code.appendln("case OpCode.REG_I16:");
+        code.appendln("case OpCode.REG_I32:");
+        code.appendln("case OpCode.REG_I64:");
+        code.increaseIndent();
+        code.appendln("ret = uvm.mc.MCRegister.findOrCreate(((uvm.Register)node).getName(), uvm.mc.MCRegister.OTHER_SYMBOL_REG, dataType); break;");
+        code.decreaseIndent();
+        code.appendln("case OpCode.LABEL:");
+        code.increaseIndent();
+        code.appendln("ret = new uvm.mc.MCLabel(((uvm.Label)node).getName()); break;");
+        code.decreaseIndent();
+        code.appendln("default:");
+        code.increaseIndent();
+        code.appendln("ret = uvm.mc.MCRegister.findOrCreate(\"res_reg\"+node.getId(), uvm.mc.MCRegister.RES_REG, dataType); break;");
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        code.appendStmtln("ret.highLevelOp = node");
+        code.appendStmtln("return ret");
+        
+        code.decreaseIndent();
+        code.appendln("}");
+	}
+
+	private static void generateBURM_f_emitCodeByRule(CodeBuilder code) {
+		code.appendln(String.format(
+                "public static List<AbstractMachineCode> emitCodeByRule(%s node, int rule) {",
                 IR_NODE_TYPE));
         
         code.increaseIndent();
@@ -412,63 +362,152 @@ public class Burg {
         code.appendStmtln("return null");
         
         code.appendln("}");
+	}
+
+	private static void generateBURM_f_emitCode(CodeBuilder code) {
+		code.appendln();
+        code.appendln(String.format("public static List<AbstractMachineCode> emitCode(%s node, int supposedNT) {", IR_NODE_TYPE));
+        code.increaseIndent();
+        code.appendStmtln("int leastCostRuleNo = -1");
+        code.appendStmtln("short leastCost = Short.MAX_VALUE");
+        code.appendStmtln("int leastCostNT = -1");
+        code.appendStmtln("List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>()");
+        code.appendln();
+        
+        code.appendStmtln("boolean unmatchedNode = true");
+        code.appendln();
+        
+        code.appendln("for (int i = 0; i < node.state.cost.length; i++)");
+        code.increaseIndent();
+        code.appendln("if (leastCost > node.state.cost[i]) {");
+        code.increaseIndent();
+        code.appendStmtln("unmatchedNode = false");
+        code.appendln("if (hasCodeEmission[node.state.rule[i]] && (supposedNT == -1 || supposedNT == i)) {");
+        code.increaseIndent();
+        code.appendStmtln("leastCost = node.state.cost[i]");
+        code.appendStmtln("leastCostRuleNo = node.state.rule[i]");
+        code.decreaseIndent();
+        code.appendln("}");
+        code.appendStmtln("leastCostNT = i");
+        code.decreaseIndent();
+        code.appendln("}");
+        code.decreaseIndent();
+        
+        code.appendln();
+        code.appendln("if (unmatchedNode) {");
+        code.increaseIndent();
+        code.appendStmtln("System.out.println(\"node: \" + node.prettyPrint() + \"doesnt have a match in instr selection\")");
+        code.appendStmtln("System.exit(-1)");
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        code.appendln();
+        code.appendln("for (int i = 0; i < node.getArity(); i++) ");
+        code.increaseIndent();
+        code.appendStmtln("ret.addAll(emitCode(node.getChild(i), node.state.childNodes.get(leastCostNT).get(i)))");
+        code.decreaseIndent();
+        
+        code.appendln();
+        code.appendStmtln("ret.addAll(emitCodeByRule(node, leastCostRuleNo))");
+        code.appendStmtln("return ret");
+        code.decreaseIndent();
+        code.appendln("}");
+        code.appendln();
+	}
+
+	private static void generateBURM_f_state(CodeBuilder code) {
+		/*
+         * first few lines of state()
+         */
+        code.appendln("public static BurmState state(IRTreeNode node, BurmState[] leaves) {");
+        code.increaseIndent();
+        code.appendStmtln("BurmState p = new BurmState()");
+        code.appendln();
+        code.appendStmtln("p.node = node");
+        code.appendStmtln("p.leaves = leaves");
         
         /*
-         * TODO shouldnt hard-code it here
-         * operandFromNode()
-         * 
-         * there is another copy of this code in X64CallConvention
+         * rest of state()
          */
-        code.appendln(String.format(
-                "public static MCOperand operandFromNode(%s node, int dataType) {", IR_NODE_TYPE));
-        code.increaseIndent();
-        code.appendln("MCOperand ret;");
-        code.appendln("switch(node.getOpcode()) {");
-        code.appendln("case OpCode.INT_IMM:");
-        code.increaseIndent();
-        code.appendln("ret = new uvm.mc.MCIntImmediate(((uvm.IntImmediate)node).getValue()); break;");
-        code.decreaseIndent();
-        code.appendln("case OpCode.FP_SP_IMM:");
-        code.increaseIndent();
-        code.appendln("ret = new uvm.mc.MCSPImmediate(((uvm.FPImmediate)node).getFloat()); break;");
-        code.decreaseIndent();
-        code.appendln("case OpCode.FP_DP_IMM:");
-        code.increaseIndent();
-        code.appendln("ret = new uvm.mc.MCDPImmediate(((uvm.FPImmediate)node).getDouble()); break;");
-        code.decreaseIndent();
-        code.appendln("case OpCode.REG_I1:");
-        code.appendln("case OpCode.REG_I8:");
-        code.appendln("case OpCode.REG_I16:");
-        code.appendln("case OpCode.REG_I32:");
-        code.appendln("case OpCode.REG_I64:");
-        code.increaseIndent();
-        code.appendln("ret = uvm.mc.MCRegister.findOrCreate(((uvm.Register)node).getName(), uvm.mc.MCRegister.OTHER_SYMBOL_REG, dataType); break;");
-        code.decreaseIndent();
-        code.appendln("case OpCode.LABEL:");
-        code.increaseIndent();
-        code.appendln("ret = new uvm.mc.MCLabel(((uvm.Label)node).getName()); break;");
-        code.decreaseIndent();
-        code.appendln("default:");
-        code.increaseIndent();
-        code.appendln("ret = uvm.mc.MCRegister.findOrCreate(\"res_reg\"+node.getId(), uvm.mc.MCRegister.RES_REG, dataType); break;");
-        code.decreaseIndent();
+        code.append("p.cost = new short[]{");
+        int ntCount = ntNames.size();
+        for (int i = 0; i <= ntCount; i++)
+            if (i != ntCount)
+                code.appendNoIndent("INFINITE,");
+            else code.appendlnNoIndent("INFINITE};");
+        code.append("p.rule = new short[]{");
+        for (int i = 0; i <= ntCount; i++)
+            if (i != ntCount)
+                code.appendNoIndent("-1,");
+            else code.appendlnNoIndent("-1};");
+        code.appendStmtln("p.childNodes = new ArrayList<List<Integer>>()");
+        for (int i = 0; i <= ntCount; i++)
+        	code.appendStmtln("p.childNodes.add(null)");
+        
+        code.appendln();
+        code.appendStmtln("int c");
+        code.appendln();
+        
+        code.appendln("switch (node.getOpcode()) {");
+        
+        // for every terminal
+        for (String term : termNames.keySet()) {
+            code.appendln("case " + term + ":");
+            code.increaseIndent();
+            
+            // for every rule, this terminal is rhs
+            for (Rule rule : rules) {
+                if (rule.rhs.id == termNames.get(term)) {
+                    boolean needToMatchChildren = rule.rhs.children.size() != 0;
+                    
+                    if (needToMatchChildren) {
+                        curCost = "";
+                        curChildren = new ArrayList<String>();
+                        code.append("if (");
+                        code.appendNoIndent(matchChildren(rule.rhs, null));
+                        code.appendNoIndent(") {");
+                        code.appendlnNoIndent();
+                        
+                        code.increaseIndent();
+                    }
+                    
+                    // current cost
+                    code.appendCommentln(rule.prettyPrint());
+                    code.append("c = ");
+                    if (curCost != null)
+                        code.appendNoIndent(curCost);
+                    code.appendNoIndent(Integer.toString(rule.cost));
+                    code.appendNoIndent(";\n");
+                    code.appendStmtln(String.format("p.record(%s, c, %d, %s)", rule.lhs.name, rule.ruleno, genChildrenArray(curChildren)));
+                    
+                    // chain cost
+                    code.appendln();
+                    code.appendCommentln("chain cost");
+                    genChainCost(code, rule.ruleno, rule.lhs, "c");
+                    
+                    if (needToMatchChildren) {
+                        code.decreaseIndent();
+                        code.appendln("}");
+                        curCost = null;
+                        curChildren = null;
+                    }
+                }
+            }
+            
+            code.appendln("break;");
+            code.decreaseIndent();
+        }
+        
+        // end of switch
         code.appendln("}");
         
-        code.appendStmtln("ret.highLevelOp = node");
-        code.appendStmtln("return ret");
-        
+        code.appendStmtln("return p");
         code.decreaseIndent();
+        
+        // end of function
         code.appendln("}");
-
-        // end of class
         code.decreaseIndent();
-        code.appendln("}");
-        
-        System.out.println("========BURM Generated========");
-        System.out.println(code.toString());
-        
-        writeTo(output + BURM_FILE, code.toString());
-    }
+	}
     
     public static String getOperandCreation(CCTOperand operand, int dataType) {        
         switch(dataType) {
@@ -626,9 +665,11 @@ public class Burg {
             if (cur instanceof NonTerminal) {
                 ret.append(String.format(base + "leaves[%d].rule[%s] != -1", i, cur.name));
                 curCost += String.format(base + "leaves[%d].cost[%s] + ", i, cur.name);
+                curChildren.add(cur.name);
             } else {
                 // cur is terminal
                 ret.append(String.format(base + "leaves[%d].node.getOpcode() == %s", i, cur.name));
+                curChildren.add("-1");
             }
             
             if (cur.children.size() != 0)
@@ -641,17 +682,18 @@ public class Burg {
         return ret.toString();
     }
     
-    public static void genChainCost(CodeBuilder code, NonTerminal nt, String cost) {
+    public static void genChainCost(CodeBuilder code, int ruleno, NonTerminal nt, String cost) {
         for (Rule rule : rules) {
             if (rule.rhs instanceof NonTerminal && rule.rhs.id == nt.id) {
                 String chainCost = cost + "+" + rule.cost;
                 code.appendCommentln(rule.prettyPrint());
                 code.appendStmtln(
-                        String.format("p.record(%s, %s, %d)", 
+                        String.format("p.record(%s, %s, %d, %s)", 
                         rule.lhs.name,
                         chainCost,
-                        rule.ruleno));
-                genChainCost(code, rule.lhs, chainCost);
+                        ruleno,
+                        genChildrenArray(curChildren)));
+                genChainCost(code, ruleno, rule.lhs, chainCost);
             }
         }
     }
