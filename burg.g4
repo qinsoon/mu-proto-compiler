@@ -25,6 +25,7 @@ declare
     |   mcStackPtrDecl
     |   mcFramePtrDecl
     |   mcCallDecl
+    |   mcCmpDecl
 // op emit
     |   opEmitRule
 // mc define
@@ -171,6 +172,10 @@ mcCondJumpDecl
 
 mcUncondJumpDecl
     :   '.mc_uncond_jump' idString+
+    ;
+
+mcCmpDecl
+    :   '.mc_cmp' idString+
     ;
 
 targetDecl

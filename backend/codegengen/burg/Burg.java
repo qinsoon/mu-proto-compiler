@@ -18,6 +18,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 import uvm.OpCode;
+import uvm.mc.MCLabel;
 import uvm.mc.MCRegister;
 
 public class Burg {
@@ -46,6 +47,7 @@ public class Burg {
     public static String                STACK_PTR;
     public static String                FRAME_PTR;
     public static final List<String>    MC_CALL = new ArrayList<String>();
+    public static final List<String>	MC_CMP = new ArrayList<String>();
     
     public static final List<String>    REG_GPR = new ArrayList<String>();
     public static final List<String>    REG_GPR_PARAM = new ArrayList<String>();
@@ -1134,6 +1136,39 @@ public class Burg {
         code.increaseIndent();
         String nopMC = targetName + MC_NOP.get(0);
         code.appendStmtln(String.format("%s ret = new %s()", nopMC, nopMC));
+        code.appendStmtln("return ret");
+        code.decreaseIndent();
+        code.appendln("}");
+        
+        // genCompareAndJE
+        // cmp op1 op2
+        // jne #pass
+        // call func
+        // pass: nop
+        code.appendln("@Override public AbstractMachineCode[] genCallIfEqual(MCOperand op1, MCOperand op2, MCLabel func, int id) {");
+        code.increaseIndent();
+        code.appendStmtln("AbstractMachineCode[] ret = new AbstractMachineCode[4]");
+        // cmp op1 op2
+        code.appendCommentln("cmp op1 op2");
+        String cmpMC = targetName + MC_CMP.get(0);
+        code.appendStmtln(String.format("%s i0 = new %s()", cmpMC, cmpMC));
+        code.appendStmtln("i0.setOperand0(op1)");
+        code.appendStmtln("i0.setOperand1(op2)");
+        code.appendStmtln("ret[0] = i0");
+        // jne #pass
+        code.appendCommentln("jne #pass");
+        code.appendStmtln("MCLabel pass = new MCLabel(\"yp_pass_\" + id)");
+        String jneMC = targetName + MC_COND_JUMP.get(1);
+        code.appendStmtln(String.format("%s i1 = new %s()", jneMC, jneMC));
+        code.appendStmtln("i1.setOperand0(pass)");
+        code.appendStmtln("ret[1] = i1");
+        // call func
+        code.appendCommentln("call func");
+        code.appendStmtln("ret[2] = genCall(func)");
+        // pass: nop
+        code.appendCommentln("#pass: nop");
+        code.appendStmtln("ret[3] = genNop()");
+        code.appendStmtln("ret[3].setLabel(pass)");
         code.appendStmtln("return ret");
         code.decreaseIndent();
         code.appendln("}");

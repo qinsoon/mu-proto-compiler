@@ -29,6 +29,11 @@ public class burgListenerImpl extends burgBaseListener {
         Burg.FRAME_PTR = ctx.idString().getText();
     }
     
+    @Override public void exitMcCmpDecl(@NotNull burgParser.McCmpDeclContext ctx) {
+    	for (burgParser.IdStringContext s : ctx.idString()) 
+    		Burg.MC_CMP.add(s.getText()); 
+    }
+    
     @Override public void exitMcCondJumpDecl(@NotNull burgParser.McCondJumpDeclContext ctx) {
         for (burgParser.IdStringContext s : ctx.idString())
             Burg.MC_COND_JUMP.add(s.getText());

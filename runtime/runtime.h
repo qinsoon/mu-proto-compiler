@@ -9,7 +9,19 @@
 typedef uint64_t Address;
 
 // yieldpoint
+
+// only define one of the two
+#define CHECKING_YIELDPOINT
+//#define PAGE_PROTECTION_YIELDPOINT
+
+#ifdef CHECKING_YIELDPOINT
+int64_t yieldpoint_check;
+#endif
+
+#ifdef PAGE_PROTECTION_YIELDPOINT
 Address yieldpoint_protect_page;
+#endif
+
 #define LOG_BYTES_IN_PAGE 12
 #define BYTES_IN_PAGE (1 << LOG_BYTES_IN_PAGE)
 
@@ -144,6 +156,8 @@ extern void fillAlignmentGap(Address start, Address end);
 /*
  * MISC
  */
+
+extern void yieldpoint();
 
 extern void disableYieldpoint();
 extern void enableYieldpoint();

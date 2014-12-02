@@ -160,12 +160,15 @@ public class UVMCompiler {
             new SimpleLinearScan("simplelinearscan", Verbose.LINEAR_SCAN).execute();
             new X64PostRegisterAllocPatching("postregallocpatching", false).execute();
             
-            new InsertYieldpoint("insertYP", Verbose.INSERT_YIELDPOINT).execute();            
+            /*
+             * post register allocation code transform (be careful of using any registers, and concern about calling convention)
+             */
+            new InsertYieldpoint("insertYP", Verbose.INSERT_YIELDPOINT).execute();
+            new SimpleBranchAlignment("simplebralign", Verbose.SIMPLE_BRANCH_ALIGN).execute();
             
             /*
              *  code emission
              */
-            new SimpleBranchAlignment("simplebralign", Verbose.SIMPLE_BRANCH_ALIGN).execute();
             new MachineCodeCleanup("mccleanup", Verbose.MC_CLEANUP).execute();
             
             /*

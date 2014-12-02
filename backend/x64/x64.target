@@ -4,6 +4,7 @@
 // as prefix of generated MC nodes
 .target X64
 
+// first one must be jump-equal
 .mc_cond_jump {je jne} {jl jge} {jle jg} {jb jae}
 .mc_uncond_jump jmp
 .mc_ret ret
@@ -13,6 +14,7 @@
 .mc_phi imcphi dpmcphi spmcphi
 .mc_nop nop
 .mc_call call
+.mc_cmp cmp
 
 .inst_ptr rip
 .stack_ptr rsp
@@ -524,39 +526,39 @@ label : LABEL
 // BRANCH
 // ********************************
 
-.mc_def jmp = {
+.mc_def jmp(1) = {
 	"jmp %s", OP[0];
 }
 
-.mc_def je = {
+.mc_def je(1) = {
 	"je %s", OP[0];
 }
 
-.mc_def jne = {
+.mc_def jne(1) = {
 	"jne %s", OP[0];
 }
 
-.mc_def jl = {
+.mc_def jl(1) = {
 	"jl %s", OP[0];
 }
 
-.mc_def jle = {
+.mc_def jle(1) = {
 	"jle %s", OP[0];
 }
 
-.mc_def jg = {
+.mc_def jg(1) = {
 	"jg %s", OP[0];
 }
 
-.mc_def jge = {
+.mc_def jge(1) = {
 	"jge %s", OP[0];
 }
 
-.mc_def jb = {
+.mc_def jb(1) = {
 	"jb %s", OP[0];
 }
 
-.mc_def jae = {
+.mc_def jae(1) = {
 	"jae %s", OP[0];
 }
 

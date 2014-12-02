@@ -18,6 +18,8 @@ public abstract class AbstractMCDriver {
     
     public abstract AbstractMachineCode genCall(MCLabel func);
     
+    public abstract AbstractMachineCode[] genCallIfEqual(MCOperand op1, MCOperand op2, MCLabel func, int id);
+    
     public abstract String getInstPtrReg();
     public abstract String getStackPtrReg();
     public abstract String getFramePtrReg();

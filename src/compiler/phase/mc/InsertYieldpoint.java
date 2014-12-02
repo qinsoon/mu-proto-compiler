@@ -1,5 +1,9 @@
 package compiler.phase.mc;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import compiler.UVMCompiler;
 import uvm.CompiledFunction;
 import uvm.mc.AbstractMachineCode;
@@ -8,6 +12,7 @@ import uvm.mc.MCIntImmediate;
 import uvm.mc.MCLabel;
 import uvm.mc.MCLabeledMemoryOperand;
 import uvm.mc.MCRegister;
+import uvm.runtime.RuntimeFunction;
 import uvm.runtime.UVMRuntime;
 
 public class InsertYieldpoint extends AbstractMCCompilationPhase {
@@ -20,22 +25,40 @@ public class InsertYieldpoint extends AbstractMCCompilationPhase {
 	protected void visitCompiledFunction(CompiledFunction cf) {
 		verboseln("----- insert yieldpoint for " + cf.getOriginFunction().getName() + " -----");
 		
+		yieldpoint_id = 0;
+		
 		// at prologue
-		AbstractMachineCode yieldpoint = genYieldpoint(cf); 
-		cf.prologue.add(yieldpoint);
-		verboseln("for prologue: " + yieldpoint.prettyPrint());
+		cf.prologue.addAll(genCheckingYieldpoint(cf));
+		verboseln("for prologue");
 		
 		// at every backedge
 		for (MCBasicBlock bb : cf.BBs) {
 			if (!bb.getBackEdges().isEmpty()) {
-				verboseln("for backedge at " + bb.getName() + ": " + yieldpoint.prettyPrint());
+				verboseln("for backedge at " + bb.getName());
 				int whereToInsert = bb.getMC().size() - 1;
-				bb.getMC().add(whereToInsert, yieldpoint);
+				bb.getMC().addAll(whereToInsert, genCheckingYieldpoint(cf));
 			}
 		}
 	}
 	
-	private static AbstractMachineCode genYieldpoint(CompiledFunction cf) {
+	private int yieldpoint_id;
+	
+	private List<AbstractMachineCode> genCheckingYieldpoint(CompiledFunction cf) {
+		MCLabeledMemoryOperand check = new MCLabeledMemoryOperand();
+		check.setDispLabel(new MCLabel(UVMRuntime.YIELDPOINT_CHECK));
+		check.setBase(cf.findOrCreateRegister(UVMCompiler.MCDriver.getInstPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
+		check.setSize((byte) 8);
+		
+		MCIntImmediate enabled = new MCIntImmediate(UVMRuntime.YIELDPOINT_ENABLE);
+		
+		List<AbstractMachineCode> ret = Arrays.asList(UVMCompiler.MCDriver.genCallIfEqual(enabled, check, new MCLabel(RuntimeFunction.yieldpoint.getFuncName()), yieldpoint_id));
+		yieldpoint_id++;
+		
+		ret.get(0).setComment("checking yieldpoint");
+		return ret;
+	}
+	
+	private List<AbstractMachineCode> genPageProtectionYieldpoint(CompiledFunction cf) {
 		MCLabeledMemoryOperand dst = new MCLabeledMemoryOperand();
 		dst.setDispLabel(new MCLabel(UVMRuntime.YIELDPOINT_PROTECT_AREA));
 		dst.setBase(cf.findOrCreateRegister(UVMCompiler.MCDriver.getInstPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
@@ -43,8 +66,11 @@ public class InsertYieldpoint extends AbstractMCCompilationPhase {
 		
 		MCIntImmediate src = new MCIntImmediate(UVMRuntime.YIELDPOINT_WRITE);
 		AbstractMachineCode yieldpoint = UVMCompiler.MCDriver.genMove(dst, src);
-		yieldpoint.setComment("yieldpoint");
+		yieldpoint.setComment("page protection yieldpoint");
 		
-		return yieldpoint;
+		List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>();
+		ret.add(yieldpoint);
+		
+		return ret;
 	}
 }
