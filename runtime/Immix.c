@@ -85,8 +85,11 @@ ImmixMutator* ImmixMutator_init(ImmixMutator* mutator, ImmixSpace* space) {
     return mutator;
 }
 
+// Immix Mutator
 Address ImmixMutator_allocLarge(ImmixMutator*, int64_t, int64_t);
 Address ImmixMutator_tryAllocFromLocal(ImmixMutator* mutator, int64_t size, int64_t align);
+
+// Immix Space
 int ImmixSpace_getNextAvailableLine(uint8_t* markTable, int currentLine);
 int ImmixSpace_getNextUnavailableLine(uint8_t* markTable, int currentLine);
 bool ImmixSpace_getNextBlock(ImmixMutator* mutator);
@@ -141,13 +144,11 @@ Address ImmixMutator_tryAllocFromLocal(ImmixMutator* mutator, int64_t size, int6
 
     // we run out of place for this block
     // require block from space
-    bool succ = ImmixSpace_getNextBlock(mutator);
-    if (succ) {
-        return ImmixMutator_alloc(mutator, size, align);
-    } else {
-        // we need GC
-        uVM_fail("GC is required but not implemented");
-        return 0;
+    while (true) {
+        bool succ = ImmixSpace_getNextBlock(mutator);
+        if (succ) {
+            return ImmixMutator_alloc(mutator, size, align);
+        }
     }
 }
 
@@ -170,6 +171,10 @@ int ImmixSpace_getNextUnavailableLine(uint8_t* markTable, int currentLine) {
         i++;
     
     return i;
+}
+
+bool ImmixMutator_triggerGC() {
+    
 }
 
 /*
@@ -222,6 +227,9 @@ bool ImmixSpace_getNextBlock(ImmixMutator* mutator) {
         DEBUG_PRINT(0, ("acquiring global fail\n"));
         // return false to require a GC
         pthread_mutex_unlock( &(space->lock));
+        
+        triggerGC();
+        
         return false;
     }
 }

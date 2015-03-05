@@ -41,3 +41,12 @@ void initObj(Address addr, uint64_t header) {
 
     *((uint64_t*) addr) = header;
 }
+
+void triggerGC() {
+    // enable yieldpoint
+    enableYieldpoint();
+    
+    // inform collector controller
+    
+    // make current thread wait
+}

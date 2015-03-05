@@ -8,7 +8,7 @@
 
 typedef uint64_t Address;
 
-// yieldpoint
+// *** yieldpoint ***
 
 // only define one of the two
 #define CHECKING_YIELDPOINT
@@ -25,7 +25,7 @@ Address yieldpoint_protect_page;
 #define LOG_BYTES_IN_PAGE 12
 #define BYTES_IN_PAGE (1 << LOG_BYTES_IN_PAGE)
 
-// general
+// *** heap general ***
 Address heapStart;
 
 #define HEAP_SIZE (50 << 20)
@@ -34,7 +34,7 @@ Address heapStart;
 
 #define ALIGNMENT_VALUE 9
 
-// immix
+// *** immix ***
 
 #define IMMIX_LOG_BYTES_IN_BLOCK 16
 #define IMMIX_BYTES_IN_BLOCK (1 << IMMIX_LOG_BYTES_IN_BLOCK)
@@ -51,8 +51,6 @@ Address heapStart;
 
 #define IMMIX_BLOCK_MARK_USABLE         0
 #define IMMIX_BLOCK_MARK_FULL           1
-
-
 
 typedef struct ImmixBlock {
     struct ImmixBlock* next;
@@ -96,6 +94,10 @@ typedef struct ImmixMutator {
 /*
  * THREAD
  */
+
+#define MAX_THREAD_COUNT 1024
+UVMThread uvmThreads[MAX_THREAD_COUNT];
+int threadCount = 0;
 
 typedef struct UVMThread {
     // internal pthread
@@ -149,6 +151,9 @@ extern UVMThread* getThreadContext();
 /*
  * MEMORY
  */
+
+// Global
+extern bool triggerGC();
 
 extern Address alignUp(Address region, int align);
 extern void fillAlignmentGap(Address start, Address end);
