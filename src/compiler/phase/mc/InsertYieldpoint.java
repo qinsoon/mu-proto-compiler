@@ -16,6 +16,9 @@ import uvm.runtime.RuntimeFunction;
 import uvm.runtime.UVMRuntime;
 
 public class InsertYieldpoint extends AbstractMCCompilationPhase {
+	private static final boolean INSERT_PROLOGUE_YP = true;
+	private static final boolean INSERT_EPILOGUE_YP = false;
+	private static final boolean INSERT_BACKEDGE_YP = true;
 
 	public InsertYieldpoint(String name, boolean verbose) {
 		super(name, verbose);
@@ -28,16 +31,25 @@ public class InsertYieldpoint extends AbstractMCCompilationPhase {
 		yieldpoint_id = 0;
 		
 		// at prologue
-		cf.prologue.addAll(genCheckingYieldpoint(cf));
-		verboseln("for prologue");
+		if (INSERT_PROLOGUE_YP) {
+			cf.prologue.addAll(genCheckingYieldpoint(cf));
+			verboseln("for prologue");
+		}
 		
 		// at every backedge
-		for (MCBasicBlock bb : cf.BBs) {
-			if (!bb.getBackEdges().isEmpty()) {
-				verboseln("for backedge at " + bb.getName());
-				int whereToInsert = bb.getMC().size() - 1;
-				bb.getMC().addAll(whereToInsert, genCheckingYieldpoint(cf));
+		if (INSERT_BACKEDGE_YP)
+			for (MCBasicBlock bb : cf.BBs) {
+				if (!bb.getBackEdges().isEmpty()) {
+					verboseln("for backedge at " + bb.getName());
+					int whereToInsert = bb.getMC().size() - 1;
+					bb.getMC().addAll(whereToInsert, genCheckingYieldpoint(cf));
+				}
 			}
+		
+		// at epilogue
+		if (INSERT_EPILOGUE_YP) {
+			cf.epilogue.addAll(genCheckingYieldpoint(cf));
+			verboseln("for epilogue");
 		}
 	}
 	
@@ -58,6 +70,7 @@ public class InsertYieldpoint extends AbstractMCCompilationPhase {
 		return ret;
 	}
 	
+	@Deprecated
 	private List<AbstractMachineCode> genPageProtectionYieldpoint(CompiledFunction cf) {
 		MCLabeledMemoryOperand dst = new MCLabeledMemoryOperand();
 		dst.setDispLabel(new MCLabel(UVMRuntime.YIELDPOINT_PROTECT_AREA));

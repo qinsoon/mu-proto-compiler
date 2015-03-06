@@ -1,15 +1,39 @@
 #include "runtime.h"
 
+/*
+ * global variables
+ */
+
+int64_t yieldpoint_check;
+Address yieldpoint_protect_page;
+
+Address heapStart;
+UVMThread* uvmThreads[MAX_THREAD_COUNT];
+int threadCount = 0;
+
+pthread_key_t currentUVMThread;
+ImmixSpace* immixSpace;
+
+GCPhase_t phase;
+
 void initYieldpoint();
 
 void initRuntime() {
     initHeap();
     initThread();
     initYieldpoint();
+    initCollector();
 }
 
 void yieldpoint() {
-    uVM_fail("havent implement yieldpoint");
+    UVMThread* t = getThreadContext();
+    
+    DEBUG_PRINT(3, ("Thread%d reaches a yieldpoint\n", t->threadSlot));
+    
+    // if we need to block
+    if (t->_block_status == NEED_TO_BLOCK) {
+        block(t);
+    }
 }
 
 static void handler(int sig, siginfo_t *si, void* unused) {
@@ -21,14 +45,14 @@ static void handler(int sig, siginfo_t *si, void* unused) {
 void initYieldpoint() {
 
 #ifdef CHECKING_YIELDPOINT
-    disableYieldpoint();
+    turnOffYieldpoints();
 #endif
     
 
 #ifdef PAGE_PROTECTION_YIELDPOINT
     yieldpoint_protect_page = (Address) mmap(NULL, BYTES_IN_PAGE * 2, PROT_NONE, MAP_SHARED|MAP_ANON, -1, 0);
     yieldpoint_protect_page = alignUp(yieldpoint_protect_page, BYTES_IN_PAGE);
-    DEBUG_PRINT(2, ("yieldpoint_protect_page=%llx\n", yieldpoint_protect_page));
+    DEBUG_PRINT(3, ("yieldpoint_protect_page=%llx\n", yieldpoint_protect_page));
     disableYieldpoint();
     
     // set up signal handler
@@ -43,7 +67,7 @@ void initYieldpoint() {
     
 }
 
-void disableYieldpoint() {
+void turnOffYieldpoints() {
     // checking
 #ifdef CHECKING_YIELDPOINT
     yieldpoint_check = 0;
@@ -55,7 +79,7 @@ void disableYieldpoint() {
 #endif
 }
 
-void enableYieldpoint() {
+void turnOnYieldpoints() {
     // checking
 #ifdef CHECKING_YIELDPOINT
     yieldpoint_check = 1;

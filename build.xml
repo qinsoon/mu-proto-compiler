@@ -17,6 +17,9 @@
 	<property name="target-rule-file" location="${backend-dir}/${target}/${target}.target"/>
 	<property name="burm-dir" location="${codegengen-dir}/burm"/>
 	<property name="burm-file" location="${burm-dir}/BURM_GENERATED.java"/>
+    
+    <property name="runtime-dir" location="runtime"/>
+    <property name="runtime-lib" location="${runtime-dir}/uvmrt.a"/>
 	
 	<property name="build" location="build"/>
 	
@@ -92,6 +95,10 @@
 		<delete dir="${uir-parser-generated}"/>
 		<delete dir="${codegengen-dir}"/>
 		<delete dir="${build}"/>
+        <delete file="${runtime-lib}"/>
+        <delete>
+                <fileset dir="${runtime-dir}" includes="**/*.o"/>
+        </delete>
 	</target>
 	
 	<target name="gen-antlr">
@@ -125,7 +132,7 @@
 	</target>
 		
 	<target name="build-runtime">
-		<exec executable="make" dir="runtime/"/>
+		<exec executable="make" dir="${runtime-dir}"/>
 	</target>
 	
 	<target name="run-test">

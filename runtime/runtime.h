@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 typedef uint64_t Address;
 
@@ -15,18 +16,18 @@ typedef uint64_t Address;
 //#define PAGE_PROTECTION_YIELDPOINT
 
 #ifdef CHECKING_YIELDPOINT
-int64_t yieldpoint_check;
+extern int64_t yieldpoint_check;
 #endif
 
 #ifdef PAGE_PROTECTION_YIELDPOINT
-Address yieldpoint_protect_page;
+extern Address yieldpoint_protect_page;
 #endif
 
 #define LOG_BYTES_IN_PAGE 12
 #define BYTES_IN_PAGE (1 << LOG_BYTES_IN_PAGE)
 
 // *** heap general ***
-Address heapStart;
+extern Address heapStart;
 
 #define HEAP_SIZE (50 << 20)
 #define HEAP_IMMIX_FRACTION 0.7
@@ -95,18 +96,37 @@ typedef struct ImmixMutator {
  * THREAD
  */
 
-#define MAX_THREAD_COUNT 1024
-UVMThread uvmThreads[MAX_THREAD_COUNT];
-int threadCount = 0;
+typedef enum {RUNNING, NEED_TO_BLOCK, BLOCKED} block_t;
 
 typedef struct UVMThread {
+    int threadSlot;
+    
     // internal pthread
     pthread_t _pthread;
     
+    pthread_mutex_t _mutex;
+    pthread_cond_t  _cond;
+    
+    block_t _block_status;
+    
     // for garbage collection
     ImmixMutator _mutator;
-    ImmixCollector _collector;
 } UVMThread;
+
+#define MAX_THREAD_COUNT 1024
+extern UVMThread* uvmThreads[MAX_THREAD_COUNT];
+extern int threadCount;
+
+/*
+ * create thread context and put it in local
+ */
+extern UVMThread* getThreadContext();
+
+/*
+ * block and unblock on pthread cond
+ */
+void block(UVMThread* uvmThread);
+void unblock(UVMThread* uvmThread);
 
 /*
  * FUNCTIONS
@@ -115,8 +135,9 @@ typedef struct UVMThread {
 extern void initRuntime();
 extern void initThread();
 extern void initHeap();
+extern void initCollector();
 
-pthread_key_t currentUVMThread;
+extern pthread_key_t currentUVMThread;
 
 /*
  * new mutator context
@@ -124,26 +145,19 @@ pthread_key_t currentUVMThread;
 extern ImmixMutator* ImmixMutator_init(ImmixMutator* mutator, ImmixSpace* space);
 extern ImmixSpace* newSpace(Address, Address);
 
-ImmixSpace* immixSpace;
+extern ImmixSpace* immixSpace;
 
 /*
- * create thread context and put it in local
+ * higher verbose level, more detailed output
+ * 5 - log everything
+ * 3 - global allocation, yieldpoint synchronization
+ * 1 - initilizer
  */
-extern void setupThreadContext();
-extern UVMThread* getThreadContext();
-
-/*
- * 0 - for details of every allocation
- * 1 - for rough verbose for every allocation
- * 2 - for global allocation only
- * 5 - for initializer
- */
-
-#define DEBUG_VERBOSE_LEVEL 2
+#define DEBUG_VERBOSE_LEVEL 3
 #define DEBUG
 
 #ifdef DEBUG
-# define DEBUG_PRINT(l, x) if (l >= DEBUG_VERBOSE_LEVEL) printf x
+# define DEBUG_PRINT(l, x) if (DEBUG_VERBOSE_LEVEL >= l) printf x
 #else
 # define DEBUG_PRINT(l, x) do {} while (0)
 #endif
@@ -152,8 +166,14 @@ extern UVMThread* getThreadContext();
  * MEMORY
  */
 
+extern ImmixMutator* ImmixMutator_reset(ImmixMutator* m);
+
 // Global
-extern bool triggerGC();
+typedef enum {MUTATOR, BLOCKING_FOR_GC, BLOCKED_FOR_GC, GC} GCPhase_t;
+extern GCPhase_t phase;
+
+extern void triggerGC();
+extern void wakeCollectorController();
 
 extern Address alignUp(Address region, int align);
 extern void fillAlignmentGap(Address start, Address end);
@@ -164,6 +184,6 @@ extern void fillAlignmentGap(Address start, Address end);
 
 extern void yieldpoint();
 
-extern void disableYieldpoint();
-extern void enableYieldpoint();
+extern void turnOffYieldpoints();
+extern void turnOnYieldpoints();
 extern void uVM_fail(const char* str);
