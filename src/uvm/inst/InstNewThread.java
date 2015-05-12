@@ -14,4 +14,8 @@ public class InstNewThread extends Instruction {
 		return "NEWTHREAD(" + stack.prettyPrint() + ")";
 	}
 
+	@Override
+    public boolean needsToExpandIntoRuntimeCall() {
+    	return true;
+    }
 }

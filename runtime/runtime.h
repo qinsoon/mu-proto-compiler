@@ -102,10 +102,10 @@ typedef struct UVMStack {
     Address _sp;
     Address _bp;
     Address _ip;
-};
+} UVMStack;
 
 #define MAX_STACK_COUNT 65535
-extern UVMSTack* uvmStacks[MAX_STACK_COUNT];
+extern UVMStack* uvmStacks[MAX_STACK_COUNT];
 extern int stackCount;
 
 typedef struct UVMThread {

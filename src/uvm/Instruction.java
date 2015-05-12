@@ -45,7 +45,11 @@ public abstract class Instruction extends IRTreeNode {
         return operands;
     }
     
-    public boolean needsToCallRuntimeService() {
+    /**
+     * override this method if the instruction needs to be expanded
+     * @return
+     */
+    public boolean needsToExpandIntoRuntimeCall() {
     	return false;
     }
     

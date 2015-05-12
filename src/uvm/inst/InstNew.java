@@ -25,7 +25,7 @@ public class InstNew extends Instruction {
 	}
 	
 	@Override
-    public boolean needsToCallRuntimeService() {
+    public boolean needsToExpandIntoRuntimeCall() {
     	return true;
     }
 }

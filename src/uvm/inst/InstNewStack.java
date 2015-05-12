@@ -32,6 +32,11 @@ public class InstNewStack extends Instruction {
 		return ret.toString();
 	}
 	
+	@Override
+    public boolean needsToExpandIntoRuntimeCall() {
+    	return true;
+    }
+	
 	public Function getEntryFunction() {
 		return entryFunc;
 	}

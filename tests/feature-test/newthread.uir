@@ -8,6 +8,11 @@
 }
 
 .funcdef @main <int<32> ()> {
-  stack  %s = NEWSTACK <int<32> ()> @entryFunc ()
-  thread %t = NEWTHREAD %s
+  .label %entry:
+    %s = NEWSTACK <int<32> ()> @entryFunc ()
+    %t = NEWTHREAD %s
+    BRANCH %exit
+
+  .label %exit:
+    RET <int<32>> 0
 }

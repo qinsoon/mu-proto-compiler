@@ -87,6 +87,11 @@ public class Register extends Value{
         		return OpCode.REG_I64;
         	else UVMCompiler.error("unexpected pointer size: " + MicroVM.POINTER_SIZE);
         }
+        else if (type instanceof uvm.type.AbstractOpaqueType) {
+        	if (MicroVM.POINTER_SIZE == 64)
+        		return OpCode.REG_I64;
+        	else UVMCompiler.error("unexpected opaque type on non-64bit arch");
+        }
         else {
             UVMCompiler.error("unexpected register type: " + type.prettyPrint());
         }
