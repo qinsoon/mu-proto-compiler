@@ -98,6 +98,16 @@ typedef struct ImmixMutator {
 
 typedef enum {RUNNING, NEED_TO_BLOCK, BLOCKED} block_t;
 
+typedef struct UVMStack {
+    Address _sp;
+    Address _bp;
+    Address _ip;
+};
+
+#define MAX_STACK_COUNT 65535
+extern UVMSTack* uvmStacks[MAX_STACK_COUNT];
+extern int stackCount;
+
 typedef struct UVMThread {
     int threadSlot;
     
@@ -167,6 +177,10 @@ extern ImmixSpace* immixSpace;
  */
 
 extern ImmixMutator* ImmixMutator_reset(ImmixMutator* m);
+
+// alloc
+extern Address allocObj(int64_t size, int64_t align);
+extern void initObj(Address addr, uint64_t header);
 
 // Global
 typedef enum {MUTATOR, BLOCKING_FOR_GC, BLOCKED_FOR_GC, GC} GCPhase_t;

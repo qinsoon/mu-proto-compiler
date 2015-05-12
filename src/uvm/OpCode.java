@@ -94,6 +94,8 @@ public abstract class OpCode {
     public static final int NEW             = 0x11;
     public static final int ALLOCAHYBRID    = 0x12;
     public static final int NEWHYBRID       = 0x13;
+    public static final int NEWSTACK		= 0x14;
+    public static final int NEWTHREAD		= 0x15;
     
     // aggregated values, refs
     public static final int IREFCAST        = 0x84;

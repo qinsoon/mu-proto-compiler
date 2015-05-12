@@ -41,6 +41,8 @@ import uvm.inst.InstGetFieldIRef;
 import uvm.inst.InstGetIRef;
 import uvm.inst.InstLoad;
 import uvm.inst.InstNew;
+import uvm.inst.InstNewStack;
+import uvm.inst.InstNewThread;
 import uvm.inst.InstParam;
 import uvm.inst.InstPhi;
 import uvm.inst.InstRet;
@@ -122,6 +124,14 @@ public abstract class ASTHelper {
             	}
             	return Struct.findOrCreateStruct(types);
             }
+            // opaque types
+            else if (ctx instanceof parser.uIRParser.StackTypeContext) {
+            	return uvm.type.Stack.T;
+            }
+            else if (ctx instanceof parser.uIRParser.ThreadTypeContext) {
+            	return uvm.type.Thread.T;
+            }
+            // void
             else if (ctx instanceof parser.uIRParser.VoidTypeContext) {
             	return uvm.type.Void.T;
             }
@@ -341,6 +351,30 @@ public abstract class ASTHelper {
         	node.setDefReg(def);
         	return node;
         }
+        else if (inst instanceof parser.uIRParser.InstNewStackContext) {
+        	parser.uIRParser.InstNewStackContext newStackCtx = (parser.uIRParser.InstNewStackContext) inst;
+        	
+        	Function entryFunc = getFunction(newStackCtx.funcCallBody());
+        	
+        	List<Value> args = getArguments(f, newStackCtx.funcCallBody().args(), entryFunc.getSig());
+        	
+        	Instruction node = new InstNewStack(entryFunc, args);
+        	
+        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), uvm.type.Stack.T);
+        	node.setDefReg(def);
+        	return node;
+        }
+        else if (inst instanceof parser.uIRParser.InstNewThreadContext) {
+        	parser.uIRParser.InstNewThreadContext newThreadCtx = (parser.uIRParser.InstNewThreadContext) inst;
+        	
+        	Value stack = getValue(f, newThreadCtx.value(), uvm.type.Stack.T);
+        	
+        	Instruction node = new InstNewThread(stack);
+        	
+        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), uvm.type.Thread.T);
+        	node.setDefReg(def);
+        	return node;
+        }
         /*
          * memory access
          */
@@ -470,6 +504,26 @@ public abstract class ASTHelper {
             UVMCompiler.error("incomplete implementation of " + ctx.getClass().toString());
         }
         return null;
+    }
+    
+    private static Function getFunction(parser.uIRParser.FuncCallBodyContext ctx) throws ASTParsingException {
+    	String name = getIdentifierName(ctx.value().IDENTIFIER(), true);
+    	Function f = MicroVM.v.getFunction(name);
+    	FunctionSignature sig = getFunctionSignature(ctx.funcSig());
+    	if (f == null) {
+    		f = new Function(name, sig);
+    		MicroVM.v.declareFunc(name, f);
+    	}
+    	return f;
+    }
+    
+    private static List<Value> getArguments(Function f, parser.uIRParser.ArgsContext ctx, FunctionSignature sig) throws ASTParsingException {
+    	List<Value> ret = new ArrayList<Value>();
+    	for (int i = 0; i < ctx.value().size(); i++) {
+    		parser.uIRParser.ValueContext valueCtx = ctx.value(i);
+    		ret.add(getValue(f, valueCtx, sig.getParamTypes().get(i)));
+    	}
+    	return ret;
     }
     
     private static Value getValue(Function f, parser.uIRParser.ValueContext ctx, uvm.Type type) throws ASTParsingException {

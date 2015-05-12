@@ -2,6 +2,8 @@ package uvm.inst;
 
 import java.util.List;
 
+import compiler.UVMCompiler;
+
 import uvm.FunctionSignature;
 import uvm.Instruction;
 import uvm.Label;
@@ -22,6 +24,10 @@ public class InstCCall extends Instruction {
 		this.sig = sig;
 		this.func = func;
 		this.arguments = arguments;
+		
+		if (sig.getParamTypes().size() != arguments.size()) {
+			UVMCompiler.error("InstCCall " + func + " has a different argument count than parameter count");
+		}		
 		
 		this.opcode = OpCode.CCALL;
 	}

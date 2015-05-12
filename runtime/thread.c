@@ -65,3 +65,7 @@ void unblock(UVMThread* uvmThread) {
     pthread_cond_signal(&(uvmThread->_cond));
     pthread_mutex_unlock(&(uvmThread->_mutex));
 }
+
+Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {
+    
+}

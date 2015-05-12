@@ -8,13 +8,24 @@ import uvm.BasicBlock;
 import uvm.CompiledFunction;
 import uvm.Instruction;
 import uvm.IntImmediate;
+import uvm.Label;
 import uvm.MicroVM;
+import uvm.Register;
 import uvm.Type;
 import uvm.Value;
 import uvm.inst.InstCCall;
+import uvm.inst.InstGetFieldIRef;
+import uvm.inst.InstGetIRef;
 import uvm.inst.InstNew;
+import uvm.inst.InstNewStack;
+import uvm.inst.InstNewThread;
+import uvm.inst.InstStore;
 import uvm.runtime.RuntimeFunction;
+import uvm.type.IRef;
 import uvm.type.Int;
+import uvm.type.Ref;
+import uvm.type.Stack;
+import uvm.type.Struct;
 
 public class ExpandRuntimeServices extends AbstractCompilationPhase {
 	static int tempIndex = 0;
@@ -34,11 +45,15 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 			
 			if (inst.needsToCallRuntimeService()) {
 				// we need to expand this instruction
+				
+				// NEW:
+				// a = call allocObj(...)
+				// call initObj(a, ...)
 				if (inst instanceof InstNew) {
 					// for NEW, we emit a ccall to runtime allocator
 					InstNew instNew = (InstNew) inst;
 					Type t = instNew.getType();
-					verboseln("Instrumenting for NEW " + t.prettyPrint());
+					verboseln("Expanding NEW " + t.prettyPrint());
 					
 					int alignment = instNew.getType().alignmentInBytes();
 					int sizeRequired = instNew.getType().sizeInBytes() + MicroVM.v.objectModel.getHeaderSize(t);
@@ -62,7 +77,77 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 					
 					Instruction initObj = ccallRuntimeFunction(RuntimeFunction.initObj, args2);
 					newInsts.add(initObj);
-				} else {
+				}
+				
+				// NEWSTACK:
+				// %argStruct = call allocObj(@argTmpType)
+				// initObj(%argStruct, ...)
+				// %a1 = GETIREF <@argTmpType 0> %args
+				// STORE %a1 %arg1 
+				// %a2 = GETIREF <@argTmpType 1> %args
+				// STORE %a2 %arg2
+				// ...
+				// %s = call allocStack(65535, entryFunc, %argStruct)
+				else if (inst instanceof InstNewStack) {
+					InstNewStack instNewStack = (InstNewStack) inst;					
+					verboseln("Expanding NEWSTACK " + instNewStack.getEntryFunction().getName());
+					
+					// get a temp arg type
+					Struct argStructType = Struct.findOrCreateStruct(instNewStack.getEntryFunction().getSig().getParamTypes());
+					
+					// %argStruct = call allocObj(@argTmpType)
+					int alignment = argStructType.alignmentInBytes();
+					int sizeRequired = argStructType.sizeInBytes() + MicroVM.v.objectModel.getHeaderSize(argStructType);
+					
+					verboseln("create a struct for args: " + argStructType.prettyPrint());
+					
+					List<Value> args1 = new ArrayList<Value>();
+					args1.add(new IntImmediate(Int.I64, (long)sizeRequired));
+					args1.add(new IntImmediate(Int.I64, (long)alignment));
+					
+					Instruction allocObj = ccallRuntimeFunction(RuntimeFunction.allocObj, args1);
+					reserveLabel(inst, allocObj);
+					Register argStruct = bb.getFunction().findOrCreateRegister("exprt"+getNewTempIndex(), argStructType);
+					allocObj.setDefReg(argStruct);
+					newInsts.add(allocObj);
+					
+					// initObj(%argStruct, ...)
+					List<Value> args2 = new ArrayList<Value>();
+					args2.add(argStruct);
+					args2.add(new IntImmediate(Int.I64, MicroVM.v.objectModel.getHeaderInitialization(argStructType)));
+					
+					Instruction initObj = ccallRuntimeFunction(RuntimeFunction.initObj, args2);
+					newInsts.add(initObj);
+					
+					// %a1 = GETIREF <@argTmpType 0> %args
+					// STORE %a1 %arg1 
+					for (int i = 0; i < instNewStack.getArguments().size(); i++) {
+						Instruction getiref = new InstGetFieldIRef(argStructType, i, argStruct);
+						IRef irefType = IRef.findOrCreateIRef(argStructType.getType(i));
+						Register tmpIRef = bb.getFunction().findOrCreateRegister("exprt_arg_tmp_iref" + getNewTempIndex(), irefType);
+						newInsts.add(getiref);
+						
+						Instruction store = new InstStore(irefType, tmpIRef, instNewStack.getArguments().get(i));
+						newInsts.add(store);
+					}
+					
+					// %s = call allocStack(65535, entryFunc, %argStruct)
+					List<Value> args3 = new ArrayList<Value>();
+					args3.add(new IntImmediate(Int.I64, (long)Stack.T.sizeInBytes()));
+					args3.add(instNewStack.getEntryFunction().getFuncLabel());
+					args3.add(argStruct);
+					
+					Instruction allocStack = ccallRuntimeFunction(RuntimeFunction.allocStack, args3);
+					reserveDef(inst, allocStack);
+					newInsts.add(allocStack);
+				}
+				
+				// NEWTHREAD:
+				// 
+				else if (inst instanceof InstNewThread) {
+					
+				}
+				else {
 					UVMCompiler.error("unimplemented runtime service expansion for " + inst.getClass().getName());
 				}
 			} else {

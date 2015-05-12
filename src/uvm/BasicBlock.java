@@ -6,12 +6,14 @@ import java.util.List;
 public class BasicBlock {
     Label label;
     List<Instruction> insts;
+    Function f;
     
     List<BasicBlock> successors 	= new ArrayList<BasicBlock>();
     List<BasicBlock> predecessors 	= new ArrayList<BasicBlock>();
     List<BasicBlock> backEdges		= new ArrayList<BasicBlock>();
     
     public BasicBlock(Function f, String name) {
+    	this.f = f;
         this.label = f.findOrCreateLabel(name);
         this.insts = new ArrayList<Instruction>();
     }
@@ -22,6 +24,10 @@ public class BasicBlock {
     
     public void setInstructions(List<Instruction> insts) {
     	this.insts = insts;
+    }
+    
+    public Function getFunction() {
+    	return f;
     }
     
     public Label getLabel() {

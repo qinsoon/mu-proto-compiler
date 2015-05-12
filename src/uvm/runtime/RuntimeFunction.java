@@ -12,6 +12,7 @@ import uvm.type.Ref;
 
 public class RuntimeFunction {	
 	public static final RuntimeFunction allocObj;
+	public static final RuntimeFunction allocStack;
 	public static final RuntimeFunction initObj;
 	public static final RuntimeFunction yieldpoint;
 	
@@ -20,6 +21,10 @@ public class RuntimeFunction {
 				"_allocObj", 
 				Ref.REF_VOID, 
 				Arrays.asList(Int.I64, Int.I64));
+		allocStack = new RuntimeFunction(InstCCall.CC_DEFAULT, 
+				"_allocStack",
+				Ref.REF_VOID,
+				Arrays.asList(Int.I64, Ref.REF_VOID, Ref.REF_VOID));
 		initObj  = new RuntimeFunction(InstCCall.CC_DEFAULT, 
 				"_initObj",
 				uvm.type.Void.T,

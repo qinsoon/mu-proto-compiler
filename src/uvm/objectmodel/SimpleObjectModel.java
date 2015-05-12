@@ -212,7 +212,10 @@ public class SimpleObjectModel {
 					align = eleType.alignmentInBytes();
 			}
 			return align;
-		} else {
+		}
+		else if (t instanceof uvm.type.Stack) 
+			return MicroVM.POINTER_SIZE / 8;
+		else {
 			UVMCompiler.error("Unknown type when trying to get alignment: " + t.prettyPrint());
 			return -1;
 		}
