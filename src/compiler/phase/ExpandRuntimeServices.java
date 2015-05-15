@@ -92,7 +92,8 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 					InstNewStack instNewStack = (InstNewStack) inst;					
 					verboseln("Expanding NEWSTACK " + instNewStack.getEntryFunction().getName());
 					
-					List<Value> args3; 
+					List<Value> args3;
+					Instruction allocStack;
 					
 					// get a temp arg type
 					if (!instNewStack.getEntryFunction().getSig().getParamTypes().isEmpty()) {
@@ -139,23 +140,38 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 						args3.add(new IntImmediate(Int.I64, (long)Stack.T.sizeInBytes()));
 						args3.add(instNewStack.getEntryFunction().getFuncLabel());
 						args3.add(entryArgs);
+						
+						allocStack = ccallRuntimeFunction(RuntimeFunction.allocStack, args3);
+						reserveDef(inst, allocStack);
 					} else {
 						// %s = call allocStack(65535, entryFunc, 0)
 						args3 = new ArrayList<Value>();
 						args3.add(new IntImmediate(Int.I64, (long)Stack.T.sizeInBytes()));
 						args3.add(instNewStack.getEntryFunction().getFuncLabel());
 						args3.add(new IntImmediate(Int.I64, (long)0));
-					}
-					
-					Instruction allocStack = ccallRuntimeFunction(RuntimeFunction.allocStack, args3);
-					reserveDef(inst, allocStack);
+						
+						allocStack = ccallRuntimeFunction(RuntimeFunction.allocStack, args3);
+						reserveDef(inst, allocStack);
+						reserveLabel(inst, allocStack);
+					}					
+
 					newInsts.add(allocStack);
 				}
 				
 				// NEWTHREAD:
 				// 
 				else if (inst instanceof InstNewThread) {
+					InstNewThread instNewThread = (InstNewThread) inst;
 					
+					uvm.Register stack = instNewThread.getStack();
+					
+					List<Value> args = new ArrayList<Value>();
+					args.add(stack);
+					
+					Instruction newThread = ccallRuntimeFunction(RuntimeFunction.newThread, args);
+					reserveDef(inst, newThread);
+					reserveLabel(inst, newThread);
+					newInsts.add(newThread);
 				}
 				else {
 					UVMCompiler.error("unimplemented runtime service expansion for " + inst.getClass().getName());
@@ -166,6 +182,11 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 		}
 		
 		bb.setInstructions(newInsts);
+		
+		verboseln("After expanding runtime services for BB " + bb.getName());
+		for (Instruction i : bb.getInsts())
+			verboseln(i.prettyPrint());
+		verboseln();
 	}
 	
 	private void reserveLabel(Instruction oldInst, Instruction newInst) {

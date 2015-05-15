@@ -369,7 +369,7 @@ public abstract class ASTHelper {
         	
         	Value stack = getValue(f, newThreadCtx.value(), uvm.type.Stack.T);
         	
-        	Instruction node = new InstNewThread(stack);
+        	Instruction node = new InstNewThread((uvm.Register)stack);
         	
         	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), uvm.type.Thread.T);
         	node.setDefReg(def);

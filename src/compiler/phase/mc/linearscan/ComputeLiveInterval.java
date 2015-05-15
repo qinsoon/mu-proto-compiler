@@ -77,6 +77,14 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
     private void buildIntervals(CompiledFunction cf) { 
         verboseln("----- build intervals for " + cf.getOriginFunction().getName() + " -----");
         
+        
+        for (MCBasicBlock bb : cf.BBs) { 
+        	verboseln(bb.getName());
+        	for (AbstractMachineCode mc : bb.getMC())
+        		verboseln(mc.prettyPrintOneline());
+        	verboseln();
+        }
+        
         // add positions for param regs
         for (MCRegister reg : cf.usedParamRegs) {
         	addPosition("param reg", cf, reg, new Position(0, Position.DEFINE, null, -1, false));

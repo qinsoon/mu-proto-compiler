@@ -11,13 +11,19 @@ import compiler.UVMCompiler;
  */
 public class Register extends Value{
     String name;
+    uvm.Type type;
     
     Instruction def;    
     List<Instruction> uses = new ArrayList<Instruction>();
     
     Register(String name, uvm.Type type) {
         this.name = name;
+        this.type = type;
         this.opcode = getOpCodeFromType(type);
+    }
+    
+    public uvm.Type getType() {
+    	return type;
     }
 
     @Override

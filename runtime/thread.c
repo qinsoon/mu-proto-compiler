@@ -69,3 +69,7 @@ void unblock(UVMThread* uvmThread) {
 Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {
     return 0;
 }
+
+Address newThread(Address stack) {
+    return 0;
+}

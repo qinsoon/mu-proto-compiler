@@ -3,10 +3,14 @@ package uvm.inst;
 import uvm.Instruction;
 
 public class InstNewThread extends Instruction {
-	uvm.Value stack;
+	uvm.Register stack;
 	
-	public InstNewThread(uvm.Value stack) {
+	public InstNewThread(uvm.Register stack) {
 		this.stack = stack;
+	}
+	
+	public uvm.Register getStack() {
+		return stack;
 	}
 
 	@Override
