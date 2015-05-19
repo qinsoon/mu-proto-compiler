@@ -32,7 +32,7 @@ public class InstCCall extends AbstractCall {
 	@Override
 	public String prettyPrint() {
 		StringBuilder ret = new StringBuilder();
-		ret.append("CCALL(");
+		ret.append("CCALL " + func + "(");
 		for (uvm.Value v : arguments) {
 			ret.append(v.prettyPrint());
 			ret.append(',');

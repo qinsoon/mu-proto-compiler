@@ -562,9 +562,11 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 					MCOperand op = mc.getOperand(i);
 					verboseln("  checking op: " + op.prettyPrint());
 					
+					// if op is a machine reg, we dont need to do anything
 					if (op instanceof MCRegister && ((MCRegister) op).getType() == MCRegister.MACHINE_REG)
 						continue;
 					
+					// if op is a temporary, we need to replace it with a machine reg or a memory location (spilled)
 					if (op instanceof MCRegister) {
 						MCRegister reg = (MCRegister) mc.getOperand(i);
 						Interval it = cf.intervals.get(reg.REP());

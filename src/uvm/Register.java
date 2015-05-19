@@ -3,6 +3,7 @@ package uvm;
 import java.util.ArrayList;
 import java.util.List;
 
+import uvm.inst.AbstractCall;
 import compiler.UVMCompiler;
 
 /**
@@ -66,6 +67,15 @@ public class Register extends Value{
     
     public boolean usesOnlyOnce() {
         return uses.size() == 1;
+    }
+    
+    public boolean hasUsesNotAsArgument() {
+    	for (Instruction inst : uses) {
+    		if (!(inst instanceof AbstractCall))
+    			return true;
+    	}
+    	
+    	return false;
     }
     
     public static final int getOpCodeFromType(uvm.Type type) {

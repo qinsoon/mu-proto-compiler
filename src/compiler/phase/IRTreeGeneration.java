@@ -76,7 +76,7 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
     	if (addedInst != null && firstInBB == null)
     		firstInBB = addedInst;
         
-        verboseln(instIndex + ", curBB.getInsts().size()=" + curBB.getInsts().size());
+        verboseln(instIndex + " of " + curBB.getInsts().size() + " insts in the BB");
         verboseln(inst.prettyPrint());
         if (instIndex == curBB.getInsts().size() - 1) {
         	// we finished this BB
@@ -159,7 +159,7 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         if (inst.hasDefReg()) {
             // we dont need to define it
             // it becomes a subtree of another node
-            if (inst.getDefReg().usesOnlyOnce()) {
+            if (inst.getDefReg().usesOnlyOnce() && inst.getDefReg().hasUsesNotAsArgument()) {
                 return null;
             }
             

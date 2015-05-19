@@ -5,7 +5,7 @@ public abstract class Verbose {
      *  generating IR tree
      */
     public static final boolean DEF_USE_GEN         = false;
-    public static final boolean TREE_GEN            = false;
+    public static final boolean TREE_GEN            = true;
     public static final boolean EXPAND_RT_SERVICE	= true;
     
     /*

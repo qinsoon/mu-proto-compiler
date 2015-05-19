@@ -142,6 +142,19 @@ public class MachineCodeCleanup extends AbstractMCCompilationPhase {
         	}
         }
         
+        // if a MC still has temporaries as operands/defs, drop it
+        // usually temporaries appear as defs which are not used at all, so register allocator did not allocate a physical reg to it
+        // FIXME: should either 1) allocate a physical reg to it, or 2) drop it much earlier
+        for (int i = 0; i < mc.getNumberOfOperands(); i++) {
+        	MCOperand op = mc.getOperand(i);
+        	if (op instanceof MCRegister && ((MCRegister) op).getType() != MCRegister.MACHINE_REG) {
+        		return true;
+        	}
+        }
+        	
+        if (mc.getDefineAsReg().getType() != MCRegister.MACHINE_REG)
+        	return true;
+        
         return false;
     }
 }
