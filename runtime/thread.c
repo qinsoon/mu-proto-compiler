@@ -67,9 +67,11 @@ void unblock(UVMThread* uvmThread) {
 }
 
 Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {
-    return 0;
+    DEBUG_PRINT(3, ("Allocate for new stack (size:%lld, entry:%p, args:%p)\n", stackSize, entry_func, args));
+    return 123;
 }
 
 Address newThread(Address stack) {
+    DEBUG_PRINT(3, ("Create new thread for stack %llx\n", stack));
     return 0;
 }

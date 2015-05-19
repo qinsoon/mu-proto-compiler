@@ -3,9 +3,7 @@ package compiler.phase.mc.x64;
 import java.util.List;
 import java.util.ArrayList;
 
-import burm.mc.X64add;
-import burm.mc.X64pop;
-import burm.mc.X64push;
+import burm.mc.*;
 import compiler.UVMCompiler;
 import uvm.CompiledFunction;
 import uvm.Function;
@@ -21,6 +19,7 @@ import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCIntImmediate;
 import uvm.mc.MCLabel;
+import uvm.mc.MCLabeledMemoryOperand;
 import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
@@ -152,7 +151,18 @@ public class X64CDefaultCallConvention {
             Type curType = argTypes.get(i);
             MCOperand arg = operandFromNode(caller, args.get(i));
             if (curType.fitsInGPR() > 0) {
-                if (curType.fitsInGPR() == 1) {                   
+                if (curType.fitsInGPR() == 1) {
+                	
+                	// if we want to pass label as an argument, convert it to a memory op
+                	MCLabeledMemoryOperand argAsMemOp = null;
+                	if (arg instanceof MCLabel) {
+                		// use label(%rip)
+                		argAsMemOp = new MCLabeledMemoryOperand();
+                		argAsMemOp.setBase(caller.findOrCreateRegister(UVMCompiler.MCDriver.getInstPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
+                		argAsMemOp.setDispLabel((MCLabel) arg);
+                		argAsMemOp.setSize((byte)8);
+                	}
+                	
                     if (usedParamGPRs < UVMCompiler.MCDriver.getNumberOfGPRParam()) {
                         // pass by register
                         MCRegister nextAvailParamReg = caller.findOrCreateRegister(
@@ -160,7 +170,13 @@ public class X64CDefaultCallConvention {
                                 MCRegister.MACHINE_REG,
                                 MCRegister.DATA_GPR);
                         
-                        ret.add(UVMCompiler.MCDriver.genMove(nextAvailParamReg, arg));
+                        if (argAsMemOp == null)
+                        	// normal mov (from reg to reg)
+                        	ret.add(UVMCompiler.MCDriver.genMove(nextAvailParamReg, arg));
+                        else {
+                        	// lea
+                        	ret.add(UVMCompiler.MCDriver.genMove(nextAvailParamReg, argAsMemOp));
+                        }
                         
                         usedParamGPRs++;
                     } else {
