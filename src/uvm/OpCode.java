@@ -116,10 +116,9 @@ public abstract class OpCode {
     public static final int RET     = 0xA1;
     public static final int RET2    = 0xA2;
     public static final int SELECT  = 0xA3;
-    public static final int PARAM   = 0xA4;
-    
-//    public static final int PUSH_STACK = 0xA5;
-//    public static final int POP_STACK  = 0xA6;
+    public static final int PARAM_GPR   = 0xA4;
+    public static final int PARAM_SP = 0xA5;
+    public static final int PARAM_DP = 0xA6;
     public static final int RT_CALL    = 0xA7;
     
     // non-op terms

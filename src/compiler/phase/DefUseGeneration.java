@@ -7,6 +7,7 @@ import uvm.Instruction;
 import uvm.MicroVM;
 import uvm.Register;
 import uvm.Value;
+import uvm.inst.AbstractCall;
 
 public class DefUseGeneration extends AbstractCompilationPhase{
 
@@ -26,6 +27,16 @@ public class DefUseGeneration extends AbstractCompilationPhase{
                 
                 verboseln("  uses:" + v.prettyPrint());
             }
+        }
+        
+        // arg as uses
+        if (inst instanceof AbstractCall) {
+        	for (Value v : ((AbstractCall) inst).getArguments()) 
+        		if (v.isRegister()) {
+        			Register reg = (Register) v;
+        			inst.getRegUses().add(reg);
+        			reg.addUse(inst);
+        		}
         }
         
         // def

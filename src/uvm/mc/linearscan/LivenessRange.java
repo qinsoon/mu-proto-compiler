@@ -240,4 +240,11 @@ public class LivenessRange {
 	}
 
 
+	public boolean hasDefineAt(int pos) {
+		Position find = getPosition(pos);
+		if (find == null)
+			return false;
+		
+		return find.isDefine();
+	}
 }

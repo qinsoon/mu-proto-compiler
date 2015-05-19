@@ -135,7 +135,7 @@ public class UVMCompiler {
             new CombineReturns("combineret", Verbose.COMBINE_RET).execute();
             new MCControlFlowAnalysis("mccfa", Verbose.RECONSTRUCT_BB).execute();
             new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();            
-
+            new AddCallRegisterArguments("callregargs", true).execute();
             
             /*
              *  register allocation

@@ -1,0 +1,20 @@
+// call with arg
+
+.funcdef @ret1 <int<32> ()> {
+  .label %entry:
+    RET <int<32>> 1
+}
+
+.funcdef @inc <int<32> (int<32>)> {
+  .label %entry:
+    %a = PARAM 0
+    %b = ADD <int<32>> %a 1
+    RET <int<32>> %b
+}
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+    %a = CALL <int<32> ()> @ret1 ()
+    %b = CALL <int<32> (int<32>)> @inc (%a)
+    RET <int<32>> %b
+}

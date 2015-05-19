@@ -48,7 +48,17 @@ stmt : NOP
 // ********************************
 
 // TODO: we need to know if PARAM is fp or int
-op : PARAM
+ireg : PARAM_GPR
+// mov
+> mov %param_reg[P(InstParam).getIndex()] -> %res_reg
+1
+
+dpreg : PARAM_DP
+// mov
+> mov %param_reg[P(InstParam).getIndex()] -> %res_reg
+1
+
+spreg : PARAM_SP
 // mov
 > mov %param_reg[P(InstParam).getIndex()] -> %res_reg
 1

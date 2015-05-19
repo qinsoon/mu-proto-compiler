@@ -128,6 +128,10 @@ public class Interval {
         return liveness.isLiveAt(index);
     }
     
+    public boolean hasDefineAt(int index) {
+    	return liveness.hasDefineAt(index);
+    }
+    
     public LivenessRange getLiveness() {
         return liveness;
     }

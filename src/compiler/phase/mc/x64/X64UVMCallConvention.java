@@ -121,7 +121,7 @@ public class X64UVMCallConvention {
         int callMCIndex = callMC.sequence;
         System.out.println("setup call seq at " + callMCIndex);
         caller.printInterval();
-        List<MCRegister> liveRegs = caller.getLiveRegistersAt(callMCIndex);
+        List<MCRegister> liveRegs = caller.getLiveRegistersThrough(callMCIndex);		// we only need to save scratch registers that are alive through the call inst
         // add live-in regs
         MCBasicBlock callBB = caller.getBasicBlockFor(callMC);
         for (MCRegister reg : callBB.liveIn)

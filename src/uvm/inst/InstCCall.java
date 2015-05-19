@@ -10,20 +10,17 @@ import uvm.Label;
 import uvm.OpCode;
 import uvm.mc.MCLabel;
 
-public class InstCCall extends Instruction {
+public class InstCCall extends AbstractCall {
 	public static final int CC_DEFAULT = 0;
 	
 	int callConv;
 	FunctionSignature sig;
-	String func;
-
-	List<uvm.Value> arguments;
 	
 	public InstCCall(int callConv, FunctionSignature sig, String func, List<uvm.Value> arguments) {
+		super(func, arguments);
+		
 		this.callConv = callConv;
 		this.sig = sig;
-		this.func = func;
-		this.arguments = arguments;
 		
 		if (sig.getParamTypes().size() != arguments.size()) {
 			UVMCompiler.error("InstCCall " + func + " has a different argument count than parameter count");
@@ -52,13 +49,5 @@ public class InstCCall extends Instruction {
 
 	public FunctionSignature getSig() {
 		return sig;
-	}
-
-	public String getFunc() {
-		return func;
-	}
-
-	public List<uvm.Value> getArguments() {
-		return arguments;
 	}
 }

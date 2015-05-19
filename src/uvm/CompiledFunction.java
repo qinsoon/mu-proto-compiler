@@ -172,6 +172,11 @@ public class CompiledFunction {
         return mc;
     }
     
+    /**
+     * get registers that are alive at seq
+     * @param sequence
+     * @return
+     */
     public List<MCRegister> getLiveRegistersAt(int sequence) {
         List<MCRegister> ret = new ArrayList<MCRegister>();
         
@@ -181,6 +186,32 @@ public class CompiledFunction {
             }
         }
         return ret;
+    }
+    
+    /**
+     * get the registers that are:
+     * 1. alive before the inst (alive at seq-1)
+     * 2. alive after the inst (alive at seq+2)
+     * 3. not re-defined at the inst(seq+1)
+     * @param sequence
+     * @return
+     */
+    public List<MCRegister> getLiveRegistersThrough(int sequence) {
+    	List<MCRegister> aliveBefore = getLiveRegistersAt(sequence - 1);
+    	List<MCRegister> aliveAfter  = getLiveRegistersAt(sequence + 2);
+    	
+    	List<MCRegister> ret = new ArrayList<MCRegister>();
+    	
+    	for (MCRegister reg : aliveBefore) {
+    		if (aliveAfter.contains(reg)) {
+    			// check reg is not defined at seq + 1
+    			Interval interval = intervals.get(reg);
+    			if (!interval.hasDefineAt(sequence+1))
+    				ret.add(reg);
+    		}
+    	}
+    	
+    	return ret;
     }
     
     public void printInterval() {        

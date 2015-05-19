@@ -120,7 +120,7 @@ public class X64CDefaultCallConvention {
         // caller saved registers
         callerSavedRegs.clear();
         int callMCIndex = callMC.sequence;
-        List<MCRegister> liveRegs = caller.getLiveRegistersAt(callMCIndex);
+        List<MCRegister> liveRegs = caller.getLiveRegistersThrough(callMCIndex);
         // add live-in regs
         MCBasicBlock callBB = caller.getBasicBlockFor(callMC);
         for (MCRegister reg : callBB.liveIn)

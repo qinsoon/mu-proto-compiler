@@ -6,13 +6,12 @@ import uvm.Function;
 import uvm.Instruction;
 import uvm.OpCode;
 
-public class InstCall extends Instruction {
-    Function callee;
-    List<uvm.Value> arguments;
+public class InstCall extends AbstractCall {
+    Function callee;    
     
     public InstCall(Function callee, List<uvm.Value> arguments) {
+    	super(callee.getName(), arguments);
         this.callee = callee;
-        this.arguments = arguments;
         this.operands.add(callee.getFuncLabel());
         this.operands.addAll(arguments);
         this.opcode = OpCode.CALL;
@@ -21,7 +20,7 @@ public class InstCall extends Instruction {
     @Override
     public String prettyPrint() {
         StringBuilder ret = new StringBuilder();
-        ret.append("CALL(");
+        ret.append("CALL " + callee.getName() + "(");
         for (uvm.Value v : arguments) {
             ret.append(v.prettyPrint());
             ret.append(',');
@@ -33,9 +32,4 @@ public class InstCall extends Instruction {
     public Function getCallee() {
         return callee;
     }
-
-    public List<uvm.Value> getArguments() {
-        return arguments;
-    }
-
 }

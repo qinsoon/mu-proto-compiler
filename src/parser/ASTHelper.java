@@ -181,8 +181,8 @@ public abstract class ASTHelper {
          */
         if (inst instanceof parser.uIRParser.InstParamContext) {
             int paramIndex = (int)getIntImmediateValue(((parser.uIRParser.InstParamContext) inst).intImmediate());
-            Instruction node = new InstParam(paramIndex);
             Type t = f.getSig().getParamTypes().get(paramIndex);
+            Instruction node = new InstParam(paramIndex, t);
             Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), t);
             node.setDefReg(def);
             return node;

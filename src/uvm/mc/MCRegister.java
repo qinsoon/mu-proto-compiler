@@ -2,6 +2,8 @@ package uvm.mc;
 
 import java.util.HashMap;
 
+import uvm.OpCode;
+
 public class MCRegister extends MCOperand{
     public static final int RES_REG     = 0;
     public static final int RET_REG     = 1;
@@ -108,5 +110,13 @@ public class MCRegister extends MCOperand{
 
     public void setDataType(int dataType) {
         this.dataType = dataType;
+    }
+    
+    public static int dataTypeFromOpCode(int opCode) {
+    	switch (opCode) {
+    	case OpCode.REG_DP: return DATA_DP;
+    	case OpCode.REG_SP: return DATA_SP;
+    	default:			return DATA_GPR;
+    	}
     }
 }
