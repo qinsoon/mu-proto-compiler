@@ -152,7 +152,8 @@ public class MachineCodeCleanup extends AbstractMCCompilationPhase {
         	}
         }
         	
-        if (mc.getDefineAsReg().getType() != MCRegister.MACHINE_REG)
+        MCOperand def = mc.getDefine();
+        if (def instanceof MCRegister && ((MCRegister) def).getType() != MCRegister.MACHINE_REG)
         	return true;
         
         return false;

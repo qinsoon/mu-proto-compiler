@@ -7,6 +7,7 @@ import uvm.CompiledFunction;
 import uvm.Function;
 import uvm.IRTreeNode;
 import uvm.MicroVM;
+import uvm.inst.AbstractCall;
 import uvm.inst.InstCall;
 import uvm.inst.InstCCall;
 import uvm.mc.AbstractMachineCode;
@@ -43,16 +44,16 @@ public class X64ExpandCallSequence extends AbstractMCCompilationPhase {
 	                    // expand calling sequence
 	                    MCLabel label = (MCLabel) mc.getOperand(0);
 	                    Function callee = MicroVM.v.getFunction(label.getName());
-	                    newMC.addAll(cc1.callerSetupCallSequence(cf, callee, mc));
-	                    newMC.addAll(cc1.callerCleanupCallSequence(cf, callee, mc));
+	                    newMC.addAll(cc1.callerSetupCallSequence(cf, (AbstractCall) HLLIR, mc));
+	                    newMC.addAll(cc1.callerCleanupCallSequence(cf, (AbstractCall) HLLIR, mc));
                 	} 
                 	// C calling conv
                 	else if (HLLIR instanceof InstCCall) {
                 		if (((InstCCall) HLLIR).getCallConv() == InstCCall.CC_DEFAULT) {
                 			X64CDefaultCallConvention cc1 = new X64CDefaultCallConvention();
                 			
-                			newMC.addAll(cc1.callerSetupCallSequence(cf, (InstCCall) HLLIR, mc));
-                			newMC.addAll(cc1.callerCleanupCallSequence(cf, (InstCCall) HLLIR, mc));
+                			newMC.addAll(cc1.callerSetupCallSequence(cf, (AbstractCall) HLLIR, mc));
+                			newMC.addAll(cc1.callerCleanupCallSequence(cf, (AbstractCall) HLLIR, mc));
                 		} else {
                 			UVMCompiler.error("unimplemented c call conv:" + ((InstCCall) HLLIR).getCallConv());
                 		}

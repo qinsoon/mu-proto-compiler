@@ -14,6 +14,7 @@ import uvm.Instruction;
 import uvm.OpCode;
 import uvm.Type;
 import uvm.Value;
+import uvm.inst.AbstractCall;
 import uvm.inst.InstCCall;
 import uvm.inst.InstCall;
 import uvm.mc.AbstractMachineCode;
@@ -113,14 +114,16 @@ public class X64CDefaultCallConvention {
     
     public List<AbstractMachineCode> callerSetupCallSequence(
             CompiledFunction caller, 
-            InstCCall callNode,
+            AbstractCall call,
             AbstractMachineCode callMC) {
         List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>();
         
         // caller saved registers
         callerSavedRegs.clear();
         int callMCIndex = callMC.sequence;
-        List<MCRegister> liveRegs = caller.getLiveRegistersThrough(callMCIndex);
+        System.out.println("setup call seq at " + callMCIndex);
+        caller.printInterval();
+        List<MCRegister> liveRegs = caller.getLiveRegistersThrough(callMCIndex);		// we only need to save scratch registers that are alive through the call inst
         // add live-in regs
         MCBasicBlock callBB = caller.getBasicBlockFor(callMC);
         for (MCRegister reg : callBB.liveIn)
@@ -134,9 +137,8 @@ public class X64CDefaultCallConvention {
         }
         
         // deal with arguments
-        InstCCall callIR = callNode;
-        List<Value> args = callIR.getArguments();
-        List<Type> argTypes = callNode.getSig().getParamTypes();
+        List<Value> args = call.getArguments();
+        List<Type> argTypes = call.getSig().getParamTypes();
         
         UVMCompiler._assert(
                 argTypes.size() == args.size(), 
@@ -196,24 +198,25 @@ public class X64CDefaultCallConvention {
             }
         }
         
+        // push return address - dont need to do this
+//        MCLabel callerLabel = (MCLabel) operandFromNode(caller, caller.getOriginFunction().getFuncLabel());
+//        MCMemoryOperand callerRelAddress = new MCMemoryOperand();
+//        MCRegister rip = caller.findOrCreateRegister(UVMCompiler.MCDriver.getInstPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+//        callerRelAddress.setBase(rip);
+//        callerRelAddress.setDispLabel(callerLabel);
+//        ret.add(pushStack(callerRelAddress));
         
         // generate call
+        // FIXME: why generate a new call inst instead of using the old one?
         ret.add(callMC);
-        
-        if (callMC.getLabel() != null) {
-        	// remove label from callMC
-        	MCLabel l = callMC.getLabel();
-        	callMC.setLabel(null);
-        	
-        	ret.get(0).setLabel(l);
-        }
+//        ret.add(UVMCompiler.MCDriver.genCall((MCLabel) operandFromNode(caller, callee.getFuncLabel())));
         
         return ret;
     }
     
     public List<AbstractMachineCode> callerCleanupCallSequence(
             CompiledFunction caller, 
-            InstCCall callNode,
+            AbstractCall call,
             AbstractMachineCode callMC) {
         List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>();
         
@@ -234,7 +237,7 @@ public class X64CDefaultCallConvention {
         // save return value to designated reg or memory location
         MCRegister retResult = callMC.getDefineAsReg().REP();
         
-        Type returnType = callNode.getSig().getReturnType();
+        Type returnType = call.getSig().getReturnType();
         
         if (returnType.fitsInGPR() > 0) {
             if (returnType.fitsInGPR() == 1) {
@@ -285,7 +288,6 @@ public class X64CDefaultCallConvention {
         prologue.add(UVMCompiler.MCDriver.genMove(rbp, rsp));
         
         // allocate space for local storage
-        // FIXME: we will patch this displacement after register allocation
         int stackDisp = -1;
 
         if (stackDisp != 0) {
@@ -297,13 +299,26 @@ public class X64CDefaultCallConvention {
         }
         
         // callee-saved register
-        for (MCRegister reg : cf.intervals.keySet()) {
-            Interval li = cf.intervals.get(reg);
-            if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()) && li.hasValidRange()) {
-                cf.calleeSavedRegs.add(reg);
-                // need to save it
-                prologue.add(pushStack(reg));
-            }
+        if (cf.getOriginFunction().isMain()) {
+        	// push all general-purpose calleeSavedRegs
+        	for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfGPR(); i++) {
+        		String r = UVMCompiler.MCDriver.getGPRName(i);
+        		if (UVMCompiler.MCDriver.isCalleeSave(r)) {
+        			MCRegister reg = cf.findOrCreateRegister(r, MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+        			cf.calleeSavedRegs.add(reg);
+        			prologue.add(pushStack(reg));
+        		}
+        	}
+        } else {
+	        for (MCRegister reg : cf.intervals.keySet()) {
+	        	// FIXME: this is not correct
+	            Interval li = cf.intervals.get(reg);
+	            if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()) && li.hasValidRange()) {
+	                cf.calleeSavedRegs.add(reg);
+	                // need to save it
+	                prologue.add(pushStack(reg));
+	            }
+	        }
         }
     }
     

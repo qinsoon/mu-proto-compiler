@@ -2,6 +2,7 @@ package uvm.inst;
 
 import java.util.List;
 
+import uvm.FunctionSignature;
 import uvm.Instruction;
 
 public abstract class AbstractCall extends Instruction {
@@ -20,4 +21,6 @@ public abstract class AbstractCall extends Instruction {
     public final List<uvm.Value> getArguments() {
         return arguments;
     }
+    
+    public abstract FunctionSignature getSig();
 }

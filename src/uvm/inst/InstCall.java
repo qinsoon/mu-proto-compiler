@@ -3,6 +3,7 @@ package uvm.inst;
 import java.util.List;
 
 import uvm.Function;
+import uvm.FunctionSignature;
 import uvm.Instruction;
 import uvm.OpCode;
 
@@ -31,5 +32,10 @@ public class InstCall extends AbstractCall {
 
     public Function getCallee() {
         return callee;
+    }
+    
+    @Override
+    public FunctionSignature getSig() {
+    	return callee.getSig();
     }
 }
