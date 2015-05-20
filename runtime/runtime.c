@@ -8,10 +8,7 @@ int64_t yieldpoint_check;
 Address yieldpoint_protect_page;
 
 Address heapStart;
-UVMThread* uvmThreads[MAX_THREAD_COUNT];
-int threadCount = 0;
 
-pthread_key_t currentUVMThread;
 ImmixSpace* immixSpace;
 
 GCPhase_t phase;
@@ -23,6 +20,7 @@ void initRuntime() {
     initThread();
     initYieldpoint();
     initCollector();
+    initStack();
 }
 
 void yieldpoint() {

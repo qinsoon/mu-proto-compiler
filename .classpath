@@ -4,6 +4,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="backend/codegengen-gen"/>
 	<classpathentry kind="src" path="parser-generated"/>
+	<classpathentry kind="src" path="runtime"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="antlr-4.2-complete.jar"/>
 	<classpathentry kind="output" path="bin"/>

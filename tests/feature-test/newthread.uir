@@ -9,7 +9,10 @@
   .label %entry:
     %s = NEWSTACK <int<32> ()> @entryFunc ()
     %t = NEWTHREAD %s
-    BRANCH %exit
+    BRANCH %wait
+
+  .label %wait:
+    BRANCH %wait
 
   .label %exit:
     RET <int<32>> 0

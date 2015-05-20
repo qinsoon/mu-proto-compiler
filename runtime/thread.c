@@ -2,7 +2,13 @@
 
 #define TRACE_BLOCK true
 
-void freeThreadContext(void*);
+UVMThread* uvmThreads[MAX_THREAD_COUNT];
+int threadCount = 0;
+pthread_mutex_t threadAcctLock;
+
+pthread_key_t currentUVMThread;
+
+void* freeThreadContext(void* a);
 void setupBootingThreadContext();
 
 void initThread() {
@@ -11,21 +17,39 @@ void initThread() {
     for (; i < MAX_THREAD_COUNT; i++)
         uvmThreads[i] = NULL;
     
+    // init lock
+    pthread_mutex_init(&threadAcctLock, NULL);
+
     // create thread local storage
-    pthread_key_create(&currentUVMThread, freeThreadContext);
+    pthread_key_create(&currentUVMThread, NULL);
     
     // set up booting thread
     setupBootingThreadContext();
 }
 
+void addNewThread(UVMThread* thread) {
+	pthread_mutex_lock(&threadAcctLock);
+
+	uvmThreads[threadCount] = thread;
+	thread->threadSlot = threadCount;
+	threadCount++;
+
+	pthread_mutex_unlock(&threadAcctLock);
+}
+
+void initUVMThread(UVMThread* thread) {
+	pthread_mutex_init(&(thread->_mutex), NULL);
+	pthread_cond_init(&(thread->_cond), NULL);
+	thread->_block_status = INIT;
+	ImmixMutator_init(&(thread->_mutator), immixSpace);
+
+	addNewThread(thread);
+}
+
 void setupBootingThreadContext() {
     UVMThread *t = (UVMThread*) malloc(sizeof(UVMThread));
     t->_pthread = pthread_self();
-    ImmixMutator_init(&(t->_mutator), immixSpace);
-    
-    uvmThreads[threadCount] = t;
-    t->threadSlot = threadCount;
-    threadCount++;
+    initUVMThread(t);
     
     pthread_setspecific(currentUVMThread, t);
 }
@@ -36,8 +60,15 @@ UVMThread* getThreadContext() {
     return ret;
 }
 
-void freeThreadContext(void * chunk) {
-    free(chunk);
+void* freeThreadContext(void* a) {
+	UVMThread* t = (UVMThread*)a;
+
+    pthread_mutex_destroy(&(t->_mutex));
+    pthread_cond_destroy(&(t->_cond));
+
+	free((void*)t);
+
+	return NULL;
 }
 
 void block(UVMThread* uvmThread) {
@@ -66,12 +97,32 @@ void unblock(UVMThread* uvmThread) {
     pthread_mutex_unlock(&(uvmThread->_mutex));
 }
 
-Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {
-    DEBUG_PRINT(3, ("Allocate for new stack (size:%lld, entry:%p, args:%p)\n", stackSize, entry_func, args));
-    return 123;
+void* uVMThreadLaunch(void* a) {
+	UVMStack* stack = (UVMStack*) a;
+	UVMThread* thread = stack->thread;
+	DEBUG_PRINT(3, ("uVMThreadLaunch: stack=%p, thread=%p\n", stack, thread));
+
+	// set current uvmthread key (TLS)
+	pthread_setspecific(currentUVMThread, thread);
+
+	// change stack (RBP) to nominated address
+
+	// fake a frame for this function (uVMThreadLaunch)
+
+	// call the actual entry function
+
+	return NULL;
 }
 
 Address newThread(Address stack) {
     DEBUG_PRINT(3, ("Create new thread for stack %llx\n", stack));
-    return 0;
+
+    UVMThread* t = (UVMThread*) malloc(sizeof(UVMThread));
+    initUVMThread(t);
+
+    ((UVMStack*) stack) -> thread = t;	// so we will be able to find the UVMThread in the new thread
+
+    pthread_create(&(t->_pthread), NULL, uVMThreadLaunch, (void*) stack);
+
+    return (Address) t;
 }

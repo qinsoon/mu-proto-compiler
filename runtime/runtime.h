@@ -96,17 +96,26 @@ typedef struct ImmixMutator {
  * THREAD
  */
 
-typedef enum {RUNNING, NEED_TO_BLOCK, BLOCKED} block_t;
+typedef enum {INIT, RUNNING, NEED_TO_BLOCK, BLOCKED} block_t;
 
+struct UVMThread;
 typedef struct UVMStack {
+	int stackSlot;
     Address _sp;
     Address _bp;
     Address _ip;
+    int64_t stackSize;
+    void *(*entry_func)(void*);
+    void *args;
+
+    struct UVMThread* thread;
 } UVMStack;
 
 #define MAX_STACK_COUNT 65535
 extern UVMStack* uvmStacks[MAX_STACK_COUNT];
 extern int stackCount;
+
+extern void addNewStack(UVMStack* stack);
 
 typedef struct UVMThread {
     int threadSlot;
@@ -121,11 +130,15 @@ typedef struct UVMThread {
     
     // for garbage collection
     ImmixMutator _mutator;
+
+    struct UVMThread* stack;
 } UVMThread;
 
 #define MAX_THREAD_COUNT 1024
 extern UVMThread* uvmThreads[MAX_THREAD_COUNT];
 extern int threadCount;
+
+extern void addNewThread(UVMThread* thread);
 
 /*
  * create thread context and put it in local
@@ -141,11 +154,11 @@ void unblock(UVMThread* uvmThread);
 /*
  * FUNCTIONS
  */
-
 extern void initRuntime();
 extern void initThread();
 extern void initHeap();
 extern void initCollector();
+extern void initStack();
 
 extern pthread_key_t currentUVMThread;
 
