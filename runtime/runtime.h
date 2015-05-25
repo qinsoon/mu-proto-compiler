@@ -106,7 +106,10 @@ typedef struct UVMStack {
     Address _ip;
     int64_t stackSize;
     void *(*entry_func)(void*);
+
     void *args;
+    int64_t* argsSize;
+    int numArgs;
 
     struct UVMThread* thread;
 } UVMStack;

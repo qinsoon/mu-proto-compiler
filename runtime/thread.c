@@ -100,17 +100,39 @@ void unblock(UVMThread* uvmThread) {
 void* uVMThreadLaunch(void* a) {
 	UVMStack* stack = (UVMStack*) a;
 	UVMThread* thread = stack->thread;
+	void* (*entry)() = stack->entry_func;
 	DEBUG_PRINT(3, ("uVMThreadLaunch: stack=%p, thread=%p\n", stack, thread));
+	DEBUG_PRINT(3, ("                 entry func=%p\n", entry));
+
+	DEBUG_PRINT(3, ("about to invoke entry function...\n"));
 
 	// set current uvmthread key (TLS)
 	pthread_setspecific(currentUVMThread, thread);
 
 	// change stack (RBP) to nominated address
+	void* saved_rsp;
+	void* saved_rbp;
 
-	// fake a frame for this function (uVMThreadLaunch)
+	asm(
+			// save rsp
+			"mov %%rsp, %0		\n"
+			// change rbp, rsp
+			"mov %1, %%rsp		\n"
+			// call entry function
+			"call *%2			\n"
 
-	// call the actual entry function
+			: "=m" (saved_rsp)
+			: "m" (stack->_sp),
+			  "r" (entry)
+	);
 
+	DEBUG_PRINT(3, ("new thread finished, returned to uVMThreadLaunch\n"));
+
+	// we need to properly clean up uVM thread stuff for a terminating thread
+	freeThreadContext(thread);
+
+	// quit
+	pthread_exit(NULL);
 	return NULL;
 }
 

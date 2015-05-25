@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import burm.mc.*;
+import burm.mc.X64lea;
 import compiler.UVMCompiler;
 import uvm.CompiledFunction;
 import uvm.Function;
@@ -170,12 +171,17 @@ public class X64CDefaultCallConvention {
                                 MCRegister.MACHINE_REG,
                                 MCRegister.DATA_GPR);
                         
-                        if (argAsMemOp == null)
+                        if (argAsMemOp == null) {
                         	// normal mov (from reg to reg)
                         	ret.add(UVMCompiler.MCDriver.genMove(nextAvailParamReg, arg));
+                        }
                         else {
                         	// lea
-                        	ret.add(UVMCompiler.MCDriver.genMove(nextAvailParamReg, argAsMemOp));
+                        	X64lea lea = new X64lea();
+                        	lea.setOperand(0, argAsMemOp);
+                        	lea.setDefine(nextAvailParamReg);
+                        	
+                        	ret.add(lea);
                         }
                         
                         usedParamGPRs++;

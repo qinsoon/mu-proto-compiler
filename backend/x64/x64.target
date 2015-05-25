@@ -501,9 +501,9 @@ label : LABEL
 	"movq %s,%s", OP[1], OP[0];
 }
 
-.mc_def lea = {
-	GPR = MEM;
-	"leaq %s,%s", OP[1], OP[0];
+.mc_def lea(1) = {
+	GPR = GPR/MEM;
+	"leaq %s,%s", OP[0], OP_REG;
 }
 
 // ********************************
