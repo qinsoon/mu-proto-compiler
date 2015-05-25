@@ -108,7 +108,7 @@ typedef struct UVMStack {
     void *(*entry_func)(void*);
 
     void *args;
-    int64_t* argsSize;
+    int64_t* argTypes;
     int numArgs;
 
     struct UVMThread* thread;

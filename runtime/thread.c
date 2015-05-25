@@ -34,6 +34,10 @@ void addNewThread(UVMThread* thread) {
 	thread->threadSlot = threadCount;
 	threadCount++;
 
+	if (threadCount >= MAX_THREAD_COUNT) {
+		uVM_fail("exceed MAX_THREAD_COUNT: need implementation here");
+	}
+
 	pthread_mutex_unlock(&threadAcctLock);
 }
 
@@ -65,6 +69,10 @@ void* freeThreadContext(void* a) {
 
     pthread_mutex_destroy(&(t->_mutex));
     pthread_cond_destroy(&(t->_cond));
+
+	pthread_mutex_lock(&threadAcctLock);
+	uvmThreads[t->threadSlot] = NULL;
+	pthread_mutex_unlock(&threadAcctLock);
 
 	free((void*)t);
 

@@ -2,7 +2,10 @@
 
 .funcdef @entryFunc <int<32> ()> {
   .label %entry:
-    RET <int<32>> 8
+    BRANCH %entry
+
+  .label %exit:
+    RET <int<32>> 0
 }
 
 .funcdef @main <int<32> ()> {
