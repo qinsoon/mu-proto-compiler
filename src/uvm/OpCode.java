@@ -121,6 +121,9 @@ public abstract class OpCode {
     public static final int PARAM_DP = 0xA6;
     public static final int RT_CALL    = 0xA7;
     
+    // internals to compiler (not exposed in uIR)
+    public static final int IREF_OFFSET = 0xD0;
+    
     // non-op terms
     public static final int INT_IMM   = 0xF0;
 //    public static final int REG     = 0xF1;

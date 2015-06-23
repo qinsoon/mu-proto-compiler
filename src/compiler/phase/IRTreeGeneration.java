@@ -136,8 +136,8 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         else if (inst instanceof InstGetFieldIRef) {
         	InstGetFieldIRef getField = (InstGetFieldIRef) inst;
         	
-        	inst.addChild(new IntImmediate(Int.I64, MicroVM.v.objectModel.getOffsetFromStructIRef(getField.getStructType(), getField.getIndex())));
         	inst.addChild(getField.getLoc());
+        	inst.addChild(new IntImmediate(Int.I64, MicroVM.v.objectModel.getOffsetFromStructIRef(getField.getStructType(), getField.getIndex())));
         }
         else if (inst instanceof InstGetIRef) {
         	InstGetIRef getIRef = (InstGetIRef) inst;

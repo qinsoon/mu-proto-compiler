@@ -4,6 +4,7 @@ import compiler.UVMCompiler;
 import uvm.CompiledFunction;
 import uvm.IRTreeNode;
 import uvm.Register;
+import uvm.inst.AbstractCall;
 import uvm.inst.InstCCall;
 import uvm.inst.InstCall;
 import uvm.mc.AbstractMachineCode;
@@ -25,8 +26,8 @@ public class AddCallRegisterArguments extends AbstractMCCompilationPhase {
 					
 					verboseln("Adding register arguments for " + hir.prettyPrint());
 					
-					if (hir instanceof InstCall) {
-						InstCall c = (InstCall) hir;
+					if (hir instanceof AbstractCall) {
+						AbstractCall c = (AbstractCall) hir;
 						
 						for (uvm.Value v : c.getArguments()) {
 							if (v instanceof Register) {
@@ -35,16 +36,6 @@ public class AddCallRegisterArguments extends AbstractMCCompilationPhase {
 								verboseln("  " + reg.prettyPrint() + " as implicit use");
 							}
 						}						
-					} else if (hir instanceof InstCCall) {
-						InstCCall c = (InstCCall) hir;
-						
-						for (uvm.Value v : c.getArguments()) {
-							if (v instanceof Register) {
-								MCRegister reg = cf.findOrCreateRegister(((Register) v).getName(), MCRegister.OTHER_SYMBOL_REG, MCRegister.dataTypeFromOpCode(hir.getOpcode()));
-								mc.addImplicitUse(reg);
-								verboseln("  " + reg.prettyPrint() + " as implicit use");
-							}
-						}
 					} else {
 						UVMCompiler.error("unexpected HIR to be translated into call: " + hir.getClass());
 					}

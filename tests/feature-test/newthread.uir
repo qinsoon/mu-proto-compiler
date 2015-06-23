@@ -1,8 +1,11 @@
 // malloc
 
-.funcdef @entryFunc <int<32> ()> {
+.funcdef @entryFunc <int<32> (int<64> int<64> int<64>)> {
   .label %entry:
-    BRANCH %entry
+    %a = PARAM 0
+    %b = PARAM 1
+    %b = PARAM 2
+    BRANCH %exit
 
   .label %exit:
     RET <int<32>> 0
@@ -10,7 +13,7 @@
 
 .funcdef @main <int<32> ()> {
   .label %entry:
-    %s = NEWSTACK <int<32> ()> @entryFunc ()
+    %s = NEWSTACK <int<32> (int<64> int<64> int<64>)> @entryFunc (1 2 3)
     %t = NEWTHREAD %s
     BRANCH %wait
 

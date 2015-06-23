@@ -5,6 +5,8 @@ UVMStack* uvmStacks[MAX_STACK_COUNT];
 int stackCount = 0;
 pthread_mutex_t stackAcctLock;
 
+int UVMStackMetaSize = sizeof(UVMStack);
+
 void initStack() {
 	int i = 0;
 	for (; i < MAX_STACK_COUNT; i++)
@@ -25,7 +27,7 @@ void addNewStack(UVMStack* stack) {
 
 void printStackInfo(UVMStack* s) {
 	printf("----STACK INFO----\n");
-    printf("slot=%d\n", s->stackSlot);
+    printf("slot=%lld\n", s->stackSlot);
     printf("sp=%llx\n", s->_sp);
     printf("bp=%llx\n", s->_bp);
     printf("ip=%llx\n", s->_ip);

@@ -328,19 +328,33 @@ op : STORE(ireg ivalue)
 > store_mov *(P[0]) P[1]
 1
 
-ireg : GETFIELD(iimm ireg)
-> mov P[1] -> %tmp_reg[0]
-> add %tmp_reg[0] P[0] -> %tmp_reg[0]
+ireg : GETFIELD(ireg iimm)
+> mov P[0] -> %tmp_reg[0]
+> add %tmp_reg[0] P[1] -> %tmp_reg[0]
 > mov %tmp_reg[0] -> %res_reg
 3
 
-getFieldReg : GETFIELD(iimm ireg)
+getFieldReg : GETFIELD(ireg iimm)
 > nop	// intentionally keeping this - explicitly emit an nop, otherwise my compiler would emit regular sequence
 0
 
 ireg : LOAD(getFieldReg)
-> load_mov *(P[0][1] + P[0][0]) -> %res_reg
+> load_mov *(P[0][0] + P[0][1]) -> %res_reg
 1
+
+// ********************************
+// INTERNAL
+// ********************************
+
+ireg : IREF_OFFSET(ireg iimm)
+> mov P[0] -> %tmp_reg[0]
+> add %tmp_reg[0] P[1] -> %tmp_reg[0]
+> mov %tmp_reg[0] -> %res_reg
+3
+
+getFieldReg : IREF_OFFSET(ireg iimm)
+> nop	// keeping this
+0
 
 // ********************************
 // NON-EMIT RULEs

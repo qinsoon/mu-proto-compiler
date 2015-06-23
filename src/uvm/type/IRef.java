@@ -4,6 +4,8 @@ import uvm.MicroVM;
 import uvm.Type;
 
 public class IRef extends AbstractPointerType {
+	public static final IRef IREF_VOID = findOrCreateIRef(Void.T);
+	
     Type referenced;
     
     public static IRef findOrCreateIRef(Type referencedType) {

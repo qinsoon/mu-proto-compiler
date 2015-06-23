@@ -20,6 +20,7 @@ public abstract class AbstractMCCompilationPhase extends AbstractCompilationPhas
     	
     	preChecklist();
         for (CompiledFunction cf : MicroVM.v.compiledFuncs) {
+        	verboseln("--- " + cf.getOriginFunction().getName() + " ---");
             visitCompiledFunction(cf);
         }
         postChecklist();

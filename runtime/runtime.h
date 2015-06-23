@@ -100,7 +100,7 @@ typedef enum {INIT, RUNNING, NEED_TO_BLOCK, BLOCKED} block_t;
 
 struct UVMThread;
 typedef struct UVMStack {
-	int stackSlot;
+	int64_t stackSlot;
     Address _sp;
     Address _bp;
     Address _ip;
@@ -113,6 +113,8 @@ typedef struct UVMStack {
 
     struct UVMThread* thread;
 } UVMStack;
+
+extern int UVMStackMetaSize;
 
 #define MAX_STACK_COUNT 65535
 extern UVMStack* uvmStacks[MAX_STACK_COUNT];
