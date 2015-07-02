@@ -73,6 +73,7 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 					Instruction allocObj = ccallRuntimeFunction(RuntimeFunction.allocObj, args);
 					reserveLabel(inst, allocObj);
 					reserveDef(inst, allocObj);
+					allocObj.setOriginalInst(inst);
 					newInsts.add(allocObj);
 					
 					// ccall to init its header
@@ -101,6 +102,7 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 					Instruction allocStack = ccallRuntimeFunction(RuntimeFunction.allocStack, args3);
 					reserveDef(inst, allocStack);
 					reserveLabel(inst, allocStack);
+					allocStack.setOriginalInst(inst);
 
 					newInsts.add(allocStack);
 					

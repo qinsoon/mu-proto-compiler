@@ -630,6 +630,16 @@ label : LABEL
 	"movsd %s,%s", OP[0], OP_REG;
 }
 
+.mc_def store_movsd = {
+	DP/MEM DP;
+	"movsd %s,%s", OP[1], OP[0];
+}
+
+.mc_def load_movsd = {
+	DP = DP/MEM;
+	"movsd %s,%s", OP[0], OP_REG;	
+}
+
 .mc_def movapd = {
 	DP = DP/MEM;
 	"movapd %s,%s", OP[0], OP_REG;

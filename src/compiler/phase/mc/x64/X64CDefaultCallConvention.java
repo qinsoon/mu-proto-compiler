@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.ArrayList;
 
 import burm.mc.*;
-import burm.mc.X64lea;
 import compiler.UVMCompiler;
 import uvm.CompiledFunction;
 import uvm.Function;
+import uvm.FunctionSignature;
 import uvm.IRTreeNode;
 import uvm.Instruction;
 import uvm.OpCode;
@@ -27,6 +27,63 @@ import uvm.mc.MCRegister;
 import uvm.mc.linearscan.Interval;
 
 public class X64CDefaultCallConvention {
+	/**
+	 * a list of register names, mapped to each parameter
+	 * if a parameter is passed on stack, it appears as null in the list
+	 * @param sig
+	 * @return
+	 */
+	public static List<String> pickRegistersForArguments(FunctionSignature sig) {
+		List<String> regs = new ArrayList<String>();
+		
+        int usedParamGPRs = 0;
+        int usedParamFPRs = 0;
+        
+        List<uvm.Type> argTypes = sig.getParamTypes();
+        
+        for (int i = 0; i < argTypes.size(); i++) {
+            Type curType = argTypes.get(i);
+            if (curType.fitsInGPR() > 0) {
+                if (curType.fitsInGPR() == 1) {                	
+                    if (usedParamGPRs < UVMCompiler.MCDriver.getNumberOfGPRParam()) {
+                        // pass by register
+                    	regs.add(UVMCompiler.MCDriver.getGPRParamName(usedParamGPRs));
+                        usedParamGPRs++;
+                    } else {
+                        // pass by stack
+                    	regs.add(null);
+                    }
+                } else {
+                    UVMCompiler.error("argument requires more than one GPR, unimplemented. ");
+                }
+            } else if (curType.fitsInFPR() > 0){
+                if (curType.fitsInFPR() == 1) {
+                    if (usedParamFPRs < UVMCompiler.MCDriver.getNumberOfFPRParam()) {
+                        // pass by register
+                    	regs.add(UVMCompiler.MCDriver.getFPRParamName(usedParamFPRs));                        
+                        usedParamFPRs++;
+                    } else {
+                        // pass by stack
+                    	regs.add(null);
+                    }
+                } else {
+                    UVMCompiler.error("argument requires more than one FPR, unimplemented. ");
+                }
+            } else if (curType.fitsInFPR() == 0 && curType.fitsInGPR() == 0) {
+                UVMCompiler.error("a param doesnt fit in registers, and passed on stack. unimplemented");
+            } else {
+                UVMCompiler.error("Type " + curType.prettyPrint() + " seems errornous on its fitness of registers. ");
+            }
+        }
+        
+        return regs;
+	}
+	
+	// TODO: 
+	public static int stackForArguments(FunctionSignature sig) {
+		return 0;
+	}
+	
     public void calleeInitParameterRegisters(CompiledFunction cf) {
         // set param_regi to the ith of param registers if suitable
         
@@ -366,6 +423,7 @@ public class X64CDefaultCallConvention {
         epilogue.add(popStack(rbp));
     }
     
+    // FIXME: for floating-point register, need to movsd, then add rsp 8
     private X64pop popStack(MCOperand dst) {
         X64pop ret = new X64pop();
         ret.setOperand(0, dst);
@@ -376,6 +434,38 @@ public class X64CDefaultCallConvention {
         X64push ret = new X64push();
         ret.setOperand(0, src);
         return ret;
+    }
+    
+    private List<X64MachineCode> popStackFP(MCOperand dst, MCRegister rsp) {
+    	X64movsd mov = new X64movsd();
+    	mov.setOperand0(rsp);
+    	mov.setDefine(dst);
+    	
+    	X64add add = new X64add();
+    	add.setOperand0(rsp);
+    	add.setOperand1(new MCIntImmediate(UVMCompiler.MC_FP_REG_SIZE_IN_BYTES));
+    	add.setDefine(rsp);
+    	
+    	List<X64MachineCode> ret = new ArrayList<X64MachineCode>();
+    	ret.add(mov);
+    	ret.add(add);
+    	return ret;
+    }
+    
+    private List<X64MachineCode> pushStackFP(MCOperand src, MCRegister rsp) {
+    	X64sub sub = new X64sub();
+    	sub.setOperand0(rsp);
+    	sub.setOperand1(new MCIntImmediate(UVMCompiler.MC_FP_REG_SIZE_IN_BYTES));
+    	sub.setDefine(rsp);
+    	
+    	X64movsd mov = new X64movsd();
+    	mov.setOperand0(src);
+    	mov.setDefine(rsp);
+    	
+    	List<X64MachineCode> ret = new ArrayList<X64MachineCode>();
+    	ret.add(sub);
+    	ret.add(mov);
+    	return ret;
     }
     
     private static MCOperand operandFromNode(CompiledFunction cf, IRTreeNode node) {

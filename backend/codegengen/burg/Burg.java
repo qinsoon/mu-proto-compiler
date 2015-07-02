@@ -278,7 +278,8 @@ public class Burg {
         code.appendln("case OpCode.REG_I32:");
         code.appendln("case OpCode.REG_I64:");
         code.increaseIndent();
-        code.appendln("ret = uvm.mc.MCRegister.findOrCreate(((uvm.Register)node).getName(), uvm.mc.MCRegister.OTHER_SYMBOL_REG, dataType); break;");
+        code.appendln("ret = uvm.mc.MCRegister.findOrCreate(((uvm.Register)node).getName(), uvm.mc.MCRegister.OTHER_SYMBOL_REG, dataType);");
+        code.appendln("break;");
         code.decreaseIndent();
         code.appendln("case OpCode.LABEL:");
         code.increaseIndent();
@@ -286,10 +287,12 @@ public class Burg {
         code.decreaseIndent();
         code.appendln("default:");
         code.increaseIndent();
-        code.appendln("ret = uvm.mc.MCRegister.findOrCreate(\"res_reg\"+node.getId(), uvm.mc.MCRegister.RES_REG, dataType); break;");
+        code.appendln("ret = uvm.mc.MCRegister.findOrCreate(\"res_reg\"+node.getId(), uvm.mc.MCRegister.RES_REG, dataType);");
+        code.appendln("break;");
         code.decreaseIndent();
         code.appendln("}");
         
+        code.appendStmtln("node.setMCOp(ret)");
         code.appendStmtln("ret.highLevelOp = node");
         code.appendStmtln("return ret");
         

@@ -14,6 +14,12 @@ public abstract class Instruction extends IRTreeNode {
     
     uvm.Label label;
     
+    /**
+     * some instructions will get expanded to new instructions and old ones get removed. 
+     * We store the original ones in the new instructions
+     */
+    protected Instruction originalInst;
+    
     public void setDefReg(Register reg) {
         if (def != null)
             UVMCompiler.error("trying to rewrite def of " + this.prettyPrint());
@@ -43,6 +49,14 @@ public abstract class Instruction extends IRTreeNode {
 
     public List<Value> getOperands() {
         return operands;
+    }
+    
+    public Instruction getOriginalInst() {
+    	return originalInst;
+    }
+    
+    public void setOriginalInst(Instruction inst) {
+    	this.originalInst = inst;
     }
     
     /**

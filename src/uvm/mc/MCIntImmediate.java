@@ -1,6 +1,8 @@
 package uvm.mc;
 
 public class MCIntImmediate extends AbstractMCImmediate {
+	public static final MCIntImmediate ZERO = new MCIntImmediate(0L);
+	
     long value;
     
     public MCIntImmediate(long value) {

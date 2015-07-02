@@ -6,6 +6,10 @@ public abstract class MCOperand {
     public IRTreeNode highLevelOp;
     public abstract String prettyPrint();
     
+    public IRTreeNode getHighLevelOp() {
+    	return highLevelOp;
+    }
+    
     public String prettyPrintHLLOp() {
         if (highLevelOp == null)
             return "null";

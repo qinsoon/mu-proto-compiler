@@ -3,6 +3,13 @@ package uvm;
 import java.util.ArrayList;
 import java.util.List;
 
+import compiler.UVMCompiler;
+import uvm.mc.MCDPImmediate;
+import uvm.mc.MCIntImmediate;
+import uvm.mc.MCLabel;
+import uvm.mc.MCOperand;
+import uvm.mc.MCRegister;
+import uvm.mc.MCSPImmediate;
 import burm.BurmState;
 
 public abstract class IRTreeNode {
@@ -52,4 +59,33 @@ public abstract class IRTreeNode {
     }
     
     public abstract String prettyPrint();
+    
+    MCOperand mcOp;
+    
+    /**
+     * guaranteed not-null value
+     * @return
+     */
+    public MCOperand getMCOp() {
+    	if (mcOp != null)
+    		return mcOp;
+    	else {
+    		if (opcode == OpCode.INT_IMM)
+    			return new MCIntImmediate(((IntImmediate)this).value);
+    		else if (opcode == OpCode.FP_DP_IMM)
+    			return new MCDPImmediate(((FPImmediate)this).value);
+    		else if (opcode == OpCode.FP_SP_IMM)
+    			return new MCSPImmediate((float) ((FPImmediate)this).value);
+    		else if (opcode == OpCode.LABEL)
+    			return new MCLabel(((Label)this).name);
+    		else{
+    			UVMCompiler.unimplemented(this.getClass() + ": getMCOP when mcOp is null. Need to implement cases for label, reg");
+    	    	return null;	// not reached
+    		}
+    	}
+    }
+    
+    public void setMCOp(MCOperand mcOp) {
+    	this.mcOp = mcOp;
+    }
 }

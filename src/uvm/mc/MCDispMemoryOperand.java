@@ -38,5 +38,9 @@ public class MCDispMemoryOperand extends MCMemoryOperand {
     public void setDisp(int disp) {
         this.disp = disp;
     }
+    
+    public MCDispMemoryOperand cloneWithDisp(int newDisp) {
+    	return new MCDispMemoryOperand(base, newDisp);
+    }
 
 }

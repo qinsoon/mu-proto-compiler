@@ -29,6 +29,7 @@ import compiler.phase.mc.linearscan.ReplaceRegisterOperand;
 import compiler.phase.mc.linearscan.SimpleLinearScan;
 import compiler.phase.mc.x64.X64AllocateParamRetRegister;
 import compiler.phase.mc.x64.X64ExpandCallSequence;
+import compiler.phase.mc.x64.X64MachineCodeExpansion;
 import compiler.phase.mc.x64.X64PostRegisterAllocPatching;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
@@ -52,7 +53,7 @@ public class UVMCompiler {
     public static AbstractMCDriver MCDriver = new X64Driver();
     public static final int MC_REG_SIZE = 64;
     public static final int MC_REG_SIZE_IN_BYTES = MC_REG_SIZE / 8;
-    public static final int MC_FP_REG_SIZE = 80;
+    public static final int MC_FP_REG_SIZE = 64;
     public static final int MC_FP_REG_SIZE_IN_BYTES = MC_FP_REG_SIZE / 8;
     
     public static void main(String[] args) {
@@ -136,6 +137,7 @@ public class UVMCompiler {
             new MCControlFlowAnalysis("mccfa", Verbose.RECONSTRUCT_BB).execute();
             new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();            
             new AddCallRegisterArguments("callregargs", true).execute();
+            new X64MachineCodeExpansion("x64mcexp", true).execute();
             
             /*
              *  register allocation
@@ -220,5 +222,9 @@ public class UVMCompiler {
     public static final void _assert(boolean cond, String message) {
         if (!cond)
             error(message);
+    }
+    
+    public static final void unimplemented(String message) {
+    	error(message);
     }
 }

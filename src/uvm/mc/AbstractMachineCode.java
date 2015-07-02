@@ -153,7 +153,11 @@ public abstract class AbstractMachineCode {
 		ret.append(name + " ");
 		for (int i = 0; i < operands.size(); i++) {
 			MCOperand o = operands.get(i);
-			ret.append(o.prettyPrintREPOnly());
+			
+			if (o == null) {
+				ret.append("NULL");
+			} else		
+				ret.append(o.prettyPrintREPOnly());
 			
 			if (i != operands.size() - 1)
 				ret.append(", ");
