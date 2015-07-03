@@ -5,6 +5,7 @@ import java.util.List;
 
 import burm.mc.X64add;
 import burm.mc.X64lea;
+import burm.mc.X64load_mov;
 import burm.mc.X64store_mov;
 import uvm.CompiledFunction;
 import uvm.Function;
@@ -61,10 +62,10 @@ public class X64MachineCodeExpansion extends AbstractMCCompilationPhase {
 						MCDispMemoryOperand stackStructSP = new MCDispMemoryOperand(stackStruct, 8);
 						// load into a register
 						MCRegister stackLoc = getTmpRegister(cf, tmpIndex++, MCRegister.DATA_GPR);
-						X64lea lea = new X64lea();
-						lea.setOperand0(stackStructSP);
-						lea.setDefine(stackLoc);
-						insertedCode.add(lea);
+						X64load_mov load = new X64load_mov();
+						load.setOperand0(stackStructSP);
+						load.setDefine(stackLoc);
+						insertedCode.add(load);
 						
 						MCDispMemoryOperand stackLocMem = new MCDispMemoryOperand(stackLoc, 0);
 						

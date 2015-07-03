@@ -107,9 +107,8 @@ typedef struct UVMStack {
     int64_t stackSize;
     void *(*entry_func)(void*);
 
-    void *args;
-    int64_t* argTypes;
-    int numArgs;
+    Address lowerBound;
+    Address upperBound;
 
     struct UVMThread* thread;
 } UVMStack;
@@ -121,6 +120,7 @@ extern UVMStack* uvmStacks[MAX_STACK_COUNT];
 extern int stackCount;
 
 extern void addNewStack(UVMStack* stack);
+extern void printStackInfo(UVMStack* stack);
 
 typedef struct UVMThread {
     int threadSlot;

@@ -49,7 +49,7 @@
 		<echo message="javac some uVM classes..."/>
 		<javac srcdir="${uvm-dir}/uvm:${burg-impl-dir}/burm"
 		       includeantruntime="false"
-		       classpath="${burg-impl-dir}:${uvm-dir}"
+		       classpath="${burg-impl-dir}:${uvm-dir}:${uvm-dir}/uvm"
 		       destdir="${burg-exec-dir}">
 		       <include name="OpCode.java"/>
 		       <include name="IRTreeNode.java"/>

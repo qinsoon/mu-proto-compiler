@@ -22,6 +22,7 @@ import uvm.mc.MCBasicBlock;
 import uvm.mc.MCDPImmediate;
 import uvm.mc.MCIntImmediate;
 import uvm.mc.MCLabel;
+import uvm.mc.MCLabeledMemoryOperand;
 import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
@@ -51,9 +52,22 @@ public class X64UVMCallConvention extends X64CDefaultCallConvention {
 			stackLoc = stackLoc.cloneWithDisp(stackDisp);
 		}
 		
+		// push entry function address
+		stackDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
+		stackLoc = stackLoc.cloneWithDisp(stackDisp);
+		
+		X64push pushEntry = new X64push();
+		MCLabeledMemoryOperand entryLabel = new MCLabeledMemoryOperand(callerCF.findOrCreateRegister(UVMCompiler.MCDriver.getInstPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
+		entryLabel.setDispLabel(new MCLabel(calleeCF.getName()));
+		pushEntry.setOperand0(entryLabel);
+		ret.add(pushEntry);
+		
 		List<String> paramRegs = pickRegistersForArguments(calleeCF.getSig());
 		
 		for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfGPRParam(); i++) {
+			stackDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
+			stackLoc = stackLoc.cloneWithDisp(stackDisp);
+			
 			String reg = UVMCompiler.MCDriver.getGPRParamName(i);
 			
 			int indexInParams = paramRegs.indexOf(reg);
@@ -69,13 +83,13 @@ public class X64UVMCallConvention extends X64CDefaultCallConvention {
 			
 			store.setComment(reg);
 			
-			stackDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
-			stackLoc = stackLoc.cloneWithDisp(stackDisp);
-			
 			ret.add(store);
 		}
 		
 		for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfFPRParam(); i++) {
+			stackDisp -= UVMCompiler.MC_FP_REG_SIZE_IN_BYTES;
+			stackLoc = stackLoc.cloneWithDisp(stackDisp);
+			
 			String reg = UVMCompiler.MCDriver.getFPRParamName(i);
 			
 			int indexInParams = paramRegs.indexOf(reg);
@@ -90,9 +104,6 @@ public class X64UVMCallConvention extends X64CDefaultCallConvention {
 			}
 			
 			store.setComment(reg);
-			
-			stackDisp -= UVMCompiler.MC_FP_REG_SIZE_IN_BYTES;
-			stackLoc = stackLoc.cloneWithDisp(stackDisp);
 			
 			ret.add(store);
 		}

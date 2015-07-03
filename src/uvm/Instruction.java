@@ -3,6 +3,11 @@ package uvm;
 import java.util.ArrayList;
 import java.util.List;
 
+import uvm.mc.MCDPImmediate;
+import uvm.mc.MCIntImmediate;
+import uvm.mc.MCLabel;
+import uvm.mc.MCOperand;
+import uvm.mc.MCSPImmediate;
 import compiler.UVMCompiler;
 
 public abstract class Instruction extends IRTreeNode {

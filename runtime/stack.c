@@ -28,12 +28,13 @@ void addNewStack(UVMStack* stack) {
 void printStackInfo(UVMStack* s) {
 	printf("----STACK INFO----\n");
     printf("slot=%lld\n", s->stackSlot);
-    printf("sp=%llx\n", s->_sp);
-    printf("bp=%llx\n", s->_bp);
-    printf("ip=%llx\n", s->_ip);
+    printf("range=%llx\n", s->lowerBound);
+    printf("     ~%llx\n", s->upperBound);
+    printf("   sp=%llx\n", s->_sp);
+    printf("   bp=%llx\n", s->_bp);
+    printf("   ip=%llx\n", s->_ip);
     printf("stackSize=%lld\n", s->stackSize);
     printf("entryFunc=%p\n", s->entry_func);
-    printf("args=%p\n", s->args);
     printf("------------------\n");
 }
 
@@ -53,7 +54,8 @@ Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {
     stackStruct->_ip = 0;
     stackStruct->stackSize = stackSize;
     stackStruct->entry_func = entry_func;
-    stackStruct->args = args;
+    stackStruct->lowerBound = ret + sizeof(UVMStack);
+    stackStruct->upperBound = stackStruct->_sp;
 
     // inform the runtime about the new stack
     addNewStack(stackStruct);

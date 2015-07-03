@@ -125,13 +125,31 @@ void* uVMThreadLaunch(void* a) {
 			// save rsp
 			"mov %%rsp, %0		\n"
 			// change rbp, rsp
-			"mov %1, %%rsp		\n"
+			//"mov %1, %%rsp		\n"
+			// pop all parameters registers
+			// xmm first
+			"movsd    0(%%rsp), %%xmm7	\n"
+			"movsd    8(%%rsp), %%xmm6	\n"
+			"movsd   16(%%rsp), %%xmm5	\n"
+			"movsd   24(%%rsp), %%xmm4	\n"
+			"movsd   32(%%rsp), %%xmm3	\n"
+			"movsd   40(%%rsp), %%xmm2	\n"
+			"movsd   48(%%rsp), %%xmm1	\n"
+			"movsd   56(%%rsp), %%xmm0	\n"
+			// mov stack pointer
+			"add $64, %%rsp		\n"
+//			// gpr
+			"popq %%r9			\n"
+			"popq %%r8			\n"
+			"popq %%rcx			\n"
+			"popq %%rdx			\n"
+			"popq %%rsi			\n"
+			"popq %%rdi			\n"
 			// call entry function
-			"call *%2			\n"
+			"ret				\n"
 
 			: "=m" (saved_rsp)
-			: "m" (stack->_sp),
-			  "r" (entry)
+			: "m" (stack->_sp):"rsp"
 	);
 
 	DEBUG_PRINT(3, ("new thread finished, returned to uVMThreadLaunch\n"));
@@ -146,6 +164,7 @@ void* uVMThreadLaunch(void* a) {
 
 Address newThread(Address stack) {
     DEBUG_PRINT(3, ("Create new thread for stack %llx\n", stack));
+    printStackInfo((UVMStack*)stack);
 
     UVMThread* t = (UVMThread*) malloc(sizeof(UVMThread));
     initUVMThread(t);
