@@ -1,0 +1,47 @@
+// multithread_malloc_loop
+
+.typedef @point struct<int<64> int<64>>
+
+.funcdef @entryFunc void ()> {
+  .label %entry:
+  BRANCH %body
+
+  .label %body:
+  %i = PHI <int<64>> {%entry: 0; %body: %i.new; }
+  %ref  = NEW <@point>
+  
+  %iref = GETIREF <@point> %ref
+  %iref_x = GETFIELDIREF <@point 0> %iref
+  STORE <int<64>> %iref_x 1
+  %iref_y = GETFIELDIREF <@point 1> %iref
+  STORE <int<64>> %iref_y 1
+  
+  %i.new = ADD <int<64>> %i 1
+  
+  BRANCH %body
+  
+  .label %ret:  
+  RETVOID
+}
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+    %s1 = NEWSTACK <void ()> @entryFunc ()
+    %t1 = NEWTHREAD %s1
+
+//    %s2 = NEWSTACK <void ()> @entryFunc ()
+//    %t2 = NEWTHREAD %s2    
+    
+//    %s3 = NEWSTACK <void ()> @entryFunc ()
+//    %t3 = NEWTHREAD %s3
+    
+//    %s4 = NEWSTACK <void ()> @entryFunc ()
+//    %t4 = NEWTHREAD %s4
+    BRANCH %wait
+
+  .label %wait:
+    BRANCH %wait
+
+  .label %exit:
+    RET <int<32>> 0
+}

@@ -140,11 +140,15 @@ op : BRANCH2(cmpFogeRes label label)
 > jmp P[2]
 1
 
-op : RET2(ivalue)
+op : RET(ivalue)
 // mov, ret
 > mov P[0] -> %ret_reg[0]
 > ret
 2
+
+op : RETVOID
+> ret
+1
 
 // ********************************
 // SLT 

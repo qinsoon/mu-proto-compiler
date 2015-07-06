@@ -27,7 +27,7 @@ public abstract class Verbose {
      */
     public static final boolean GEN_MOV_FOR_PHI     = false;
     public static final boolean DETECT_BACK_EDGE	= false;
-    public static final boolean INST_NUMBERING      = false;
+    public static final boolean INST_NUMBERING      = true;
     public static final boolean ALLOC_PARAM_RET_REG = false;
     public static final boolean COMPUTE_INTERVAL    = true;
     public static final boolean REG_COALESC         = false;

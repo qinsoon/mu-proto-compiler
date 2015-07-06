@@ -26,6 +26,7 @@ import uvm.MicroVM;
 import uvm.Register;
 import uvm.Type;
 import uvm.Value;
+import uvm.inst.*;
 import uvm.inst.InstAdd;
 import uvm.inst.InstAlloca;
 import uvm.inst.InstBranch;
@@ -208,6 +209,10 @@ public abstract class ASTHelper {
             Instruction node = new InstRet(v);
             return node;
         } 
+        else if (inst instanceof parser.uIRParser.InstRetVoidContext) {
+        	Instruction node = new InstRetVoid();
+        	return node;
+        }
         
         else if (inst instanceof parser.uIRParser.InstPhiContext) {
             Type t = getType(((parser.uIRParser.InstPhiContext) inst).type());

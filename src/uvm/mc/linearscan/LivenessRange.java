@@ -166,6 +166,9 @@ public class LivenessRange {
     }
     
     public String prettyPrint() {
+    	if (bitset.size() == 0)
+    		return "";
+    	
         StringBuilder ret = new StringBuilder();
         int rangeStart = -1;
         for (int i = 0; i < bitset.size(); i++) {
@@ -188,10 +191,16 @@ public class LivenessRange {
     		else output[i] = '-';
     	}
     	for (Position p : positions) {
+    		try {
     		if (p.isUse())
     			output[p.index] = 'U';
     		else if (p.isDefine())
     			output[p.index] = 'D';
+    		} catch (Exception e) {
+    			e.printStackTrace();
+    			System.out.println("bitset size=" + bitset.size());
+    			System.exit(1);
+    		}
     	}
     	
     	return ret.toString() + new String(output);

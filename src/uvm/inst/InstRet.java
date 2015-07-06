@@ -11,7 +11,7 @@ public class InstRet extends Instruction {
     public InstRet(Value val) {
         this.val = val;
         operands.add(val);
-        opcode = OpCode.RET2;
+        opcode = OpCode.RET;
     }
 
     @Override

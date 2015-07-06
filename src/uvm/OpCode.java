@@ -114,7 +114,7 @@ public abstract class OpCode {
     // misc
     public static final int PHI     = 0xA0;
     public static final int RET     = 0xA1;
-    public static final int RET2    = 0xA2;
+    public static final int RETVOID    = 0xA2;
     public static final int SELECT  = 0xA3;
     public static final int PARAM_GPR   = 0xA4;
     public static final int PARAM_SP = 0xA5;

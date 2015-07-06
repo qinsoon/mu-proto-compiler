@@ -22,6 +22,10 @@ public class CompiledFunction {
     Function origin;
     
     // MC
+    
+    // after CFG is built, if there is any insertion/deletion on machine code (e.g. MachineCodeExpansion)
+    // we need both change mc here and mc in MCBasicBlocks
+    // FIXME
     public List<AbstractMachineCode> mc = new ArrayList<AbstractMachineCode>();
     
     public List<AbstractMachineCode> finalMC = new ArrayList<AbstractMachineCode>();
@@ -115,6 +119,13 @@ public class CompiledFunction {
         return str.toString();
     }
     
+    /**
+     * 
+     * @return
+     */
+    public int getNumberOfMachineInstructions() {
+    	return 0;
+    }
     
     public void printDotFile(String namePostfix) {
         String name = getOriginFunction().getName() + "_" + namePostfix; 

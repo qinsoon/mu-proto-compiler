@@ -184,7 +184,7 @@ extern ImmixSpace* immixSpace;
  * 3 - global allocation, yieldpoint synchronization
  * 1 - initilizer
  */
-#define DEBUG_VERBOSE_LEVEL 3
+#define DEBUG_VERBOSE_LEVEL 5
 #define DEBUG
 
 #ifdef DEBUG

@@ -39,6 +39,7 @@ public class X64MachineCodeExpansion extends AbstractMCCompilationPhase {
 		
 		int tmpIndex = 0;
 		
+//		for (int i = 0; i < cf.mc.size(); i++) {
 		for (MCBasicBlock bb : cf.BBs) {
 			for (int i = 0; i < bb.getMC().size(); i++) {
 				AbstractMachineCode mc = bb.getMC().get(i);
@@ -89,6 +90,7 @@ public class X64MachineCodeExpansion extends AbstractMCCompilationPhase {
 						
 						// insert into original mc
 						bb.getMC().addAll(i+2, insertedCode);
+						cf.mc.addAll(cf.mc.indexOf(mc) + 1, insertedCode);
 					}
 				}
 			}
