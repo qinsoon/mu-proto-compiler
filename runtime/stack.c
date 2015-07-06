@@ -38,6 +38,19 @@ void printStackInfo(UVMStack* s) {
     printf("------------------\n");
 }
 
+void inspectStack(UVMStack* stack, int64_t maxValues) {
+	Address stackTop = stack->upperBound;
+	Address cur;
+
+	printf("STACK STARTS (hi to lo, printing %lld values)\n", maxValues);
+	printf("     -------------------\n");
+	for (cur = stackTop - 8; cur >= stack->lowerBound && stackTop - cur < maxValues*8; cur -= 8) {
+		printf("     0x%llx | %llx \n", cur, *((uint64_t*)cur));
+	}
+	printf("     ...\n");
+	printf("     -------------------\n");
+}
+
 Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {
     DEBUG_PRINT(3, ("Allocate for new stack (size:%lld, entry:%p, args:%p)\n", stackSize, entry_func, args));
 

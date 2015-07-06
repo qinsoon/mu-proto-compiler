@@ -121,6 +121,7 @@ extern int stackCount;
 
 extern void addNewStack(UVMStack* stack);
 extern void printStackInfo(UVMStack* stack);
+extern void inspectStack(UVMStack* stack, int64_t max);
 
 typedef struct UVMThread {
     int threadSlot;
@@ -144,6 +145,8 @@ extern UVMThread* uvmThreads[MAX_THREAD_COUNT];
 extern int threadCount;
 
 extern void addNewThread(UVMThread* thread);
+
+extern void threadExit();
 
 /*
  * create thread context and put it in local
@@ -190,6 +193,9 @@ extern ImmixSpace* immixSpace;
 # define DEBUG_PRINT(l, x) do {} while (0)
 #endif
 
+extern void uvmPrintInt64(int64_t);
+extern void uvmPrintStr(Address);
+
 /*
  * MEMORY
  */
@@ -219,3 +225,4 @@ extern void yieldpoint();
 extern void turnOffYieldpoints();
 extern void turnOnYieldpoints();
 extern void uVM_fail(const char* str);
+extern void NOT_REACHED();

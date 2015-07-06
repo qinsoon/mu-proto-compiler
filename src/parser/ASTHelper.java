@@ -52,6 +52,7 @@ import uvm.inst.InstShl;
 import uvm.inst.InstSlt;
 import uvm.inst.InstSrem;
 import uvm.inst.InstStore;
+import uvm.inst.InstThreadExit;
 import uvm.metadata.Const;
 import uvm.type.IRef;
 import uvm.type.Int;
@@ -169,11 +170,7 @@ public abstract class ASTHelper {
         return ret;
     }
     
-    public static Instruction getInstruction(Function f, InstContext ctx) throws ASTParsingException {
-//        Register def = null;
-//        if (ctx.IDENTIFIER() != null)
-//            def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false));
-        
+    public static Instruction getInstruction(Function f, InstContext ctx) throws ASTParsingException {  
         InstBodyContext inst = ctx.instBody();
         
         /*
@@ -497,6 +494,15 @@ public abstract class ASTHelper {
         		Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), sig.getReturnType());
         		node.setDefReg(def);
         	}
+        	return node;
+        }
+        /*
+         * Thread related
+         */
+        else if (inst instanceof parser.uIRParser.InstThreadExitContext) {
+        	parser.uIRParser.InstThreadExitContext threadExitCtx = (parser.uIRParser.InstThreadExitContext) inst;
+        	
+        	Instruction node = new InstThreadExit();
         	return node;
         }
         

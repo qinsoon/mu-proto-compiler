@@ -16,6 +16,7 @@ public class RuntimeFunction {
 	public static final RuntimeFunction initObj;
 	public static final RuntimeFunction yieldpoint;
 	public static final RuntimeFunction newThread;
+	public static final RuntimeFunction threadExit;
 	
 	static {
 		allocObj = new RuntimeFunction(InstCCall.CC_DEFAULT, 
@@ -33,11 +34,15 @@ public class RuntimeFunction {
 		yieldpoint = new RuntimeFunction(InstCCall.CC_DEFAULT, 
 				"_yieldpoint",
 				uvm.type.Void.T,
-				Arrays.asList(uvm.type.Void.T));
+				Arrays.asList());
 		newThread = new RuntimeFunction(InstCCall.CC_DEFAULT, 
 				"_newThread",
 				uvm.type.Ref.REF_VOID,
 				Arrays.asList(uvm.type.Ref.REF_VOID));
+		threadExit = new RuntimeFunction(InstCCall.CC_DEFAULT, 
+				"_threadExit",
+				uvm.type.Void.T,
+				Arrays.asList());
 	}
     
     int callConv;

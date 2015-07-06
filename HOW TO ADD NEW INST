@@ -10,7 +10,11 @@ in the constructor, add operands, add opcode.
 3. frontend: parser/ASTHelper
 to allow uVM frontend to take the IR
 
-4. Internal Tree IR: compiler.phase.IRTreeGeneration
-add operands/children that will be used in instruction selection
+4 (a) If the IR will be expanded into runtime service call or other instructions
+go to compiler.phase.ExpandRuntimeService, and rewrite the instruction. 
 
-5. BURS: backend/x64/x64.target
+4 (b)
+  (1) Internal Tree IR: compiler.phase.IRTreeGeneration
+      add operands/children that will be used in instruction selection
+
+  (2) BURS: backend/x64/x64.target

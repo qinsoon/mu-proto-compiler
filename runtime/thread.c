@@ -125,7 +125,7 @@ void* uVMThreadLaunch(void* a) {
 			// save rsp
 			"mov %%rsp, %0		\n"
 			// change rbp, rsp
-			//"mov %1, %%rsp		\n"
+			"mov %1, %%rsp		\n"
 			// pop all parameters registers
 			// xmm first
 			"movsd    0(%%rsp), %%xmm7	\n"
@@ -146,20 +146,24 @@ void* uVMThreadLaunch(void* a) {
 			"popq %%rsi			\n"
 			"popq %%rdi			\n"
 			// call entry function
-			"ret				\n"
+			"jmp *%2			\n"
 
 			: "=m" (saved_rsp)
-			: "m" (stack->_sp):"rsp"
+			: "m" (stack->_sp),
+			  "r" (entry)
 	);
 
-	DEBUG_PRINT(3, ("new thread finished, returned to uVMThreadLaunch\n"));
-
-	// we need to properly clean up uVM thread stuff for a terminating thread
-	freeThreadContext(thread);
-
-	// quit
-	pthread_exit(NULL);
+	DEBUG_PRINT(3, ("new thread finished, returned to uVMThreadLaunch (SHOULD NOT REACH HERE)\n"));
+	NOT_REACHED();
 	return NULL;
+}
+
+void threadExit() {
+	UVMThread* uvmT = getThreadContext();
+
+	DEBUG_PRINT(3, ("Thread%d (%p) exits\n", uvmT->threadSlot, uvmT));
+	freeThreadContext(uvmT);
+	pthread_exit(NULL);
 }
 
 Address newThread(Address stack) {

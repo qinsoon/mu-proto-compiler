@@ -97,6 +97,18 @@ void fillAlignmentGap(Address start, Address end) {
     memset((void*)start, ALIGNMENT_VALUE, end - start);
 }
 
+void uvmPrintInt64(int64_t s) {
+	printf("%lld\n", s);
+}
+
+void uvmPrintStr(Address s) {
+	printf("%s\n", (char*) s);
+}
+
+void NOT_REACHED() {
+	uVM_fail("SHOULDNT REACH HERE");
+}
+
 void uVM_fail(const char* str) {
     printf("uVM failed in runtime: %s\n", str);
     exit(1);

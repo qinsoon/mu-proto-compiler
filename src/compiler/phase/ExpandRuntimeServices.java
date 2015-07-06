@@ -23,6 +23,7 @@ import uvm.inst.InstNew;
 import uvm.inst.InstNewStack;
 import uvm.inst.InstNewThread;
 import uvm.inst.InstStore;
+import uvm.inst.InstThreadExit;
 import uvm.runtime.RuntimeFunction;
 import uvm.type.IRef;
 import uvm.type.Int;
@@ -141,6 +142,15 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 					reserveLabel(inst, newThread);
 					newInsts.add(newThread);
 				}
+				
+				// THREADEXIT:
+				// ccall threadExit()
+				else if (inst instanceof InstThreadExit) {					
+					Instruction threadExit = ccallRuntimeFunction(RuntimeFunction.threadExit, new ArrayList<uvm.Value>());
+					reserveLabel(inst, threadExit);
+					newInsts.add(threadExit);
+				}
+				
 				else {
 					UVMCompiler.error("unimplemented runtime service expansion for " + inst.getClass().getName());
 				}
