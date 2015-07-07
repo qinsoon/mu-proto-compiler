@@ -36,6 +36,10 @@ public class X64ExpandCallSequence extends AbstractMCCompilationPhase {
                 if (mc.isCall()) {
                 	IRTreeNode HLLIR = mc.getHighLevelIR();
                 	
+                	MCLabel mcLabel = mc.getLabel();
+                	if (mcLabel != null)
+                		mc.setLabel(null);
+                	
                 	// uVM internal calling conv
                 	if (HLLIR instanceof InstCall) {
 	                    // use this instance for this call only
@@ -60,6 +64,10 @@ public class X64ExpandCallSequence extends AbstractMCCompilationPhase {
                 	}
                 	else {
                 		UVMCompiler.error("unknown calling instruction:" + HLLIR.toString());
+                	}
+                	
+                	if (mcLabel != null) {
+                		newMC.get(0).setLabel(mcLabel);
                 	}
                 } else {
                     newMC.add(mc);

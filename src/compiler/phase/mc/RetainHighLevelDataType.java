@@ -17,7 +17,7 @@ public class RetainHighLevelDataType extends AbstractMCCompilationPhase {
 
     @Override
     protected void visitCompiledFunction(CompiledFunction cf) {
-        for (AbstractMachineCode mc : cf.mc) {
+        for (AbstractMachineCode mc : cf.getMachineCode()) {
             for (int i = 0; i < mc.getNumberOfOperands(); i++) {
                 MCOperand op = mc.getOperand(i);
                 

@@ -90,7 +90,7 @@ public class X64MachineCodeExpansion extends AbstractMCCompilationPhase {
 						
 						// insert into original mc
 						bb.getMC().addAll(i+2, insertedCode);
-						cf.mc.addAll(cf.mc.indexOf(mc) + 1, insertedCode);
+						cf.addMachineCode(cf.getIndexOfMachineCode(mc) + 1, insertedCode);
 					}
 				}
 			}

@@ -2,7 +2,7 @@
 
 .typedef @point struct<int<64> int<64>>
 
-.funcdef @entryFunc void ()> {
+.funcdef @entryFunc <void ()> {
   .label %entry:
   BRANCH %body
 

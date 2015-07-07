@@ -26,7 +26,7 @@ public class CompiledFunction {
     // after CFG is built, if there is any insertion/deletion on machine code (e.g. MachineCodeExpansion)
     // we need both change mc here and mc in MCBasicBlocks
     // FIXME
-    public List<AbstractMachineCode> mc = new ArrayList<AbstractMachineCode>();
+    private List<AbstractMachineCode> mc = new LinkedList<AbstractMachineCode>();
     
     public List<AbstractMachineCode> finalMC = new ArrayList<AbstractMachineCode>();
     
@@ -119,14 +119,6 @@ public class CompiledFunction {
         return str.toString();
     }
     
-    /**
-     * 
-     * @return
-     */
-    public int getNumberOfMachineInstructions() {
-    	return 0;
-    }
-    
     public void printDotFile(String namePostfix) {
         String name = getOriginFunction().getName() + "_" + namePostfix; 
         
@@ -175,12 +167,36 @@ public class CompiledFunction {
         mc.add(code);
     }
     
+    public void addMachineCode(int index, AbstractMachineCode code) {
+    	mc.add(index, code);
+    }
+    
     public void addMachineCode(List<AbstractMachineCode> code) {
         mc.addAll(code);
     }
     
+    public void addMachineCode(int index, List<AbstractMachineCode> code) {
+    	mc.addAll(index, code);
+    }
+    
+    public void setMachineCode(List<AbstractMachineCode> code) {
+    	this.mc = code;
+    }
+    
     public List<AbstractMachineCode> getMachineCode() {
         return mc;
+    }
+    
+    /**
+     * 
+     * @return
+     */
+    public int getNumberOfMachineCodes() {
+    	return mc.size();
+    }
+    
+    public int getIndexOfMachineCode(AbstractMachineCode code) {
+    	return mc.indexOf(code);
     }
     
     /**

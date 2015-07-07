@@ -25,7 +25,7 @@ public class MCControlFlowAnalysis extends AbstractMCCompilationPhase{
         
         MCBasicBlock curBB = null;
         
-        for (AbstractMachineCode mc : cf.mc) {
+        for (AbstractMachineCode mc : cf.getMachineCode()) {
             verboseln("scanning mc : " + mc.prettyPrintOneline());
             if (curBB == null) {
                 // start of a BB

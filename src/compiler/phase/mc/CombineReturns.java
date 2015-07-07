@@ -1,6 +1,7 @@
 package compiler.phase.mc;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import uvm.CompiledFunction;
@@ -32,7 +33,7 @@ public class CombineReturns extends AbstractMCCompilationPhase {
         
         // combines MC
         
-        List<AbstractMachineCode> newMCs = new ArrayList<AbstractMachineCode>();        
+        List<AbstractMachineCode> newMCs = new LinkedList<AbstractMachineCode>();        
         MCLabel retLabel = new MCLabel("exit"); 
         
         for (AbstractMachineCode mc : cf.getMachineCode()) {
@@ -49,7 +50,7 @@ public class CombineReturns extends AbstractMCCompilationPhase {
         retMC.setLabel(retLabel);
         newMCs.add(retMC);
         
-        cf.mc = newMCs;
+        cf.setMachineCode(newMCs);
     }
 
 }

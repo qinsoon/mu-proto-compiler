@@ -15,7 +15,7 @@ public class JoinPhiNode extends AbstractMCCompilationPhase {
 
 	@Override
 	protected void visitCompiledFunction(CompiledFunction cf) {
-		for (AbstractMachineCode mc : cf.mc) {
+		for (AbstractMachineCode mc : cf.getMachineCode()) {
 			if (mc.isPhi()) {
 				MCRegister def = mc.getDefineAsReg();
 				for (int i = 1; i < mc.getNumberOfOperands(); i += 2) {

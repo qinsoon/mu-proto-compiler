@@ -412,7 +412,7 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 	}
 	
 	private void initIntervalWeight() {		
-		for (AbstractMachineCode mc : currentCF.mc) {
+		for (AbstractMachineCode mc : currentCF.getMachineCode()) {
 			if (mc.isPhi())
 				continue;
 			
