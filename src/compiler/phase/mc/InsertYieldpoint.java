@@ -41,8 +41,17 @@ public class InsertYieldpoint extends AbstractMCCompilationPhase {
 			for (MCBasicBlock bb : cf.BBs) {
 				if (!bb.getBackEdges().isEmpty()) {
 					verboseln("for backedge at " + bb.getName());
+					
 					int whereToInsert = bb.getMC().size() - 1;
-					bb.getMC().addAll(whereToInsert, genCheckingYieldpoint(cf));
+					AbstractMachineCode insertPoint = bb.getMC().get(whereToInsert);
+					
+					List<AbstractMachineCode> yp = genCheckingYieldpoint(cf);
+					bb.getMC().addAll(whereToInsert, yp);
+					
+					if (insertPoint.getLabel() != null) {
+						yp.get(0).setLabel(insertPoint.getLabel());
+						insertPoint.setLabel(null);
+					}
 				}
 			}
 		

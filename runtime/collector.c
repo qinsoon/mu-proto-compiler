@@ -55,9 +55,13 @@ void *collector_controller_run(void *param) {
             worldStopped = true;
             for (int i = 0; i < threadCount; i++) {
                 UVMThread* t = uvmThreads[i];
-                if (t != NULL && t->_block_status == BLOCKED)
-                    continue;
+//                DEBUG_PRINT(3, ("Checking on Thread%d...", t->threadSlot));
+                if (t != NULL && t->_block_status == BLOCKED) {
+//                	DEBUG_PRINT(3, ("blocked\n"));
+                	continue;
+                }
                 else {
+//                	DEBUG_PRINT(3, ("not blocked\n"));
                     worldStopped = false;
                     break;
                 }
