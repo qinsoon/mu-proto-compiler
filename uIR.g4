@@ -131,7 +131,7 @@ instBody
     |   'GETIREF'       '<' type '>' value              # InstGetIRef
 
     |   'GETFIELDIREF'  '<' type intImmediate '>' value # InstGetFieldIRef
-    |   'GETELEMIREF'   '<' type '>' value value        # InstGetElemIRef
+    |   'GETELEMIREF'   '<' type type '>' value value        # InstGetElemIRef
     |   'SHIFTIREF'     '<' type '>' value value        # InstShiftIRef
     |   'GETFIXEDPARTIREF'  '<' type '>' value          # InstGetFixedPartIRef
     |   'GETVARPARTIREF'    '<' type '>' value          # InstGetVarPartIRef

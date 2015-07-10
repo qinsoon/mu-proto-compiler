@@ -147,6 +147,18 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         	inst.addChild(getIRef.getRef());
         	inst.addChild(new IntImmediate(Int.I64, (long) headerSize));
         }
+        else if (inst instanceof InstGetElemIRefConstIndex) {
+        	InstGetElemIRefConstIndex getElem = (InstGetElemIRefConstIndex) inst;
+        	
+        	inst.addChild(getElem.getLoc());
+        	inst.addChild(new IntImmediate(Int.I64, MicroVM.v.objectModel.getOffsetFromArrayIRef(getElem.getArrayType(), (int) getElem.getIndex())));
+        }
+        else if (inst instanceof InstGetElemIRefVarIndex) {
+        	InstGetElemIRefVarIndex getElem = (InstGetElemIRefVarIndex) inst;
+        	
+        	inst.addChild(getElem.getLoc());
+        	inst.addChild(getElem.getIndex());
+        }
         /*
          * DEFAULT: add all operands as children
          */

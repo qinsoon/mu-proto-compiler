@@ -27,34 +27,8 @@ import uvm.Register;
 import uvm.Type;
 import uvm.Value;
 import uvm.inst.*;
-import uvm.inst.InstAdd;
-import uvm.inst.InstAlloca;
-import uvm.inst.InstBranch;
-import uvm.inst.InstBranch2;
-import uvm.inst.InstCCall;
-import uvm.inst.InstCall;
-import uvm.inst.InstEq;
-import uvm.inst.InstFAdd;
-import uvm.inst.InstFDiv;
-import uvm.inst.InstFOlt;
-import uvm.inst.InstFPToSI;
-import uvm.inst.InstGetFieldIRef;
-import uvm.inst.InstGetIRef;
-import uvm.inst.InstLoad;
-import uvm.inst.InstNew;
-import uvm.inst.InstNewStack;
-import uvm.inst.InstNewThread;
-import uvm.inst.InstParam;
-import uvm.inst.InstPhi;
-import uvm.inst.InstRet;
-import uvm.inst.InstSIToFP;
-import uvm.inst.InstSgt;
-import uvm.inst.InstShl;
-import uvm.inst.InstSlt;
-import uvm.inst.InstSrem;
-import uvm.inst.InstStore;
-import uvm.inst.InstThreadExit;
 import uvm.metadata.Const;
+import uvm.type.Array;
 import uvm.type.IRef;
 import uvm.type.Int;
 import uvm.type.Ref;
@@ -136,6 +110,11 @@ public abstract class ASTHelper {
             // void
             else if (ctx instanceof parser.uIRParser.VoidTypeContext) {
             	return uvm.type.Void.T;
+            }
+            else if (ctx instanceof parser.uIRParser.ArrayTypeContext) {
+            	uvm.Type eleT = getType(((parser.uIRParser.ArrayTypeContext) ctx).type());
+            	int length = Integer.valueOf(((parser.uIRParser.ArrayTypeContext) ctx).intImmediate().getText());
+            	return uvm.type.Array.findOrCreate(eleT, length);
             }
             else {
                 throw new ASTParsingException("Missing implementation on " + ctx.getClass().toString());
@@ -441,6 +420,29 @@ public abstract class ASTHelper {
         	
         	return node;
         }
+        else if (inst instanceof parser.uIRParser.InstGetElemIRefContext) {
+        	parser.uIRParser.InstGetElemIRefContext getElemIRefCtx = (parser.uIRParser.InstGetElemIRefContext) inst;
+        	
+        	Array arrayT = (Array) getType(getElemIRefCtx.type(0));
+        	IRef arrayIRef = IRef.findOrCreateIRef(arrayT);
+        	IRef arrayEleTypeIRef = IRef.findOrCreateIRef(arrayT.getEleType());        	
+        	
+        	Value loc = getValue(f, getElemIRefCtx.value(0), arrayIRef);
+        	Type indexT = getType(getElemIRefCtx.type(1));
+        	Value index = getValue(f, getElemIRefCtx.value(1), indexT);
+        	
+        	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), arrayEleTypeIRef);
+        	
+        	if (index instanceof IntImmediate) {
+        		Instruction node = new InstGetElemIRefConstIndex(arrayT, ((IntImmediate) index).getValue(), loc);
+        		node.setDefReg(def);
+        		return node;
+        	} else {
+        		Instruction node = new InstGetElemIRefVarIndex(arrayT, index, loc);
+        		node.setDefReg(def);
+        		return node;
+        	}
+        }
         /*
          * call
          */
@@ -512,7 +514,7 @@ public abstract class ASTHelper {
         }
         
         else {
-            UVMCompiler.error("incomplete implementation of " + ctx.getClass().toString());
+            UVMCompiler.error("incomplete implementation of " + ctx.toStringTree());
         }
         return null;
     }

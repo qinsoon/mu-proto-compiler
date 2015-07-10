@@ -7,6 +7,7 @@ import compiler.UVMCompiler;
 import compiler.util.Alignment;
 import uvm.MicroVM;
 import uvm.Type;
+import uvm.type.Array;
 import uvm.type.IRef;
 import uvm.type.Ref;
 import uvm.type.Struct;
@@ -18,6 +19,10 @@ public class SimpleObjectModel {
 	
 	public int getOffsetFromStructIRef(Struct structT, int index) {
 		return structT.getOffset(index);
+	}
+	
+	public int getOffsetFromArrayIRef(Array arrayT, int index) {
+		return arrayT.getEleType().sizeInBytes() * index;
 	}
 	
 	/*
