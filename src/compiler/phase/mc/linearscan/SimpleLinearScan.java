@@ -29,6 +29,10 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 
 	@Override
 	protected void visitCompiledFunction(CompiledFunction cf) {
+		verboseln("Linear scan for " + cf.getOriginFunction().getName());
+		verboseln(cf.prettyPrint());
+		verboseln();
+		
 		linearScan(cf);
 		replaceRegistersAndInsertSpillingCode(cf);
 	}

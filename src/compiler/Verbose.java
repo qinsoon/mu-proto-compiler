@@ -26,17 +26,17 @@ public abstract class Verbose {
      *  register allocation
      */
     public static final boolean GEN_MOV_FOR_PHI     = false;
-    public static final boolean DETECT_BACK_EDGE	= true;
+    public static final boolean DETECT_BACK_EDGE	= false;
     public static final boolean INST_NUMBERING      = false;
     public static final boolean ALLOC_PARAM_RET_REG = false;
-    public static final boolean COMPUTE_INTERVAL    = false;
+    public static final boolean COMPUTE_INTERVAL    = true;
     public static final boolean REG_COALESC         = false;
-    public static final boolean LINEAR_SCAN         = false;
+    public static final boolean LINEAR_SCAN         = true;
     
     public static final boolean REPLACE_MEM_OP      = false;
     public static final boolean INSERT_SPILLING     = false;
     
-    public static final boolean EXPAND_CALL_SEQ     = false;
+    public static final boolean EXPAND_CALL_SEQ     = true;
     
     /*
      * post register allocation code transform (be careful of using any registers, and concern about calling convention)

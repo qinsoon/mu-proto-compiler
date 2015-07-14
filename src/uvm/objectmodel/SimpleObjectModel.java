@@ -30,16 +30,22 @@ public class SimpleObjectModel {
 	 * 
 	 * Use 8 bytes
 	 * 
-	 * (1) if the highest bit is 1
+	 * 1st bit is never used (sign bit), left as zero
+	 * otherwise the header initialization const may be larger than a java int
+	 *
+	 * 
+	 * 1. If the 2nd bit is 0 (Scalar)
+	 * 
+	 * (1) if the 3rd bit is 1
 	 * 
 	 * high                                                                     low
-	 * | 01xxxxxx xxxxxxxx | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx|
+	 * | 001xxxxx xxxxxxxx | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx|
 	 *    GC bits            Reference Bitmap
 	 *  
-	 * (2) if the highest bit is 0
+	 * (2) if the 3rd bit is 0
 	 * 
 	 * high																		 low
-	 * | 00xxxxxx xxxxxxxx | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx|
+	 * | 000xxxxx xxxxxxxx | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx|
 	 *    GC bits            Pointer to external reference bitmap
 	 * 
 	 * 
@@ -52,10 +58,18 @@ public class SimpleObjectModel {
 	 * E.g. struct{int<32>, int<32>, ref<int<32>>, int<64>, ref<int<64>>}  
 	 * Bitmap = 0101
 	 * 
+	 * 2. If the 2nd bit is 1 (Array)
+	 * 
+	 * high
+	 * | 01yxxxxx xxxxxxxx | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx |
+	 *    GC bits			 Length of array
+	 *    
+	 * the 3rd bit tells if the array element is reference or not 
+	 * 
 	 */
 	
-	public static final long BITMAP_MASK = 0x0000FFFFFFFFFFFFL;
-	public static final long GCBITS_MASK = 0x7FFF000000000000L;
+	public static final long BITMAP_MASK = 0x00FFFFFFL;
+	public static final long GCBITS_MASK = 0x7F000000L;
 	
 //	public static final int BITMAP_LENGTH_SIZE_IN_BYTES = 4;
 	public static final int GC_HEADER_SIZE_IN_BYTES = 2;
@@ -68,6 +82,26 @@ public class SimpleObjectModel {
 	 */
 	
 	public long getHeaderInitialization(Type t) {
+		if (t instanceof Array) {
+			long ret;
+			if (((Array) t).getEleType().isReference()) {
+				// 0110 0000 ...
+				ret = 0x60000000L;
+			} else
+				// 0100 0000 ...
+				ret = 0x40000000L;
+			
+			// put length into last 6 bytes
+			int length = ((Array) t).getLength();
+			int maskedLength = length & 0x00FFFFFF;
+			if (length != maskedLength) {
+				UVMCompiler.error("Length excceds max length that can be put in the header. ");
+			}
+			
+			ret |= maskedLength;
+			return ret;
+		}
+		
 		// we use 1 bit in the bitmap to represent 8bytes
 		// check if we can fit the type into a 48bits bitmap
 		if (t.sizeInBytes() > 48 * 8) {

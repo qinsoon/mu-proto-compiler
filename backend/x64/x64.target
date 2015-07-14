@@ -346,6 +346,24 @@ ireg : LOAD(getFieldReg)
 > load_mov *(P[0][0] + P[0][1]) -> %res_reg
 1
 
+ireg : GETELEM_CONST(ireg iimm)
+> mov P[0] -> %tmp_reg[0]
+> add %tmp_reg[0] P[1] -> %tmp_reg[0]
+> mov %tmp_reg[0] -> %res_reg
+3
+
+getElemReg : GETELEM_CONST(ireg iimm)
+> nop
+0
+
+ireg : LOAD(getElemReg)
+> load_mov *(P[0][0] + P[0][1]) -> %res_reg
+1
+
+op : STORE(getElemReg ivalue)
+> store_mov *(P[0][0] + P[0][1]) P[1]
+1
+
 // ********************************
 // INTERNAL
 // ********************************

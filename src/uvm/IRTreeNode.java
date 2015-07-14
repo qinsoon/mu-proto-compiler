@@ -3,8 +3,6 @@ package uvm;
 import java.util.ArrayList;
 import java.util.List;
 
-import compiler.UVMCompiler;
-
 import uvm.mc.MCDPImmediate;
 import uvm.mc.MCIntImmediate;
 import uvm.mc.MCLabel;
@@ -37,8 +35,11 @@ public abstract class IRTreeNode {
     }
     
     public void addChild(IRTreeNode node) {
-    	if (node == null)
-    		UVMCompiler.error("Adding NULL to node:" + prettyPrint());
+    	if (node == null) {
+    		System.out.println("Adding NULL to node:" + prettyPrint());
+    		Thread.dumpStack();
+    		System.exit(1);
+    	}
         children.add(node);
     }
     

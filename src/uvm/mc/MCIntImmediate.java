@@ -15,6 +15,6 @@ public class MCIntImmediate extends AbstractMCImmediate {
     
     @Override
     public String prettyPrint() {
-        return "$" + Long.toString(value);
+        return "$" + Long.toString(value) + "(0x" + Long.toHexString(value) + ")";
     }
 }

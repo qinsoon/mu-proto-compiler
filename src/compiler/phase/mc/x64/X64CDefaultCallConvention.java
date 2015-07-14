@@ -181,11 +181,13 @@ public class X64CDefaultCallConvention {
         System.out.println("setup call seq at " + callMCIndex);
         caller.printInterval();
         List<MCRegister> liveRegs = caller.getLiveRegistersThrough(callMCIndex);		// we only need to save scratch registers that are alive through the call inst
+//        MCRegister.printList("liveThroughs", liveRegs);
         // add live-in regs
         MCBasicBlock callBB = caller.getBasicBlockFor(callMC);
         for (MCRegister reg : callBB.liveIn)
             if (!liveRegs.contains(reg.REP()))
                 liveRegs.add(reg.REP());
+//        MCRegister.printList("liveThrough+live-in", liveRegs);
 
         for (MCRegister reg : liveRegs) {
             System.out.println("Pushing " + reg.prettyPrint() + ", hash:" + reg.hashCode());

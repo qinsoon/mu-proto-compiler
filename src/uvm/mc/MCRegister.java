@@ -1,6 +1,7 @@
 package uvm.mc;
 
 import java.util.HashMap;
+import java.util.List;
 
 import uvm.OpCode;
 
@@ -118,5 +119,13 @@ public class MCRegister extends MCOperand{
     	case OpCode.REG_SP: return DATA_SP;
     	default:			return DATA_GPR;
     	}
+    }
+    
+    public static void printList(String str, List<MCRegister> regs) {
+    	System.out.print(str + ": ");
+    	for (MCRegister reg : regs) {
+    		System.out.print(reg.prettyPrint() + ",");
+    	}
+    	System.out.println();
     }
 }
