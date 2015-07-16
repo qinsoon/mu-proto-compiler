@@ -550,6 +550,10 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 						
 						Interval interval = cf.intervals.get(reg.REP());
 						
+						if (interval == null) {
+							UVMCompiler.error("interval for " + reg.REP().prettyPrint() + " doesnt exist, maybe in IR, there is a register created but never used (so the compiler didn't create an interval for it). ");
+						}
+						
 						if (interval.getSpill() != null)
 							spilledTemps ++;
 						if (interval.isRegOnlyUseAt(mc.sequence))

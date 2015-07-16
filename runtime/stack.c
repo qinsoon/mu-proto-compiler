@@ -15,6 +15,11 @@ void initStack() {
 	pthread_mutex_init(&stackAcctLock, NULL);
 }
 
+UVMStack* getCurrentStack() {
+	UVMThread* t = getThreadContext();
+	return (UVMStack*) t->stack;
+}
+
 void addNewStack(UVMStack* stack) {
 	pthread_mutex_lock(&stackAcctLock);
 

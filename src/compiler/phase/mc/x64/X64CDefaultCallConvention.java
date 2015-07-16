@@ -1,5 +1,6 @@
 package compiler.phase.mc.x64;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -18,6 +19,7 @@ import uvm.inst.InstCCall;
 import uvm.inst.InstCall;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
+import uvm.mc.MCDispMemoryOperand;
 import uvm.mc.MCIntImmediate;
 import uvm.mc.MCLabel;
 import uvm.mc.MCLabeledMemoryOperand;
@@ -175,6 +177,8 @@ public class X64CDefaultCallConvention {
             AbstractMachineCode callMC) {
         List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>();
         
+        MCRegister rsp = caller.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);        
+        
         // caller saved registers
         callerSavedRegs.clear();
         int callMCIndex = callMC.sequence;
@@ -191,7 +195,7 @@ public class X64CDefaultCallConvention {
 
         for (MCRegister reg : liveRegs) {
             System.out.println("Pushing " + reg.prettyPrint() + ", hash:" + reg.hashCode());
-            ret.add(pushStack(reg));
+            ret.addAll(pushStack(reg, rsp));
             callerSavedRegs.add(reg);
         }
         
@@ -246,7 +250,7 @@ public class X64CDefaultCallConvention {
                         usedParamGPRs++;
                     } else {
                         // pass by stack
-                        ret.add(pushStack(arg));
+                        ret.addAll(pushStack(arg, rsp));
                         argumentsSizeOnStack += UVMCompiler.MC_REG_SIZE_IN_BYTES;
                     }
                 } else {
@@ -266,7 +270,7 @@ public class X64CDefaultCallConvention {
                         usedParamFPRs++;
                     } else {
                         // pass by stack
-                        ret.add(pushStack(arg));
+                        ret.addAll(pushStack(arg, rsp));
                         argumentsSizeOnStack += UVMCompiler.MC_FP_REG_SIZE_IN_BYTES;
                     }
                 } else {
@@ -346,8 +350,9 @@ public class X64CDefaultCallConvention {
         }
         
         // restore caller saved register
+        MCRegister rsp = caller.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
         for (int i = callerSavedRegs.size() - 1; i >= 0; i--) {
-            ret.add(popStack(callerSavedRegs.get(i)));
+            ret.addAll(popStack(callerSavedRegs.get(i), rsp));
         }
         
         return ret;
@@ -360,12 +365,13 @@ public class X64CDefaultCallConvention {
         
         // push rbp
         MCRegister rbp = cf.findOrCreateRegister(UVMCompiler.MCDriver.getFramePtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
-        AbstractMachineCode pushRBP = pushStack(rbp);
-        pushRBP.setLabel(new MCLabel("prologue"));
-        prologue.add(pushRBP);
+        MCRegister rsp = cf.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+        
+        List<X64MachineCode> pushRBP = pushStack(rbp, rsp);
+        pushRBP.get(0).setLabel(new MCLabel("prologue"));
+        prologue.addAll(pushRBP);
         
         // rsp -> rbp
-        MCRegister rsp = cf.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
         prologue.add(UVMCompiler.MCDriver.genMove(rbp, rsp));
         
         // allocate space for local storage
@@ -387,7 +393,7 @@ public class X64CDefaultCallConvention {
         		if (UVMCompiler.MCDriver.isCalleeSave(r)) {
         			MCRegister reg = cf.findOrCreateRegister(r, MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
         			cf.calleeSavedRegs.add(reg);
-        			prologue.add(pushStack(reg));
+        			prologue.addAll(pushStack(reg, rsp));
         		}
         	}
         } else {
@@ -397,7 +403,7 @@ public class X64CDefaultCallConvention {
 	            if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()) && li.hasValidRange()) {
 	                cf.calleeSavedRegs.add(reg);
 	                // need to save it
-	                prologue.add(pushStack(reg));
+	                prologue.addAll(pushStack(reg, rsp));
 	            }
 	        }
         }
@@ -411,36 +417,57 @@ public class X64CDefaultCallConvention {
     public void genEpilogue(CompiledFunction cf) {
         List<AbstractMachineCode> epilogue = cf.epilogue;
         
+        MCRegister rsp = cf.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+        
         // restore callee-saved regs
         for (int i = cf.calleeSavedRegs.size() - 1; i >= 0; i--) {
-            epilogue.add(popStack(cf.calleeSavedRegs.get(i)));
+            epilogue.addAll(popStack(cf.calleeSavedRegs.get(i), rsp));
         }
         
         // set rbp -> rsp
         MCRegister rbp = cf.findOrCreateRegister(UVMCompiler.MCDriver.getFramePtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
-        MCRegister rsp = cf.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
         epilogue.add(UVMCompiler.MCDriver.genMove(rsp, rbp));
         
         // pop rbp
-        epilogue.add(popStack(rbp));
+        epilogue.addAll(popStack(rbp, rsp));
+    }
+    
+    private List<X64MachineCode> popStack(MCOperand dst, MCRegister rsp) {
+    	if (!(dst instanceof MCRegister))
+    		UVMCompiler.error("expecting pushing a mcregister here");
+    	
+    	MCRegister reg = (MCRegister) dst;
+    	
+    	if (reg.getDataType() == MCRegister.DATA_GPR)
+    		return popStackInt(dst);
+    	else return popStackFP(dst, rsp);
+    }
+    
+    private List<X64MachineCode> pushStack(MCOperand src, MCRegister rsp) {
+    	if (src instanceof MCRegister && ((MCRegister) src).getDataType() == MCRegister.DATA_GPR)
+    		return pushStackInt(src);
+    	else if (src instanceof MCIntImmediate)
+    		return pushStackInt(src);
+    	else return pushStackFP(src, rsp);
     }
     
     // FIXME: for floating-point register, need to movsd, then add rsp 8
-    private X64pop popStack(MCOperand dst) {
+    private List<X64MachineCode> popStackInt(MCOperand dst) {
         X64pop ret = new X64pop();
         ret.setOperand(0, dst);
-        return ret;
+        return Arrays.asList(ret);
     }
     
-    private X64push pushStack(MCOperand src) {
+    private List<X64MachineCode> pushStackInt(MCOperand src) {
         X64push ret = new X64push();
         ret.setOperand(0, src);
-        return ret;
+        return Arrays.asList(ret);
     }
     
     private List<X64MachineCode> popStackFP(MCOperand dst, MCRegister rsp) {
+    	MCDispMemoryOperand stackSlot = new MCDispMemoryOperand(rsp);
     	X64movsd mov = new X64movsd();
-    	mov.setOperand0(rsp);
+    	mov.setOperand0(stackSlot);
     	mov.setDefine(dst);
     	
     	X64add add = new X64add();
@@ -460,9 +487,10 @@ public class X64CDefaultCallConvention {
     	sub.setOperand1(new MCIntImmediate(UVMCompiler.MC_FP_REG_SIZE_IN_BYTES));
     	sub.setDefine(rsp);
     	
-    	X64movsd mov = new X64movsd();
-    	mov.setOperand0(src);
-    	mov.setDefine(rsp);
+    	MCDispMemoryOperand stackSlot = new MCDispMemoryOperand(rsp);
+    	X64store_movsd mov = new X64store_movsd();
+    	mov.setOperand0(stackSlot);
+    	mov.setOperand1(src);
     	
     	List<X64MachineCode> ret = new ArrayList<X64MachineCode>();
     	ret.add(sub);
@@ -509,8 +537,10 @@ public class X64CDefaultCallConvention {
         case OpCode.REG_I64:
         case OpCode.INT_IMM:
             return MCRegister.DATA_GPR;
+        case OpCode.REG_SP:
         case OpCode.FP_SP_IMM:
             return MCRegister.DATA_SP;
+        case OpCode.REG_DP:
         case OpCode.FP_DP_IMM:
             return MCRegister.DATA_DP;
         default:

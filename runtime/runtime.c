@@ -101,6 +101,10 @@ void uvmPrintInt64(int64_t s) {
 	printf("%lld\n", s);
 }
 
+void uvmPrintDouble(double s) {
+	printf("inPrintDouble(), not working properly\n");
+}
+
 void uvmPrintStr(Address s) {
 	printf("%s\n", (char*) s);
 }

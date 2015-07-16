@@ -1,0 +1,39 @@
+// doublearray
+
+.typedef @doubleArray5 array<double 5>
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+  BRANCH %body
+
+  .label %body:
+  %p  = NEW <@doubleArray5>
+  %pi = GETIREF <@doubleArray5> %p
+  %p0 = GETELEMIREF <@doubleArray5 int<64>> %pi 0
+  STORE <double> %p0 0.0
+  %p1 = GETELEMIREF <@doubleArray5 int<64>> %pi 1
+  STORE <double> %p1 1.0
+  %p2 = GETELEMIREF <@doubleArray5 int<64>> %pi 2
+  STORE <double> %p2 2.0
+  %p3 = GETELEMIREF <@doubleArray5 int<64>> %pi 3
+  STORE <double> %p3 3.0
+  %p4 = GETELEMIREF <@doubleArray5 int<64>> %pi 4
+  STORE <double> %p4 4.0
+  
+  %i0 = LOAD <double> %p0
+  %i1 = LOAD <double> %p1
+  %i2 = LOAD <double> %p2
+  %i3 = LOAD <double> %p3
+  %i4 = LOAD <double> %p4
+  
+  %res1 = FADD <double> %i1 %i0
+  %res2 = FADD <double> %i2 %res1
+  %res3 = FADD <double> %i3 %res2
+  %res4 = FADD <double> %i4 %res3
+  
+  %res = FPTOSI <double int<32>> %res4
+  
+  CCALL DEFAULT <void (double)> @_uvmPrintDouble (%res4)
+  
+  RET <int<32>> %res
+}

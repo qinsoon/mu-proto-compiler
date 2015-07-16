@@ -80,7 +80,7 @@ stmt : PSEUDO_ASSIGN(ireg op)
 > mov P[1] -> P[0]
 1
 
-stmt : PSEUDO_ASSIGN(REG_DP op)
+stmt : PSEUDO_ASSIGN(dpreg op)
 > movsd P[1] -> P[0]
 1
 
@@ -328,9 +328,22 @@ ireg : LOAD(ireg)
 > load_mov *(P[0]) -> %res_reg
 1
 
+dpreg : LOAD(ireg)
+> load_movsd *(P[0]) -> %res_reg
+1
+
 op : STORE(ireg ivalue)
 > store_mov *(P[0]) P[1]
 1
+
+op : STORE(ireg dpreg)
+> store_movsd *(P[0]) P[1]
+1
+
+op : STORE(ireg fpimm)
+> movsd P[1] -> %tmp_reg[0]
+> store_movsd *(P[0]) %tmp_reg[0]
+2
 
 ireg : GETFIELD(ireg iimm)
 > mov P[0] -> %tmp_reg[0]
@@ -430,10 +443,13 @@ reg : dpreg
 imm : iimm
 0
 
-imm : FP_SP_IMM
+imm : fpimm
 0
 
-imm : FP_DP_IMM
+fpimm : FP_SP_IMM
+0
+
+fpimm : FP_DP_IMM
 0
 
 iimm : INT_IMM

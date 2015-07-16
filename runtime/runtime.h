@@ -120,6 +120,7 @@ extern UVMStack* uvmStacks[MAX_STACK_COUNT];
 extern int stackCount;
 
 extern void addNewStack(UVMStack* stack);
+extern UVMStack* getCurrentStack();
 extern void printStackInfo(UVMStack* stack);
 extern void inspectStack(UVMStack* stack, int64_t max);
 
@@ -194,6 +195,7 @@ extern ImmixSpace* immixSpace;
 #endif
 
 extern void uvmPrintInt64(int64_t);
+extern void uvmPrintDouble(double);
 extern void uvmPrintStr(Address);
 
 /*
