@@ -221,7 +221,7 @@ mcOperand
     |   singleNodeFuncCall      # mcOpdNodeFunc
     |   '$' mcImmediate         # mcOpdImm
     |   '%' mcReg               # mcOpdReg
-    |   '*(' mcOperand ('+' mcOperand)? ')'    # mcOpdAddress
+    |   '*(' mcOperand '+' mcOperand '+' mcOperand 'x' mcOperand ')'    # mcOpdAddress
     ;
 
 singleNodeFuncCall

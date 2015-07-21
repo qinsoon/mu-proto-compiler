@@ -1,0 +1,40 @@
+// intarray-var
+
+.typedef @intArray5 array<int<64> 5>
+.typedef @int64 int<64>
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+  %p  = NEW <@intArray5>
+  %irefP = GETIREF <@intArray5> %p
+  BRANCH %body
+
+  .label %body:
+  %i = PHI <int<64>> {%entry: 0; %body: %iNew; }
+  %pi = GETELEMIREF <@intArray5 @int64> %irefP %i
+  STORE <int<64>> %pi %i
+  %iNew = ADD <int<64>> %i 1
+  %cond = SLT <int<64>> %iNew 5
+  BRANCH2 %cond %body %add
+  
+  .label %add:
+  %p0 = GETELEMIREF <@intArray5 @int64> %irefP 0
+  %p1 = GETELEMIREF <@intArray5 @int64> %irefP 1
+  %p2 = GETELEMIREF <@intArray5 @int64> %irefP 2
+  %p3 = GETELEMIREF <@intArray5 @int64> %irefP 3
+  %p4 = GETELEMIREF <@intArray5 @int64> %irefP 4
+  %i0 = LOAD <int<64>> %p0
+  %i1 = LOAD <int<64>> %p1
+  %i2 = LOAD <int<64>> %p2
+  %i3 = LOAD <int<64>> %p3
+  %i4 = LOAD <int<64>> %p4
+  
+  %res1 = ADD <int<64>> %i1 %i0
+  %res2 = ADD <int<64>> %i2 %res1
+  %res3 = ADD <int<64>> %i3 %res2
+  %res4 = ADD <int<64>> %i4 %res3
+  
+  CCALL DEFAULT <void (int<64>)> @_uvmPrintInt64 (%res4)
+  
+  RET <int<32>> %res4
+}

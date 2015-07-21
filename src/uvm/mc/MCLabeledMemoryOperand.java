@@ -15,11 +15,9 @@ public class MCLabeledMemoryOperand extends MCMemoryOperand {
     @Override
     public String prettyPrint() {
         StringBuilder ret = new StringBuilder();
+        ret.append(dispLabel.prettyPrint());
         if (base != null)
-            ret.append("[" + base.prettyPrint() + "]+");
-        if (index != null)
-            ret.append("[" + index.prettyPrint() + "]*");
-        ret.append("(2^" + scale + ")+" + dispLabel.prettyPrint());
+            ret.append("(" + base.prettyPrint() + ")");
         return ret.toString();
     }
     

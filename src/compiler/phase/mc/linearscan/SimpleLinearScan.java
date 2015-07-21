@@ -11,6 +11,7 @@ import java.util.Set;
 import uvm.CompiledFunction;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
+import uvm.mc.MCIndexedDispMemoryOperand;
 import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCOperand;
 import uvm.mc.MCRegister;
@@ -664,8 +665,26 @@ public class SimpleLinearScan extends AbstractMCCompilationPhase {
 								if (it.getPhysicalReg() != null) {
 									memOp.setBase(it.getPhysicalReg());
 								} else {
-									System.out.println(base.prettyPrintREPOnly() + " in " + memOp.prettyPrint() + " hasnt been assigned a phys reg");
+									System.out.println("base reg " + base.prettyPrintREPOnly() + " in " + memOp.prettyPrint() + " hasnt been assigned a phys reg");
 									UVMCompiler.error("Error in replacing register");
+								}
+							}
+						}
+						
+						if (memOp instanceof MCIndexedDispMemoryOperand) {
+							MCIndexedDispMemoryOperand indexedMem = (MCIndexedDispMemoryOperand) memOp;
+							
+							if (indexedMem.getIndex() != null) {
+								MCRegister index = indexedMem.getIndex();
+								
+								if (index.getREPType() != MCRegister.MACHINE_REG) {
+									Interval it = cf.intervals.get(index.REP());
+									if (it.getPhysicalReg() != null) {
+										indexedMem.setIndex(it.getPhysicalReg());
+									} else {
+										System.out.println("index reg " + index.prettyPrintREPOnly() + " in " + indexedMem.prettyPrint() + " hasnt been assigned a phys reg");
+										UVMCompiler.error("Error in replacing register");
+									}
 								}
 							}
 						}

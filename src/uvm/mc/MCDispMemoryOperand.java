@@ -9,7 +9,8 @@ public class MCDispMemoryOperand extends MCMemoryOperand {
 	}
     
     public MCDispMemoryOperand(MCRegister base, MCOperand disp) {
-    	this(base, (int) ((MCIntImmediate)disp).value);
+    	super(base);
+    	this.disp = (int) ((MCIntImmediate)disp).value;
     }
     
     public MCDispMemoryOperand(MCRegister base) {
@@ -23,11 +24,7 @@ public class MCDispMemoryOperand extends MCMemoryOperand {
     @Override
     public String prettyPrint() {
         StringBuilder ret = new StringBuilder();
-        if (base != null)
-            ret.append("[" + base.prettyPrint() + "]+");
-        if (index != null)
-            ret.append("[" + index.prettyPrint() + "]*");
-        ret.append("(2^" + scale + ")+" + disp);
+        ret.append(disp + "(" + base.prettyPrint() + ")");
         return ret.toString();
     }
     

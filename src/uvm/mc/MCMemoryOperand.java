@@ -7,10 +7,7 @@ public abstract class MCMemoryOperand extends MCOperand {
 
     // base register
     MCRegister base = null;
-    // index register
-    MCRegister index = null;
-    // scale value (log power of 2). valid values are 0,1,2,3
-    byte scale = 0;    
+
     // number of bytes being accessed (1,2,4,8)
     byte size;
     
@@ -26,22 +23,6 @@ public abstract class MCMemoryOperand extends MCOperand {
 
     public void setBase(MCRegister base) {
         this.base = base;
-    }
-
-    public MCRegister getIndex() {
-        return index;
-    }
-
-    public void setIndex(MCRegister index) {
-        this.index = index;
-    }
-
-    public byte getScale() {
-        return scale;
-    }
-
-    public void setScale(byte scale) {
-        this.scale = scale;
     }
 
     public byte getSize() {

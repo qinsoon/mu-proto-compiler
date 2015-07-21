@@ -308,6 +308,9 @@ ireg : CCALL(label)
 // MEMORY ALLOCATION / ACCESS
 // ********************************
 
+
+// alloca
+
 ireg : ALLOCA(iimm)
 > sub %rsp P[0] -> %rsp
 > mov %rsp -> %res_reg
@@ -318,32 +321,38 @@ op : ALLOCA(iimm)
 > mov %rsp -> %res_reg
 2
 
+// load/store
+
+ireg : LOAD(ireg)
+> load_mov *(P[0] + $0 + $0 x $0) -> %res_reg
+1
+
+dpreg : LOAD(ireg)
+> load_movsd *(P[0] + $0 + $0 x $0) -> %res_reg
+1
+
+op : STORE(ireg ivalue)
+> store_mov *(P[0] + $0 + $0 x $0) P[1]
+1
+
+op : STORE(ireg dpreg)
+> store_movsd *(P[0] + $0 + $0 x $0) P[1]
+1
+
+op : STORE(ireg fpimm)
+> movsd P[1] -> %tmp_reg[0]
+> store_movsd *(P[0] + $0 + $0 x $0) %tmp_reg[0]
+2
+
+// getiref
+
 ireg : GETIREF(ireg iimm)
 > mov P[0] -> %tmp_reg[0]
 > add %tmp_reg[0] P[1] -> %tmp_reg[0]
 > mov %tmp_reg[0] -> %res_reg
 3
 
-ireg : LOAD(ireg)
-> load_mov *(P[0]) -> %res_reg
-1
-
-dpreg : LOAD(ireg)
-> load_movsd *(P[0]) -> %res_reg
-1
-
-op : STORE(ireg ivalue)
-> store_mov *(P[0]) P[1]
-1
-
-op : STORE(ireg dpreg)
-> store_movsd *(P[0]) P[1]
-1
-
-op : STORE(ireg fpimm)
-> movsd P[1] -> %tmp_reg[0]
-> store_movsd *(P[0]) %tmp_reg[0]
-2
+// struct
 
 ireg : GETFIELD(ireg iimm)
 > mov P[0] -> %tmp_reg[0]
@@ -356,25 +365,37 @@ getFieldReg : GETFIELD(ireg iimm)
 0
 
 ireg : LOAD(getFieldReg)
-> load_mov *(P[0][0] + P[0][1]) -> %res_reg
+> load_mov *(P[0][0] + P[0][1] + $0 x $0) -> %res_reg
 1
 
-ireg : GETELEM_CONST(ireg iimm)
-> mov P[0] -> %tmp_reg[0]
-> add %tmp_reg[0] P[1] -> %tmp_reg[0]
-> mov %tmp_reg[0] -> %res_reg
-3
+// array
 
-getElemReg : GETELEM_CONST(ireg iimm)
+ireg : GETELEM_CONST(ireg iimm)
+> lea *(P[0] + P[1] + $0 x $0) -> %res_reg
+1
+
+getElemRegConst : GETELEM_CONST(ireg iimm)
 > nop
 0
 
-ireg : LOAD(getElemReg)
-> load_mov *(P[0][0] + P[0][1]) -> %res_reg
+ireg : LOAD(getElemRegConst)
+> load_mov *(P[0][0] + P[0][1] + $0 x $0) -> %res_reg
 1
 
-op : STORE(getElemReg ivalue)
-> store_mov *(P[0][0] + P[0][1]) P[1]
+op : STORE(getElemRegConst ivalue)
+> store_mov *(P[0][0] + P[0][1] + $0 x $0) P[1]
+1
+
+ireg : GETELEM_VAR(ireg ireg iimm)
+> lea *(P[0] + $0 + P[1] x P[2]) -> %res_reg
+1
+
+getElemRegVar: GETELEM_VAR(ireg ireg iimm)
+> nop
+0
+
+op : STORE(getElemRegVar ivalue)
+> store_mov *(P[0][0] + $0 + P[0][1] x P[0][2]) P[1]
 1
 
 // ********************************
@@ -511,6 +532,10 @@ label : LABEL
 
 .emit_op MCDispMemoryOperand = {
 	"%d(%%%s)", P(MCDispMemoryOperand).getDisp(), P(MCDispMemoryOperand).getBase().REP().getName();
+}
+
+.emit_op MCIndexedDispMemoryOperand = {
+	"%d(%%%s, %%%s, %d)", P(MCIndexedDispMemoryOperand).getDisp(), P(MCIndexedDispMemoryOperand).getBase().REP().getName(), P(MCIndexedDispMemoryOperand).getIndex().REP().getName(), P(MCIndexedDispMemoryOperand).getScale();
 }
 
 // _|      _|    _|_|_|      _|_|_|    _|_|_|_|  _|_|_|_|  _|_|_|  _|      _|  _|_|_|_|

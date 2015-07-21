@@ -158,6 +158,7 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         	
         	inst.addChild(getElem.getLoc());
         	inst.addChild(getElem.getIndex());
+        	inst.addChild(new IntImmediate(Int.I64, getElem.getArrayType().getEleType().sizeInBytes()));
         }
         /*
          * DEFAULT: add all operands as children

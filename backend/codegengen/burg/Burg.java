@@ -316,13 +316,15 @@ public class Burg {
             code.increaseIndent();
             code.appendCommentln(rule.prettyPrint());
             
+            System.out.println("---Rule:" + rule.prettyPrint() + "---");
+            
             /*
              * machine code gen from rules
              */
-            if (rule.mcEmissionRules != null && !rule.mcEmissionRules.isEmpty()) {
+            if (rule.mcEmissionRules != null && !rule.mcEmissionRules.isEmpty()) {            	
                 for (int i = 0; i < rule.mcEmissionRules.size(); i++) {
                     MCRule mc = rule.mcEmissionRules.get(i);
-                    System.out.println("emit " + mc.op.name);
+                    System.out.println("emit " + mc.prettyPrint());
                     String opClass = targetName + mc.op.name;
                     String var = "mc" + rule.ruleno + "_" + i;
                     code.appendStmtln(String.format(
@@ -332,6 +334,8 @@ public class Burg {
                     
                     for (int j = 0; j < mc.operands.size(); j++) {
                         CCTOperand operand = mc.operands.get(j);
+                    	System.out.println("  op" + j + ": " + operand.toString());
+                    	
                         String newOperandStr;
                         if (mc.op.opDataType != null)
                             newOperandStr = getOperandCreation(operand, mc.op.opDataType[j]);
@@ -588,14 +592,20 @@ public class Burg {
             }
         }
         else if (operand instanceof OpdMemOperand) {
-        	if (((OpdMemOperand) operand).disp == null) {
+        	CCTOperand index = ((OpdMemOperand) operand).index;
+        	
+        	if (index instanceof OpdIntImmediate && ((OpdIntImmediate)index).value == 0) {
         		newOperandStr = String.format(
-        				"new MCDispMemoryOperand((MCRegister) %s)", getOperandCreation(((OpdMemOperand) operand).base, dataType));
-        	} else {
-        		newOperandStr = String.format(
-        				"new MCDispMemoryOperand((MCRegister) %s, %s)", 
-        				getOperandCreation(((OpdMemOperand) operand).base, dataType), 
+        				"new MCDispMemoryOperand((MCRegister) %s, %s)",
+        				getOperandCreation(((OpdMemOperand) operand).base, dataType),
         				getCompileTimeOperand(((OpdMemOperand) operand).disp, 0));
+        	} else {        	
+	    		newOperandStr = String.format(
+	    				"new MCIndexedDispMemoryOperand((MCRegister) %s, %s, (MCRegister) %s, %s)",
+	    				getOperandCreation(((OpdMemOperand) operand).base, dataType),
+	    				getCompileTimeOperand(((OpdMemOperand) operand).disp, 0),
+	    				index == null ? "null" : getOperandCreation(((OpdMemOperand) operand).index, MCRegister.DATA_GPR),
+	    				getCompileTimeOperand(((OpdMemOperand) operand).scale, 0));
         	}
         }
         
@@ -620,7 +630,9 @@ public class Burg {
         } else if (operand instanceof OpdNodeFunc) {
             return genChainCallFromOpdNodeFunc((OpdNodeFunc) operand);
         } else {
-            error("illegal compile-time operand: " + operand.getClass().toString());
+        	if (operand == null) 
+        		error("met CCTOperand as null");
+        	else error("illegal compile-time operand: " + operand.getClass().toString());
             return null;
         }
     }
@@ -764,15 +776,23 @@ public class Burg {
         OpdIntImmediate(long value) {
             this.value = value;
         }
+        
+        boolean isZero() {
+        	return value == 0;
+        }
     }
     
     static class OpdMemOperand extends CCTOperand {
     	CCTOperand base;
     	CCTOperand disp;
+    	CCTOperand index;
+    	CCTOperand scale;
     	
-    	OpdMemOperand(CCTOperand base, CCTOperand disp) {
+    	OpdMemOperand(CCTOperand base, CCTOperand disp, CCTOperand index, CCTOperand scale) {
     		this.base = base;
     		this.disp = disp;
+    		this.index = index;
+    		this.scale = scale;
     	}
     }
     
@@ -1329,10 +1349,9 @@ public class Burg {
         code.appendln("@Override public String emitOp(MCOperand node) {");
         code.increaseIndent();
         for (String op : operandEmit.keySet()) {
-            OperandEmit operand = operandEmit.get(op);
-            
+            OperandEmit operand = operandEmit.get(op);            
 
-            code.appendln("if (node instanceof " + operand.operandName + ")");
+            code.appendln("if (node.getClass().getName().contains(\"" + operand.operandName + "\"))");
             
             StringBuilder str = new StringBuilder();
             str.append("return String.format(");
@@ -1571,6 +1590,7 @@ public class Burg {
     
     public static void error(String message) {
         System.out.println(message);
+        Thread.dumpStack();
         System.exit(1);
     }
 }
