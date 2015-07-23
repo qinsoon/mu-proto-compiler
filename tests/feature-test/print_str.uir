@@ -1,0 +1,19 @@
+// print-string
+
+.typedef @intArray3 array<int<64> 3>
+.typedef @int64 int<64>
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+  %s = NEW <@intArray3>
+  %si = GETIREF <@intArray3> %s
+  %si0 = GETELEMIREF <@intArray3 int<64>> %si 0
+  STORE <int<64>> %si0 8022916924116329800
+  %si1 = GETELEMIREF <@intArray3 int<64>> %si 1
+  STORE <int<64>> %si1 6581362
+  BRANCH %body
+
+  .label %body:
+  CCALL DEFAULT <void (int<64>)> @_uvmPrintStr (%si)
+  RET <int<32>> 0
+}
