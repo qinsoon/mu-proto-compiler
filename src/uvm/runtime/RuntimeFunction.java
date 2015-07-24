@@ -18,6 +18,9 @@ public class RuntimeFunction {
 	public static final RuntimeFunction newThread;
 	public static final RuntimeFunction threadExit;
 	
+	public static final RuntimeFunction uvmPrintStr;
+	public static final RuntimeFunction malloc;
+	
 	static {
 		allocObj = new RuntimeFunction(InstCCall.CC_DEFAULT, 
 				"_allocObj", 
@@ -43,6 +46,16 @@ public class RuntimeFunction {
 				"_threadExit",
 				uvm.type.Void.T,
 				Arrays.asList());
+		
+		uvmPrintStr = new RuntimeFunction(InstCCall.CC_DEFAULT,
+				"_uvmPrintStr",
+				uvm.type.Void.T,
+				Arrays.asList(Int.I64));
+		
+		malloc = new RuntimeFunction(InstCCall.CC_DEFAULT, 
+				"_malloc",
+				uvm.type.Ref.REF_VOID,
+				Arrays.asList(Int.I64));
 	}
     
     int callConv;

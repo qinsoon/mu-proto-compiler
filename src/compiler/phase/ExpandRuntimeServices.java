@@ -1,6 +1,7 @@
 package compiler.phase;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import compiler.UVMCompiler;
@@ -15,9 +16,11 @@ import uvm.Register;
 import uvm.Type;
 import uvm.Value;
 import uvm.inst.InstCCall;
+import uvm.inst.InstGetElemIRefConstIndex;
 import uvm.inst.InstGetFieldIRef;
 import uvm.inst.InstGetIRef;
 import uvm.inst.InstInternalIRefOffset;
+import uvm.inst.InstInternalPrintStr;
 import uvm.inst.InstLoad;
 import uvm.inst.InstNew;
 import uvm.inst.InstNewStack;
@@ -25,6 +28,7 @@ import uvm.inst.InstNewThread;
 import uvm.inst.InstStore;
 import uvm.inst.InstThreadExit;
 import uvm.runtime.RuntimeFunction;
+import uvm.type.Array;
 import uvm.type.IRef;
 import uvm.type.Int;
 import uvm.type.Ref;
@@ -149,6 +153,35 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 					Instruction threadExit = ccallRuntimeFunction(RuntimeFunction.threadExit, new ArrayList<uvm.Value>());
 					reserveLabel(inst, threadExit);
 					newInsts.add(threadExit);
+				}
+				
+				else if (inst instanceof InstInternalPrintStr) {
+					InstInternalPrintStr printStr = (InstInternalPrintStr) inst;
+					long[] int64array = printStr.stringLiteralToInt64();
+					
+					// malloc
+					List<Value> args = new ArrayList<Value>();
+					args.add(new IntImmediate(Int.I64, int64array.length * Int.I64.sizeInBytes()));
+					Instruction malloc = ccallRuntimeFunction(RuntimeFunction.malloc, args);
+					Register s = getNewTempRegister(bb.getFunction(), IRef.IREF_VOID);
+					malloc.setDefReg(s);
+					reserveLabel(inst, malloc);
+					newInsts.add(malloc);
+					
+					for (int i = 0; i < int64array.length; i++) {
+						// %si = GETELEMIREF %si i
+						Instruction getElem = new InstGetElemIRefConstIndex(Array.findOrCreate(Int.I64, int64array.length), i, s);
+						Register si = getNewTempRegister(bb.getFunction(), IRef.findOrCreateIRef(Int.I64));
+						getElem.setDefReg(si);
+						newInsts.add(getElem);
+						
+						// STORE %si int64array[i]
+						Instruction store = new InstStore(IRef.findOrCreateIRef(Int.I64), si, new IntImmediate(Int.I64, int64array[i]));
+						newInsts.add(store);
+					}
+					
+					Instruction callPrintStr = ccallRuntimeFunction(RuntimeFunction.uvmPrintStr, Arrays.asList(s));
+					newInsts.add(callPrintStr);
 				}
 				
 				else {

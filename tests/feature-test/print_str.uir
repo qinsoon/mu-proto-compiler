@@ -15,5 +15,9 @@
 
   .label %body:
   CCALL DEFAULT <void (int<64>)> @_uvmPrintStr (%si)
+  BRANCH %body2
+  
+  .label %body2:
+  PRINTSTR "Hello World2"  
   RET <int<32>> 0
 }

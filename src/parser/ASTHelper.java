@@ -512,6 +512,21 @@ public abstract class ASTHelper {
         	Instruction node = new InstThreadExit();
         	return node;
         }
+        /*
+         * debug use
+         */
+        else if (inst instanceof parser.uIRParser.InstPrintStrContext) {
+        	parser.uIRParser.InstPrintStrContext printStrCtx = (parser.uIRParser.InstPrintStrContext) inst;
+        	
+        	String literal = printStrCtx.STRINGLITERAL().toString();
+        	if (literal.startsWith("\""))
+        		literal = literal.substring(1);
+        	if (literal.endsWith("\""))
+        		literal = literal.substring(0, literal.length() - 1);
+        	
+        	Instruction node = new InstInternalPrintStr(literal);
+        	return node;
+        }
         
         else {
             UVMCompiler.error("incomplete implementation of " + ctx.toStringTree());

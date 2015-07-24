@@ -156,6 +156,9 @@ instBody
 
     // Foreign Function Interface
     |   'CCALL' callConv funcCallBody                   # InstCCall
+
+    // for debug use
+    |   'PRINTSTR ' STRINGLITERAL                       # InstPrintStr
     ;
 
 funcCallBody
@@ -272,6 +275,10 @@ decimalFP
 
 // LEXER
 
+STRINGLITERAL
+    :   '"' (IDCHAR | SPECIAL_CHAR)* '"'
+    ;
+
 DIGITS
     : DIGIT+
     ;
@@ -288,6 +295,13 @@ IDENTIFIER
 
 GLOBAL_ID_PREFIX: '@';
 LOCAL_ID_PREFIX: '%';
+
+fragment
+SPECIAL_CHAR
+    :   '('
+    |   ')'
+    |   ' '
+    ;
 
 fragment
 IDCHAR
