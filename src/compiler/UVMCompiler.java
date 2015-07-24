@@ -133,6 +133,7 @@ public class UVMCompiler {
             /*
              *  mc code transform
              */
+            new compiler.phase.mc.x64.X64SpillConstantsToMemory("spillconstant", Verbose.SPILL_CONSTANT).execute();
             new CombineReturns("combineret", Verbose.COMBINE_RET).execute();
             new MCControlFlowAnalysis("mccfa", Verbose.RECONSTRUCT_BB).execute();
             new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();            
@@ -176,7 +177,6 @@ public class UVMCompiler {
             /*
              * machine dependent transformation
              */
-            new compiler.phase.mc.SpillConstantsToMemory("spillconstant", Verbose.SPILL_CONSTANT).execute();
             new CodeEmission("codeemit", "emit", Verbose.CODE_EMIT).execute();
             
             if (TIMING_COMPILATION) {
