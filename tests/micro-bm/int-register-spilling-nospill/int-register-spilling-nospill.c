@@ -1,5 +1,5 @@
 int main(void) {
-  int v1 = 0,  v2 = 0,  v3 = 0,  v4 = 0;
+  long long int v1 = 0,  v2 = 0,  v3 = 0,  v4 = 0;
 
   volatile int i = 0;
   while (i < 10) {
@@ -10,6 +10,6 @@ int main(void) {
 	i++;
   }
 
-  int sum = v1 + v2 + v3 + v4;
+  long long int sum = v1 + v2 + v3 + v4;
   return (sum % 125);
 }

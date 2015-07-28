@@ -1,8 +1,8 @@
 int main(void) {
-  int v1 = 0,  v2 = 0,  v3 = 0,  v4 = 0,  v5 = 0,  v6 = 0,  v7 = 0,  v8 = 0;
-  int v9 = 0, v10 = 0, v11 = 0, v12 = 0, v13 = 0, v14 = 0, v15 = 0, v16 = 0;
-  int v17= 0, v18 = 0, v19 = 0, v20 = 0, v21 = 0, v22 = 0, v23 = 0, v24 = 0;
-  int v25= 0, v26 = 0, v27 = 0, v28 = 0, v29 = 0, v30 = 0, v31 = 0, v32 = 0;
+  long long int v1 = 0,  v2 = 0,  v3 = 0,  v4 = 0,  v5 = 0,  v6 = 0,  v7 = 0,  v8 = 0;
+  long long int v9 = 0, v10 = 0, v11 = 0, v12 = 0, v13 = 0, v14 = 0, v15 = 0, v16 = 0;
+  long long int v17= 0, v18 = 0, v19 = 0, v20 = 0, v21 = 0, v22 = 0, v23 = 0, v24 = 0;
+  long long int v25= 0, v26 = 0, v27 = 0, v28 = 0, v29 = 0, v30 = 0, v31 = 0, v32 = 0;
 
   volatile int i = 0;
   while (i < 10) {
@@ -41,7 +41,7 @@ int main(void) {
 	i++;
   }
 
-  int sum = v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8 + v9 + v10 + v11 + v12 + \
+  long long int sum = v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8 + v9 + v10 + v11 + v12 + \
   	v13 + v14 + v15 + v16 + v17 + v18 + v19 + v20 + v21 + v22 + v23 + \
 	v24 + v25 + v26 + v27 + v28 + v29 + v30 + v31 + v32;
   return sum;

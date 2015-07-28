@@ -37,7 +37,7 @@
 	%i4 = SUB <int<64>> %i3 1
 	BRANCH %ret
 	
-	.label %ret
+	.label %ret:
 	RET <int<64>> %i4
 }
 
@@ -50,7 +50,7 @@
 	%i5 = SDIV <int<64>> %i3 %i4
 	BRANCH %ret
 	
-	.label %ret
+	.label %ret:
 	RET <int<64>> %i5
 }
 
@@ -67,7 +67,7 @@
 	.label %thenBlock:
 	RETVOID
 	
-	.label %elseBLOCK:
+	.label %elseBlock:
 	%iDepth2 = SUB <int<64>> iDepth 1
 	
 	// thisNode.left = new Node()
