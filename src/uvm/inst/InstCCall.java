@@ -33,7 +33,7 @@ public class InstCCall extends AbstractCall {
 	public String prettyPrint() {
 		StringBuilder ret = new StringBuilder();
 		ret.append("CCALL " + func + "(");
-		for (uvm.Value v : arguments) {
+		for (uvm.Value v : getArguments()) {
 			ret.append(v.prettyPrint());
 			ret.append(',');
 		}

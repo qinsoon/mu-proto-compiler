@@ -15,6 +15,8 @@ public class InstGetElemIRefVarIndex extends Instruction {
 		this.index = index;
 		this.loc = loc;
 		
+		this.operands.add(loc);
+		this.operands.add(index);
 		this.opcode = OpCode.GETELEM_VAR;
 	}	
 

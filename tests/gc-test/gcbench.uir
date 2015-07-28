@@ -23,11 +23,11 @@
 	RETVOID	
 }
 
-.const @kStretchTreeDepth   	<int<64>> 18
-.const @kLongLivedTreeDepth	<int<64>> 16
-.const @kArraySize			<int<64>> 500000
-.const @kMinTreeDepth		<int<64>> 4
-.const @kMaxTreeDepth		<int<64>> 16
+.const @kStretchTreeDepth   <int<64>> = 18
+.const @kLongLivedTreeDepth	<int<64>> = 16
+.const @kArraySize			<int<64>> = 500000
+.const @kMinTreeDepth		<int<64>> = 4
+.const @kMaxTreeDepth		<int<64>> = 16
 
 .funcdef @TreeSize <int<64> (int<64>)> {
 	.label %entry:

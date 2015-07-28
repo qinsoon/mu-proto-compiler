@@ -22,4 +22,14 @@ public class FPImmediate extends ImmediateValue {
     public float getFloat() {
         return (float) value;
     }
+    
+    @Override
+    public boolean equals(Object o) {
+    	if (o == null)
+    		return false;
+    	
+    	if (o instanceof FPImmediate && ((FPImmediate) o).value == value && ((FPImmediate) o).type.equals(type))
+    		return true;    	
+    	else return false;
+    }
 }

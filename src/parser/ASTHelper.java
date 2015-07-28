@@ -19,6 +19,7 @@ import uvm.FPImmediate;
 import uvm.Function;
 import uvm.FunctionSignature;
 import uvm.IRTreeNode;
+import uvm.ImmediateValue;
 import uvm.Instruction;
 import uvm.IntImmediate;
 import uvm.Label;
@@ -129,12 +130,17 @@ public abstract class ASTHelper {
         }
     }
     
-    public static Const getConst(ConstDefContext ctx) throws ASTParsingException {
-        String name = getIdentifierName(ctx.IDENTIFIER(), false);
+    public static ImmediateValue getConst(ConstDefContext ctx) throws ASTParsingException {
         Type type = getType(ctx.type());
-        Number imm = getImmediateValue(ctx.immediate(), type);
         
-        return new Const(name, type, imm);
+        if (type instanceof uvm.type.Int) {
+        	return new IntImmediate(type, Long.parseLong(ctx.immediate().getText()));
+        } else if (type instanceof uvm.type.Float || type instanceof uvm.type.Double) {
+        	return new FPImmediate(type, Double.parseDouble(ctx.immediate().getText()));
+        } else {
+        	UVMCompiler.error("unexpected const type: " + type.prettyPrint());
+        	return null;
+        }
     }
     
     public static Number getImmediateValue(ImmediateContext ctx, Type t) throws ASTParsingException {

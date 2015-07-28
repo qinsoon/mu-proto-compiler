@@ -13,6 +13,7 @@ public class InstGetIRef extends Instruction {
 		this.referent = referent;
 		this.ref = ref;
 		
+		this.operands.add(ref);
 		this.opcode = OpCode.GETIREF;
 	}
 

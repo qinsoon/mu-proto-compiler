@@ -14,6 +14,8 @@ public class InstNewStack extends Instruction {
 		this.entryFunc = entryFunc;
 		this.arguments = arguments;
 
+		for (uvm.Value v : arguments)
+			this.operands.add(v);
 		this.opcode = OpCode.NEWSTACK;
 	}
 	

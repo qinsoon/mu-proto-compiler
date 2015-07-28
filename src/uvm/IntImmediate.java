@@ -24,4 +24,14 @@ public class IntImmediate extends ImmediateValue {
     public long getValue() {
         return value;
     }
+    
+    @Override
+    public boolean equals(Object o) {
+    	if (o == null)
+    		return false;
+    	
+    	if (o instanceof IntImmediate && ((IntImmediate) o).value == value && ((IntImmediate) o).type.equals(type))
+    		return true;    	
+    	else return false;
+    }
 }

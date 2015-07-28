@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import compiler.UVMCompiler;
 import uvm.objectmodel.SimpleObjectModel;
 import uvm.runtime.UVMRuntime;
 
@@ -60,6 +61,31 @@ public class MicroVM {
     	}
     	
     	return res;
+    }
+    
+    /*
+     * GLOBAL CONSTS
+     */
+    public HashMap<String, ImmediateValue> globalConsts = new HashMap<String, ImmediateValue>();
+    
+    public void defineGlobalConsts(String id, ImmediateValue v) {
+    	ImmediateValue res = globalConsts.get(id);
+    	if (res == null) {
+    		globalConsts.put(id, v);
+    		System.out.println("declared const: " + id + " = " + v.prettyPrint());
+    	} else {
+    		if (!res.equals(v))
+    			UVMCompiler.error(String.format("redefining const %s: OLD=%s, NEW=%s", id, res.prettyPrint(), v.prettyPrint()));
+    	}
+    }
+    
+    /**
+     * may return null
+     * @param id
+     * @return
+     */
+    public ImmediateValue getGlobalConsts(String id) {
+    	return globalConsts.get(id);
     }
     
     /*

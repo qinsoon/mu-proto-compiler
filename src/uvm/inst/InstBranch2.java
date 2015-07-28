@@ -16,6 +16,8 @@ public class InstBranch2 extends Instruction {
         this.ifTrue = ifTrue;
         this.ifFalse = ifFalse;
         operands.add(cond);
+        operands.add(ifTrue);
+        operands.add(ifFalse);
         opcode = OpCode.BRANCH2;
     }
 

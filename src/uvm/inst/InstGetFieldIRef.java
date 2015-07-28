@@ -19,6 +19,7 @@ public class InstGetFieldIRef extends Instruction {
 		this.index = index;
 		this.loc = loc;
 		
+		this.operands.add(loc);
 		this.opcode = OpCode.GETFIELD;
 	}
 

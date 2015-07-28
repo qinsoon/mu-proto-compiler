@@ -1,0 +1,12 @@
+// const
+
+.const @intConst    <int<64>> = 1024
+.const @intConst2	<int<64>> = 2048
+.const @doubleConst <double>  = 1.024
+
+.funcdef @main <int<32> ()> {
+	.label %entry:
+	%res = ADD <int<64>> @intConst @intConst2
+	CCALL DEFAULT <void (int<64>)> @_uvmPrintInt64 (%res)
+	RET <int<32>> 0
+} 

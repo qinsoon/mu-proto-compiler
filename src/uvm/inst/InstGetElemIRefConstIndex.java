@@ -16,6 +16,7 @@ public class InstGetElemIRefConstIndex extends Instruction {
 		this.index = index;
 		this.loc = loc;
 		
+		this.operands.add(loc);
 		this.opcode = OpCode.GETELEM_CONST;
 	}
 	

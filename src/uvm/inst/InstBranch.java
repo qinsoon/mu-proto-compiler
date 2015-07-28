@@ -11,6 +11,7 @@ public class InstBranch extends Instruction {
     
     public InstBranch(Label target) {
         this.target = target;
+        this.operands.add(target);
         opcode = OpCode.BRANCH;
     }
 

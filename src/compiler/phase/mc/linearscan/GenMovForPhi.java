@@ -93,18 +93,21 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                         if (opdForP != -1) {
                             verboseln("inserted mov");
                             MCOperand opd = mc.getOperand(opdForP);
-                            int opdDataType = -1;
-                            if (opd instanceof MCRegister) {
-                                opdDataType = ((MCRegister) opd).getDataType();
-                            } else if (opd instanceof uvm.mc.MCIntImmediate) {
-                                opdDataType = MCRegister.DATA_GPR;
-                            } else if (opd instanceof uvm.mc.MCDPImmediate) {
-                                opdDataType = MCRegister.DATA_DP;
-                            } else if (opd instanceof uvm.mc.MCSPImmediate) {
-                                opdDataType = MCRegister.DATA_SP;
-                            } else {
-                                UVMCompiler.error("genmov for unimplemented opd type: " + opd.getClass().toString());
-                            }
+                            int opdDataType = mc.getDefineAsReg().getDataType();
+//                            if (opd instanceof MCRegister) {
+//                                opdDataType = ((MCRegister) opd).getDataType();
+//                            } else if (opd instanceof uvm.mc.MCIntImmediate) {
+//                                opdDataType = MCRegister.DATA_GPR;
+//                            } else if (opd instanceof uvm.mc.MCDPImmediate) {
+//                                opdDataType = MCRegister.DATA_DP;
+//                            } else if (opd instanceof uvm.mc.MCSPImmediate) {
+//                                opdDataType = MCRegister.DATA_SP;
+//                            } else if (opd instanceof uvm.mc.MCMemoryOperand) {
+//                            	
+//                            }                            
+//                            else {
+//                                UVMCompiler.error("genmov for unimplemented opd type: " + opd.getClass().toString());
+//                            }
                             
                             MCRegister genMovReg = cf.findOrCreateRegister("gen_mov_reg" + genMovRegIndex, MCRegister.OTHER_SYMBOL_REG, opdDataType);
                             genMovRegIndex++;

@@ -17,6 +17,7 @@ import compiler.phase.ExpandRuntimeServices;
 import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
 import compiler.phase.MCRepresentationGeneration;
+import compiler.phase.ReplaceConsts;
 import compiler.phase.mc.*;
 import compiler.phase.mc.linearscan.AddingJumpInstruction;
 import compiler.phase.mc.linearscan.ComputeLiveInterval;
@@ -120,8 +121,9 @@ public class UVMCompiler {
             /*
              *  generating IR tree
              */
+            new ReplaceConsts("replaceconsts", true).execute();
             new ExpandRuntimeServices("expandruntime", Verbose.EXPAND_RT_SERVICE).execute();
-            new DefUseGeneration("defusegen", Verbose.DEF_USE_GEN).execute();            
+            new DefUseGeneration("defusegen", Verbose.DEF_USE_GEN).execute();
             new IRTreeGeneration("treegen", Verbose.TREE_GEN).execute();
             
             /*

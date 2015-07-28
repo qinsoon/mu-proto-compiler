@@ -22,7 +22,7 @@ public class Function {
     
     // to define a function. The following need to be provided
     
-    HashMap<String, Const> constPool;
+    HashMap<String, ImmediateValue> constPool;
     List<BasicBlock> BBs;
     
     BasicBlock CFG;
@@ -73,7 +73,7 @@ public class Function {
         this.funcLabel = findOrCreateLabel(name);
     }
     
-    public void defineFunction(HashMap<String, Const> constPool, List<BasicBlock> BBs) {
+    public void defineFunction(HashMap<String, ImmediateValue> constPool, List<BasicBlock> BBs) {
         if (defined)
             throw new RuntimeException("Redefining function: " + name + ", probably by an error");
         
@@ -103,7 +103,7 @@ public class Function {
         return sig;
     }
 
-    public HashMap<String, Const> getConstPool() {
+    public HashMap<String, ImmediateValue> getConstPool() {
         return constPool;
     }
     

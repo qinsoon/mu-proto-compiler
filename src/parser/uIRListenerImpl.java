@@ -10,16 +10,20 @@ import org.antlr.v4.runtime.misc.NotNull;
 import uvm.BasicBlock;
 import uvm.Function;
 import uvm.FunctionSignature;
+import uvm.ImmediateValue;
 import uvm.Instruction;
 import uvm.MicroVM;
 import uvm.Type;
+import uvm.Value;
 import uvm.metadata.Const;
 import compiler.UVMCompiler;
 
 public class uIRListenerImpl extends uIRBaseListener {
     Function currentFunc;
     
-    HashMap<String, Const> localConstPool;
+    HashMap<String, ImmediateValue> bundleConstPool = new HashMap<String, ImmediateValue>();
+    
+    HashMap<String, ImmediateValue> localConstPool;
     List<BasicBlock> BBs;
     
     BasicBlock curBB;
@@ -40,6 +44,17 @@ public class uIRListenerImpl extends uIRBaseListener {
     }
     
     @Override
+    public void exitConstDef(@NotNull uIRParser.ConstDefContext ctx) {
+    	try{
+    		String id = ASTHelper.getIdentifierName(ctx.IDENTIFIER(), true);
+    		ImmediateValue v = ASTHelper.getConst(ctx); 
+    		MicroVM.v.defineGlobalConsts(id, v);
+    	} catch (ASTParsingException e) {
+    		error(ctx, e.getMessage());
+    	}
+    }
+    
+    @Override
     public void enterFuncDef(@NotNull uIRParser.FuncDefContext ctx) {
         try {
             String funcName = ASTHelper.getIdentifierName(ctx.IDENTIFIER(), true);
@@ -49,7 +64,7 @@ public class uIRListenerImpl extends uIRBaseListener {
             MicroVM.v.declareFunc(funcName, currentFunc);
             
             // init
-            localConstPool = new HashMap<String, Const>();
+            localConstPool = new HashMap<String, ImmediateValue>();
             BBs = new ArrayList<BasicBlock>();
         } catch (ASTParsingException e) {
             error(ctx, e.getMessage());
@@ -77,8 +92,9 @@ public class uIRListenerImpl extends uIRBaseListener {
         try {
             if (ctx.constDef() != null) {
                 // local const
-                Const c = ASTHelper.getConst(ctx.constDef());
-                localConstPool.put(c.getName(), c);
+            	String id = ASTHelper.getIdentifierName(ctx.constDef().IDENTIFIER(), false);
+            	ImmediateValue v= ASTHelper.getConst(ctx.constDef());
+                localConstPool.put(id, v);
             } else if (ctx.label() != null) {
                 // label - end of last BB, starts of a new BB
                 if (curBB != null) {

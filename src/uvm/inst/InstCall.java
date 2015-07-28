@@ -13,8 +13,8 @@ public class InstCall extends AbstractCall {
     public InstCall(Function callee, List<uvm.Value> arguments) {
     	super(callee.getName(), arguments);
         this.callee = callee;
-        this.operands.add(callee.getFuncLabel());
-        this.operands.addAll(arguments);
+//        this.operands.add(callee.getFuncLabel());
+//        this.operands.addAll(arguments);
         this.opcode = OpCode.CALL;
     }
     
@@ -22,7 +22,7 @@ public class InstCall extends AbstractCall {
     public String prettyPrint() {
         StringBuilder ret = new StringBuilder();
         ret.append("CALL " + callee.getName() + "(");
-        for (uvm.Value v : arguments) {
+        for (uvm.Value v : getArguments()) {
             ret.append(v.prettyPrint());
             ret.append(',');
         }
