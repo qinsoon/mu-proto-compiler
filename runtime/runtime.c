@@ -23,6 +23,29 @@ void initRuntime() {
     initStack();
 }
 
+void* uvmMain(void*);
+
+int main(int c, char** args) {
+	initRuntime();
+
+	// alloc stack
+	printf("uvmMain at %p\n", uvmMain);
+	UVMStack* mainStack = (UVMStack*) allocStack(STACK_SIZE, uvmMain, NULL);
+
+	// init stack
+	Address stackStart = mainStack->lowerBound;
+	memset((void*) stackStart, 0, STACK_SIZE);
+	mainStack->_sp = mainStack->_sp - 120;		// see java part: X64MachineCodeExpansion
+												// the thread trampoline will pop registers
+
+	// launch thread
+	UVMThread* t = (UVMThread*) newThread((Address)mainStack);
+	sleep(2);									// wait and hope new thread is created
+
+	// join
+	pthread_join(t->_pthread, NULL);
+}
+
 void yieldpoint() {
     UVMThread* t = getThreadContext();
     

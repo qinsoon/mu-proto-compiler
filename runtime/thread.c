@@ -24,7 +24,7 @@ void initThread() {
     pthread_key_create(&currentUVMThread, NULL);
     
     // set up booting thread
-    setupBootingThreadContext();
+    // setupBootingThreadContext();
 }
 
 void addNewThread(UVMThread* thread) {

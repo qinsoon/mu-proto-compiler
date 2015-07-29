@@ -66,8 +66,10 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             }
             
             if (cf.getOriginFunction().getName().equals("main")) {
-                writer.write("\t.globl _main\n");
-                writer.write("_main:\n");
+                writer.write("\t.globl _uvmMain\n");
+                writer.write("\t.globl uvmMain\n");
+                writer.write("_uvmMain:\n");
+                writer.write("uvmMain:\n");
             } else {
                 writer.write("\t.globl " + cf.getOriginFunction().getName() + "\n");
             }
@@ -79,10 +81,12 @@ public class CodeEmission extends AbstractMCCompilationPhase {
                     emitMC(writer, mc);
             }
             
-            if (cf.getOriginFunction().isMain() && MicroVM.v.runtime.needToInitRuntime()) {
-            	// emit call _initRuntime()
-            	emitMC(writer, UVMCompiler.MCDriver.genCall(new MCLabel(UVMRuntime.INIT_FUNC)));
-            }
+            // we now start from a common main function, then create a thread to execute uvm main
+            // so we dont need to init runtime in uvm main
+//            if (cf.getOriginFunction().isMain() && MicroVM.v.runtime.needToInitRuntime()) {
+//            	// emit call _initRuntime()
+//            	emitMC(writer, UVMCompiler.MCDriver.genCall(new MCLabel(UVMRuntime.INIT_FUNC)));
+//            }
             
             for (AbstractMachineCode mc : cf.finalMC) {
                 emitMCInsertingEpilogueBeforeRet(writer, cf, mc);
