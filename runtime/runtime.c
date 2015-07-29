@@ -40,7 +40,6 @@ int main(int c, char** args) {
 
 	// launch thread
 	UVMThread* t = (UVMThread*) newThread((Address)mainStack);
-	sleep(2);									// wait and hope new thread is created
 
 	// join
 	pthread_join(t->_pthread, NULL);
