@@ -4,7 +4,7 @@
 
 .typedef @Node struct<ref<@Node> ref<@Node> int<64> int<64>>
 
-.funcdef @initNode2 <void (ref<@Node> ref<@Node> ref<@Node>>)> {
+.funcdef @initNode2 <void (ref<@Node> ref<@Node> ref<@Node>)> {
 	.label %entry:
 	%this = PARAM 0
 	%l = PARAM 1
@@ -68,7 +68,7 @@
 	RETVOID
 	
 	.label %elseBlock:
-	%iDepth2 = SUB <int<64>> iDepth 1
+	%iDepth2 = SUB <int<64>> %iDepth 1
 	
 	// thisNode.left = new Node()
 	%irefThisNode = GETIREF <@Node> %thisNode
@@ -93,7 +93,7 @@
 .funcdef @MakeTree <ref<@Node> (int<64>)> {
 	.label %entry:
 	%iDepth = PARAM 0
-	%cond = SLE <int<64>> iDepth 0
+	%cond = SLE <int<64>> %iDepth 0
 	BRANCH2 %cond %thenBlock %elseBlock
 	
 	.label %thenBlock:
@@ -116,9 +116,9 @@
 	BRANCH %forLoop1
 	
 	.label %forLoop1:
-	%i1 = PHI <int<64>> (%entry: 0; %forLoop1: %i1New;)
+	%i1 = PHI <int<64>> {%entry: 0; %forLoop1: %i1New;}
 	%tempTree = NEW <@Node>
-	CALL <void (int<64> ref<@Node>)> @Populate (%depth, %tempTree)
+	CALL <void (int<64> ref<@Node>)> @Populate (%depth %tempTree)
 	%i1New = ADD <int<64>> %i1 1
 	%forLoop1Cond = SLT <int<64>> %i1New %iNumIters
 	BRANCH2 %forLoop1Cond %forLoop1 %afterForLoop1
@@ -127,7 +127,7 @@
 	BRANCH %forLoop2
 	
 	.label %forLoop2:
-	%i2 = PHI <int<64>> (%afterForLoop1: 0; %forLoop2: %i2New;)
+	%i2 = PHI <int<64>> {%afterForLoop1: 0; %forLoop2: %i2New;}
 	%tempTree2 = CALL <ref<@Node> (int<64>)> @MakeTree(%depth)
 	%i2New = ADD <int<64>> %i2 1
 	%forLoop2Cond = SLT <int<64>> %i2New %iNumIters
@@ -147,7 +147,7 @@
 	
 	// create a long lived object
 	%longLivedTree = NEW <@Node>
-	CALL <void (int<64> ref<@Node>)> @Populate (@kLongLivedTreeDepth, %longLivedTree)
+	CALL <void (int<64> ref<@Node>)> @Populate (@kLongLivedTreeDepth %longLivedTree)
 	
 	// create long-lived array, filling half of it
 	%array = NEW <array<double 500000>>
@@ -155,8 +155,8 @@
 	BRANCH %fillingArray
 	
 	.label %fillingArray:
-	%i = PHI <int<64>> (%body1: 0; %fillingArray: %iNew;)
-	%irefElem = GETELEM <array<double 500000>> %irefArray %i
+	%i = PHI <int<64>> {%body1: 0; %fillingArray: %iNew;}
+	%irefElem = GETELEMIREF <array<double 500000> int<64>> %irefArray %i
 	%if = SITOFP <int<64> double> %i
 	%v = FDIV <double> 1.0 %if
 	STORE <double> %v %irefElem
@@ -165,7 +165,7 @@
 	BRANCH2 %cond %fillingArray %body2
 	
 	.label %body2:
-	%d = PHI <int<64> (%fillingArray: @kMinTreeDepth; %body2: %dNew;)
+	%d = PHI <int<64>> {%fillingArray: @kMinTreeDepth; %body2: %dNew;}
 	CALL <void (int<64>)> @TimeConstruction(%d)
 	%dNew = ADD <int<64>> %d 2
 	%cond2 = SLE <int<64>> %d @kMaxTreeDepth
@@ -176,8 +176,8 @@
 	BRANCH2 %check1 %fail %nextCheck
 	
 	.label %nextCheck:
-	%irefElem1000 = GETELEM <array<double 500000>> %irefArray 1000
-	%supposedValue = FDIV 1.0 1000.0
+	%irefElem1000 = GETELEMIREF <array<double 500000> int<64>> %irefArray 1000
+	%supposedValue = FDIV <double> 1.0 1000.0
 	%check2 = FUNE <double> %irefElem1000 %supposedValue
 	BRANCH2 %check2 %fail %end
 	

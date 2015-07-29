@@ -70,6 +70,30 @@ public abstract class ASTHelper {
         
         return new FunctionSignature(returnType, paramTypes);
     }
+    
+    public static Type defineType(String id, TypeContext typeContext) throws ASTParsingException {
+    	// handle possible self-reference here    	
+        TypeConstructorContext ctx = typeContext.typeConstructor();
+        if (ctx instanceof parser.uIRParser.StructTypeContext) {
+        	// create a dummy first
+        	Struct dummy = Struct.createDummyStruct();
+        	MicroVM.v.declareType(id, dummy);
+        	
+        	// fill in
+        	ArrayList<Type> types = new ArrayList<Type>();
+        	for (TypeContext typeCtx : ((parser.uIRParser.StructTypeContext) ctx).type()) {
+        		types.add(getType(typeCtx));
+        	}
+        	
+        	dummy.setTypes(types);
+        	
+        	return dummy;
+        }
+        
+        Type t = getType(typeContext);
+        MicroVM.v.declareType(id, t);
+        return t;
+    }
 
     public static Type getType(TypeContext typeContext) throws ASTParsingException {
         if (typeContext.typeConstructor() != null) {

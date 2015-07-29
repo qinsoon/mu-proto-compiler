@@ -26,13 +26,6 @@ public class IRef extends AbstractPointerType {
     }
     
     @Override
-    public boolean equals(Object o) {
-    	if (o instanceof IRef && ((IRef) o).referenced.equals(referenced))
-    		return true;
-    	return false;
-    }
-
-    @Override
     public String prettyPrint() {
         return "iref<" + referenced.prettyPrint() + ">";
     }

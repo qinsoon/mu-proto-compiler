@@ -16,6 +16,10 @@ public class Struct extends Type {
         
         MicroVM.v.objectModel.layoutStruct(this);
     }
+    
+    protected Struct() {
+    	super();
+    }
 
 	public static Struct findOrCreateStruct(List<Type> types) {
 		for (Type t : MicroVM.v.types.values()) {
@@ -28,6 +32,10 @@ public class Struct extends Type {
 
 		return ret;
 	}
+	
+	public static Struct createDummyStruct() {
+		return new Struct();
+	}
     
     public Type getType(int i) {
     	return types.get(i);
@@ -35,6 +43,11 @@ public class Struct extends Type {
     
     public List<Type> getTypes() {
     	return types;
+    }
+    
+    public void setTypes(List<Type> types) {
+    	this.types = types;
+    	MicroVM.v.objectModel.layoutStruct(this);
     }
     
     @Override
@@ -86,10 +99,24 @@ public class Struct extends Type {
     public String prettyPrint() {
         StringBuilder ret = new StringBuilder();
         ret.append("struct<");
-        for (int i = 0; i < types.size(); i++) {
-            ret.append(types.get(i).prettyPrint());
-            if (i != types.size() - 1)
-                ret.append(" ");
+        if (types == null) {
+        	ret.append("TEMP_DUMMY_STRUCT");
+        } else {
+	        for (int i = 0; i < types.size(); i++) {
+	        	Type t = types.get(i);
+	        	
+	        	// avoid infinite recursive for self-referenced struct/ref
+	        	if (t instanceof Struct)
+	        		ret.append("STRUCT");
+	        	else if (t instanceof AbstractPointerType)
+	        		ret.append("POINTER");
+	        	
+	        	// normal print
+	        	else ret.append(types.get(i).prettyPrint());
+	        	
+	            if (i != types.size() - 1)
+	                ret.append(" ");
+	        }
         }
         ret.append(">");
         return ret.toString();

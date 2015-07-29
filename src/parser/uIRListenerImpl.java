@@ -35,11 +35,10 @@ public class uIRListenerImpl extends uIRBaseListener {
 	    	if (MicroVM.v.types.containsKey(typeID)) {
 	    		UVMCompiler.error("duplicate type def on " + typeID);
 	    	} else {
-				Type t = ASTHelper.getType(ctx.type());
-				MicroVM.v.types.put(typeID, t);
+				Type t = ASTHelper.defineType(typeID, ctx.type());
 	    	}
-    	} catch (Exception e) {
-    		UVMCompiler.error("exception in processing typedef: " + e.getMessage());
+    	} catch (ASTParsingException e) {
+    		UVMCompiler.error("exception in processing typedef: (" + e.getClass().toString() + ")" + e.getMessage());
     	}
     }
     

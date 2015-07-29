@@ -29,12 +29,7 @@ public class Ref extends AbstractPointerType {
         this.referenced = referenced;
     }
     
-    @Override
-    public boolean equals(Object o) {
-    	if (o instanceof Ref && ((Ref) o).referenced.equals(referenced))
-    		return true;
-    	return false;
-    }
+
 
     @Override
     public String prettyPrint() {

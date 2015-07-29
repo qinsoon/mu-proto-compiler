@@ -212,7 +212,7 @@ public class UVMCompiler {
     }
     
     public static final void error(String message) {
-        System.err.print(message);
+        System.err.println(message);
         Thread.dumpStack();
         System.exit(1);
     }

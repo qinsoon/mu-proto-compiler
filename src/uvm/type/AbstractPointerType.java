@@ -20,4 +20,10 @@ public abstract class AbstractPointerType extends Type {
 		return 0;
 	}
 
+    @Override
+    public final boolean equals(Object o) {
+    	if (o.getClass().equals(getClass()))
+    		return true;
+    	return false;
+    }
 }
