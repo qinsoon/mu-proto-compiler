@@ -256,9 +256,16 @@ public abstract class ASTHelper {
                     node = new InstShl(t, op1, op2);
                 } else if (iBinOp instanceof parser.uIRParser.InstAddContext) {
                     node = new InstAdd(t, op1, op2);
+                } else if (iBinOp instanceof parser.uIRParser.InstSubContext) {
+                	node = new InstSub(t, op1, op2);
+                } else if (iBinOp instanceof parser.uIRParser.InstMulContext) {
+                	node  = new InstMul(t, op1, op2);
+                } else if (iBinOp instanceof parser.uIRParser.InstSDivContext) {
+                	node = new InstSDiv(t, op1, op2);
                 } else if (iBinOp instanceof parser.uIRParser.InstSRemContext) {
-                    node = new InstSrem(t, op1, op2);
-                } else {
+                    node = new InstSRem(t, op1, op2);
+                } 
+                else {
                     UVMCompiler.error("incomplete implementation of i binops: " + inst.getText());
                 }
             } else if (binOp.fBinOps() != null) {
@@ -295,7 +302,10 @@ public abstract class ASTHelper {
                     node = new InstSgt(t, op1, op2);
                 } else if (iCmpOp instanceof parser.uIRParser.InstSltContext) {
                     node = new InstSlt(t, op1, op2);
-                } else {
+                } else if (iCmpOp instanceof parser.uIRParser.InstSleContext) {
+                	node = new InstSle(t, op1, op2);
+                }                
+                else {
                     UVMCompiler.error("incomplete implementation of i cmp op: " + inst.getText());
                 }
             } else if (cmpOp.fCmpOps() != null) {
@@ -497,8 +507,10 @@ public abstract class ASTHelper {
             
             Instruction node = new InstCall(callee, args);
             
-            Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), sig.getReturnType());
-            node.setDefReg(def);
+            if (ctx.IDENTIFIER() != null) {
+	            Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), sig.getReturnType());
+	            node.setDefReg(def);
+            }
             return node;
         }
         else if (inst instanceof parser.uIRParser.InstCCallContext) {

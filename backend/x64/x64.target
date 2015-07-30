@@ -173,6 +173,28 @@ cmpSltRes : SLT(iimm iimm)
 2
 
 // ********************************
+// SLE 
+// ********************************
+
+// 2nd op should always be reg
+cmpSleRes : SLE(ireg iimm)
+> cmp P[1] P[0]
+1
+
+cmpSgtRes : SLE(iimm ireg)
+> cmp P[0] P[1]
+1
+
+cmpSleRes : SLE(ireg ireg)
+> cmp P[1] P[0]
+1
+
+cmpSleRes : SLE(iimm iimm)
+> mov P[0] -> %tmp_reg[0]
+> cmp P[1] %tmp_reg[0]
+2
+
+// ********************************
 // FOLT
 // ********************************
 
@@ -256,10 +278,37 @@ ireg : SREM(ivalue iimm)
 > mov %rdx -> %res_reg
 5
 
+ireg : SDIV(ivalue ireg)
+> xor %rdx %rdx -> %rdx
+> mov P[0] -> %rax
+> idiv P[1] -> %rax
+> mov %rax -> %res_reg
+4
+
+ireg : SDIV(ivalue iimm)
+> xor %rdx %rdx -> %rdx
+> mov P[0] -> %rax
+> mov P[1] -> %tmp_reg[0]
+> idiv %tmp_reg[0] -> %rax
+> mov %rax -> %res_reg
+5
+
+ireg : MUL(ivalue ivalue)
+> mov P[0] -> %rax
+> mul P[1] -> %rax
+> mov %rax -> %res_reg
+3
+
 ireg : ADD(ivalue ivalue)
 // add
 > mov P[0] -> %res_reg
 > add %res_reg P[1] -> %res_reg
+2
+
+ireg : SUB(ivalue ivalue)
+// sub
+> mov P[0] -> %res_reg
+> sub %res_reg P[1] -> %res_reg
 2
 
 // ********************************
@@ -667,6 +716,14 @@ label : LABEL
 	GPR/MEM;
 	"idivq %s", OP[0];
 	uses: rax(GPR) rdx(GPR);
+	defines: rax(GPR) rdx(GPR);
+}
+
+.mc_def mul = {
+	GPR/MEM;
+	"mulq %s", OP[0];
+	uses: rax(GPR);
+	defines: rax(GPR) rdx(GPR);
 }
 
 .mc_def add = {
@@ -674,14 +731,14 @@ label : LABEL
 	"addq %s,%s", OP[1], OP[0];
 }
 
-.mc_def xor = {
-	GPR = GPR GPR/MEM;
-	"xorq %s,%s", OP[1], OP[0];
-}
-
 .mc_def sub = {
 	GPR = GPR GPR/MEM;
 	"subq %s,%s", OP[1], OP[0];
+}
+
+.mc_def xor = {
+	GPR = GPR GPR/MEM;
+	"xorq %s,%s", OP[1], OP[0];
 }
 
 // ********************************
