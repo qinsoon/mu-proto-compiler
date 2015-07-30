@@ -140,6 +140,11 @@ op : BRANCH2(cmpFogeRes label label)
 > jmp P[2]
 1
 
+op : BRANCH2(cmpFuneRes label label)
+> jne P[1]
+> jmp P[2]
+1
+
 op : RET(ivalue)
 // mov, ret
 > mov P[0] -> %ret_reg[0]
@@ -214,6 +219,18 @@ cmpFoltRes : FOLT(FP_DP_IMM FP_DP_IMM)
 > movsd P[0] -> %tmp_reg[0]
 > comisd P[1] %tmp_reg[0]
 2
+
+// ********************************
+// FUNE
+// ********************************
+
+cmpFuneRes : FUNE(REG_DP FP_DP_IMM)
+> ucomisd P[1] P[0]
+1
+
+cmpFuneRes : FUNE(FP_DP_IMM REG_DP)
+> ucomisd P[0] P[1]
+1
 
 // ********************************
 // SGT
@@ -798,6 +815,11 @@ label : LABEL
 .mc_def comisd = {
 	DP/MEM DP;
 	"comisd %s,%s", OP[0], OP[1];
+}
+
+.mc_def ucomisd = {
+	DP/MEM DP;
+	"ucomisd %s,%s", OP[0], OP[1];
 }
 
 // misc

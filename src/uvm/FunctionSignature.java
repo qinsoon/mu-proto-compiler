@@ -14,7 +14,7 @@ public class FunctionSignature {
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        str.append(returnType);
+        str.append(returnType.toString());
         str.append(" (");
         for (int i = 0; i < paramTypes.size(); i++) {
             str.append(paramTypes.get(i));

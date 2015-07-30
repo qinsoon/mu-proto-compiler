@@ -312,7 +312,10 @@ public abstract class ASTHelper {
                 parser.uIRParser.FCmpOpsContext fCmpOp = cmpOp.fCmpOps();
                 if (fCmpOp instanceof parser.uIRParser.InstFOltContext) {
                     node = new InstFOlt(t, op1, op2);
-                } else {
+                } else if (fCmpOp instanceof parser.uIRParser.InstFUneContext) {
+                	node = new InstFUne(t, op1, op2);
+                }                
+                else {
                     UVMCompiler.error("incomplete implementation of f cmp op: " + inst.getText());
                 }
             }
