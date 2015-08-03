@@ -31,7 +31,7 @@ public class MicroVM {
     public HashMap<String, Function> funcs = new HashMap<String, Function>();
     
     public void declareFunc(String name, Function f) {
-        funcs.put(name, f);
+    	funcs.put(name, f);
         System.out.println("declared func: " + f);
     }
     

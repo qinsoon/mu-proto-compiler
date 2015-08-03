@@ -410,7 +410,13 @@ public abstract class ASTHelper {
         	
         	Value loc = getValue(f, loadCtx.value(), irefType);
         	
-        	Instruction node = new InstLoad(irefType, loc);
+        	Instruction node = null;
+        	
+        	if (referentType instanceof uvm.type.Double)
+        		node = new InstLoadDP(irefType, loc);
+        	else if (referentType instanceof uvm.type.Float)
+        		UVMCompiler.error("unimplemented float type in load instruction");
+        	else node = new InstLoadInt(irefType, loc);
         	
         	Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), referentType);
         	node.setDefReg(def);

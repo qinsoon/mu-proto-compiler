@@ -112,7 +112,7 @@
 .funcdef @TimeConstruction <void (int<64>)> {
 	.label %entry:
 	%depth = PARAM 0
-	%iNumIters = CALL <int<64> (int<64>)> @NumInters(%depth)
+	%iNumIters = CALL <int<64> (int<64>)> @NumIters(%depth)
 	BRANCH %forLoop1
 	
 	.label %forLoop1:

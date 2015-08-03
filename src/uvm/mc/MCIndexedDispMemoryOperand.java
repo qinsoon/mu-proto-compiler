@@ -51,7 +51,7 @@ public class MCIndexedDispMemoryOperand extends MCDispMemoryOperand {
     public String prettyPrint() {
     	StringBuilder ret = new StringBuilder();
     	
-    	ret.append(disp + "(" + base.prettyPrint());
+    	ret.append(disp + "(" + base.prettyPrint() + "+");
     	if (index != null) 
     		ret.append(index.prettyPrint() + "*" + scale);
     	ret.append(")");

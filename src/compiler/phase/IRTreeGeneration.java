@@ -21,10 +21,15 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         super(name, verbose);
     }
     
+    // do not move load/store which may break dependency
+    private static boolean isMovable(Instruction inst) {
+    	return !(inst instanceof AbstractLoad || inst instanceof InstStore);
+    }
+    
     private static void checkAndAddValue(Instruction inst, Value v) {
         if (v instanceof Register) {
             Register reg = (Register) v;
-            if (reg.usesOnlyOnce()) {
+            if (reg.usesOnlyOnce() && isMovable(reg.getDef())) {
                 // merging an inst with another
                 Instruction merged = reg.getDef();
                 inst.addChild(reg.getDef());                
@@ -172,7 +177,7 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         if (inst.hasDefReg()) {
             // we dont need to define it
             // it becomes a subtree of another node
-            if (inst.getDefReg().usesOnlyOnce() && inst.getDefReg().hasUsesNotAsArgument()) {
+            if (inst.getDefReg().usesOnlyOnce() && inst.getDefReg().hasUsesNotAsArgument() && isMovable(inst)) {
                 return null;
             }
             

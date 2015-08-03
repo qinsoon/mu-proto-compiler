@@ -1,0 +1,45 @@
+// doublearray-var
+
+.typedef @doubleArray5 array<double 5>
+.typedef @int64 int<64>
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+  %p  = NEW <@doubleArray5>
+  %irefP = GETIREF <@doubleArray5> %p
+  BRANCH %body
+
+  .label %body:
+  %i = PHI <int<64>> {%entry: 0; %body: %iNew; }
+  %pi = GETELEMIREF <@doubleArray5 @int64> %irefP %i
+  %fi = SITOFP <int<64> double> %i
+  STORE <double> %pi %fi
+  %iNew = ADD <int<64>> %i 1
+  %cond = SLT <int<64>> %iNew 5
+  BRANCH2 %cond %body %add
+  
+  .label %add:
+  %p0 = GETELEMIREF <@doubleArray5 @int64> %irefP 0
+  %p1 = GETELEMIREF <@doubleArray5 @int64> %irefP 1
+  %p2 = GETELEMIREF <@doubleArray5 @int64> %irefP 2
+  %p3 = GETELEMIREF <@doubleArray5 @int64> %irefP 3
+  %p4 = GETELEMIREF <@doubleArray5 @int64> %irefP 4
+  %i0 = LOAD <double> %p0
+  %i1 = LOAD <double> %p1
+  %i2 = LOAD <double> %p2
+  %i3 = LOAD <double> %p3
+  %i4 = LOAD <double> %p4
+  
+  %res1 = FADD <double> %i1 %i0
+  %res2 = FADD <double> %i2 %res1
+  %res3 = FADD <double> %i3 %res2
+  %res4 = FADD <double> %i4 %res3
+  
+  %ret = FPTOSI <double int<64>> %res4
+  
+  CCALL DEFAULT <void (int<64>)> @_uvmPrintInt64 (%ret)
+  
+  THREADEXIT
+  
+  RET <int<32>> %ret
+}

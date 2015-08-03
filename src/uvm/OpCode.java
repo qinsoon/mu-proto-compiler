@@ -103,9 +103,10 @@ public abstract class OpCode {
     public static final int GETFIELD        = 0x81;
     public static final int GETELEM_CONST   = 0x82;
     public static final int SHIFTIREF       = 0x83;
-    public static final int LOAD            = 0x85;
+    public static final int LOADINT         = 0x85;
     public static final int STORE           = 0x86;
     public static final int GETELEM_VAR		= 0x87;
+    public static final int LOADDP			= 0x88;
     
     // control flow
     public static final int BRANCH  = 0x90;

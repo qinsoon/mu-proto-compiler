@@ -328,6 +328,11 @@ ireg : SUB(ivalue ivalue)
 > sub %res_reg P[1] -> %res_reg
 2
 
+ireg : SHL(ivalue ivalue)
+> mov P[0] -> %res_reg
+> shl %res_reg P[1] -> %res_reg
+2
+
 // ********************************
 // FLOATING POINT
 // ********************************
@@ -389,11 +394,11 @@ op : ALLOCA(iimm)
 
 // load/store
 
-ireg : LOAD(ireg)
+ireg : LOADINT(ireg)
 > load_mov *(P[0] + $0 + $0 x $0) -> %res_reg
 1
 
-dpreg : LOAD(ireg)
+dpreg : LOADDP(ireg)
 > load_movsd *(P[0] + $0 + $0 x $0) -> %res_reg
 1
 
@@ -430,8 +435,12 @@ getFieldReg : GETFIELD(ireg iimm)
 > nop	// intentionally keeping this - explicitly emit an nop, otherwise my compiler would emit regular sequence
 0
 
-ireg : LOAD(getFieldReg)
+ireg : LOADINT(getFieldReg)
 > load_mov *(P[0][0] + P[0][1] + $0 x $0) -> %res_reg
+1
+
+dpreg : LOADDP(getFieldReg)
+> load_movsd *(P[0][0] + P[0][1] + $0 x $0) -> %res_reg
 1
 
 // array
@@ -444,8 +453,12 @@ getElemRegConst : GETELEM_CONST(ireg iimm)
 > nop
 0
 
-ireg : LOAD(getElemRegConst)
+ireg : LOADINT(getElemRegConst)
 > load_mov *(P[0][0] + P[0][1] + $0 x $0) -> %res_reg
+1
+
+dpreg : LOADDP(getElemRegConst)
+> load_movsd *(P[0][0] + P[0][1] + $0 x $0) -> %res_reg
 1
 
 op : STORE(getElemRegConst ivalue)
@@ -460,8 +473,20 @@ getElemRegVar: GETELEM_VAR(ireg ireg iimm)
 > nop
 0
 
+ireg : LOADINT(getElemRegVar)
+> load_mov *(P[0][0] + $0 + P[0][1] x P[0][2]) -> %res_reg
+1
+
+dpreg : LOADDP(getElemRegVar)
+> load_movsd *(P[0][0] + $0 + P[0][1] x P[0][2]) -> %res_reg
+1
+
 op : STORE(getElemRegVar ivalue)
 > store_mov *(P[0][0] + $0 + P[0][1] x P[0][2]) P[1]
+1
+
+op : STORE(getElemRegVar dpvalue)
+> store_movsd *(P[0][0] + $0 + P[0][1] x P[0][2]) P[1]
 1
 
 // ********************************
@@ -751,6 +776,11 @@ label : LABEL
 .mc_def sub = {
 	GPR = GPR GPR/MEM;
 	"subq %s,%s", OP[1], OP[0];
+}
+
+.mc_def shl = {
+	GPR = GPR GPR/MEM;
+	"shlq %s,%s", OP[1], OP[0];
 }
 
 .mc_def xor = {

@@ -21,7 +21,7 @@ import uvm.inst.InstGetFieldIRef;
 import uvm.inst.InstGetIRef;
 import uvm.inst.InstInternalIRefOffset;
 import uvm.inst.InstInternalPrintStr;
-import uvm.inst.InstLoad;
+import uvm.inst.InstLoadInt;
 import uvm.inst.InstNew;
 import uvm.inst.InstNewStack;
 import uvm.inst.InstNewThread;
@@ -123,7 +123,7 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 						newInsts.add(irefAdd);
 						
 						// load that address, then we have sp
-						Instruction loadSP = new InstLoad(IRef.IREF_VOID, spAddress);
+						Instruction loadSP = new InstLoadInt(IRef.IREF_VOID, spAddress);
 						Register sp = getNewTempRegister(bb.getFunction(), IRef.IREF_VOID);
 						loadSP.setDefReg(sp);
 						
