@@ -229,6 +229,8 @@ extern void fillAlignmentGap(Address start, Address end);
 
 extern void yieldpoint();
 
+extern void uvmMainExit(int64_t);
+
 extern void turnOffYieldpoints();
 extern void turnOnYieldpoints();
 extern void uVM_fail(const char* str);

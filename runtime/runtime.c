@@ -23,6 +23,13 @@ void initRuntime() {
     initStack();
 }
 
+int64_t retval;
+
+void uvmMainExit(int64_t r) {
+	retval = r;
+	threadExit();
+}
+
 void* uvmMain(void*);
 
 int main(int c, char** args) {
@@ -43,6 +50,8 @@ int main(int c, char** args) {
 
 	// join
 	pthread_join(t->_pthread, NULL);
+
+	return retval;
 }
 
 void yieldpoint() {

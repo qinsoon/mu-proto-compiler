@@ -25,6 +25,8 @@ import uvm.inst.InstLoadInt;
 import uvm.inst.InstNew;
 import uvm.inst.InstNewStack;
 import uvm.inst.InstNewThread;
+import uvm.inst.InstRet;
+import uvm.inst.InstRetVoid;
 import uvm.inst.InstStore;
 import uvm.inst.InstThreadExit;
 import uvm.runtime.RuntimeFunction;
@@ -187,7 +189,23 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 				else {
 					UVMCompiler.error("unimplemented runtime service expansion for " + inst.getClass().getName());
 				}
-			} else {
+			} else if (bb.getFunction().isMain() && (inst instanceof InstRet || inst instanceof InstRetVoid)) {
+				Value retVal;
+				if (inst instanceof InstRet) {
+					retVal = ((InstRet) inst).getVal();
+				} else {
+					retVal = new IntImmediate(Int.I64, 0);
+				}
+				
+				InstCCall storeRetVal = ccallRuntimeFunction(RuntimeFunction.uvmMainExit, Arrays.asList(retVal));
+				reserveLabel(inst, storeRetVal);
+				inst.setLabel(null);
+				
+				newInsts.add(storeRetVal);
+				newInsts.add(inst);
+			}
+			
+			else {
 				newInsts.add(inst);
 			}
 		}

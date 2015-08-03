@@ -13,6 +13,10 @@ public class InstRet extends Instruction {
         operands.add(val);
         opcode = OpCode.RET;
     }
+    
+    public Value getVal() {
+    	return val;
+    }
 
     @Override
     public String prettyPrint() {

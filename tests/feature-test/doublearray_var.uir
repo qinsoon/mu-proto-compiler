@@ -39,7 +39,5 @@
   
   CCALL DEFAULT <void (int<64>)> @_uvmPrintInt64 (%ret)
   
-  THREADEXIT
-  
   RET <int<32>> %ret
 }

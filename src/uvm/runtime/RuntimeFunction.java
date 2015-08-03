@@ -17,6 +17,7 @@ public class RuntimeFunction {
 	public static final RuntimeFunction yieldpoint;
 	public static final RuntimeFunction newThread;
 	public static final RuntimeFunction threadExit;
+	public static final RuntimeFunction uvmMainExit;
 	
 	public static final RuntimeFunction uvmPrintStr;
 	public static final RuntimeFunction malloc;
@@ -46,6 +47,11 @@ public class RuntimeFunction {
 				"_threadExit",
 				uvm.type.Void.T,
 				Arrays.asList());
+		
+		uvmMainExit = new RuntimeFunction(InstCCall.CC_DEFAULT, 
+				"_uvmMainExit",
+				uvm.type.Void.T,
+				Arrays.asList(Int.I64));
 		
 		uvmPrintStr = new RuntimeFunction(InstCCall.CC_DEFAULT,
 				"_uvmPrintStr",
