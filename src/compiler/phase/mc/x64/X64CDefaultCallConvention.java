@@ -98,6 +98,7 @@ public class X64CDefaultCallConvention {
                 (usedGPRParamReg < UVMCompiler.MCDriver.getNumberOfGPRParam() || usedFPRParamReg < UVMCompiler.MCDriver.getNumberOfFPRParam());
                 i++) {
             Type paramType = paramTypes.get(i);
+            System.out.println("allocate param register for PARAM" + i);
             if (paramType.fitsInGPR() > 0) {
                 if (paramTypes.get(i).fitsInGPR() == 1) {
                     // we need to set param_regi to the ith of GPR Param
@@ -126,7 +127,10 @@ public class X64CDefaultCallConvention {
                     UVMCompiler.error("a param fits in single-precision FPRs, unimplemented");                    
                 }
             } else if (paramType.fitsInGPR() == 0 && paramType.fitsInFPR() == 0) {
-                UVMCompiler.error("a param doesnt fit in registers, and passed on stack. unimplemented");
+            	if (paramType instanceof uvm.type.Void) {
+            		// do nothing
+            	} else            		
+            		UVMCompiler.error("a param doesnt fit in registers, and passed on stack. unimplemented");
             } else {
                 UVMCompiler.error("Type " + paramType.prettyPrint() + " seems errornous on its fitness of registers. ");
             }

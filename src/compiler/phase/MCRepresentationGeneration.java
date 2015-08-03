@@ -43,7 +43,7 @@ public class MCRepresentationGeneration extends AbstractCompilationPhase{
             MCRegister.clearTemps();
             
             if (verbose) {
-                System.out.println(f.getName() + " machine code:");
+                System.out.println("----- " + f.getName() + " machine code: -----");
                 for (AbstractMachineCode mc : cf.getMachineCode()) {
                     System.out.println(mc.prettyPrint());
                 }

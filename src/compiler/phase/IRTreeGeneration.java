@@ -22,8 +22,9 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
     }
     
     // do not move load/store which may break dependency
+    // do not move PARAM (it may eliminates param_reg)
     private static boolean isMovable(Instruction inst) {
-    	return !(inst instanceof AbstractLoad || inst instanceof InstStore);
+    	return !(inst instanceof AbstractLoad || inst instanceof InstStore || inst instanceof InstParam);
     }
     
     private static void checkAndAddValue(Instruction inst, Value v) {

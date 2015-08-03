@@ -159,7 +159,7 @@
 	%irefElem = GETELEMIREF <array<double 500000> int<64>> %irefArray %i
 	%if = SITOFP <int<64> double> %i
 	%v = FDIV <double> 1.0 %if
-	STORE <double> %v %irefElem
+	STORE <double> %irefElem %v
 	%iNew = ADD <int<64>> %i 1
 	%cond = SLT <int<64>> %iNew 250000
 	BRANCH2 %cond %fillingArray %body2
@@ -177,8 +177,9 @@
 	
 	.label %nextCheck:
 	%irefElem1000 = GETELEMIREF <array<double 500000> int<64>> %irefArray 1000
+	%ele1000 = LOAD <double> %irefElem1000
 	%supposedValue = FDIV <double> 1.0 1000.0
-	%check2 = FUNE <double> %irefElem1000 %supposedValue
+	%check2 = FUNE <double> %ele1000 %supposedValue
 	BRANCH2 %check2 %fail %end
 	
 	.label %fail:

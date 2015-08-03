@@ -224,11 +224,15 @@ cmpFoltRes : FOLT(FP_DP_IMM FP_DP_IMM)
 // FUNE
 // ********************************
 
-cmpFuneRes : FUNE(REG_DP FP_DP_IMM)
+cmpFuneRes : FUNE(dpreg FP_DP_IMM)
 > ucomisd P[1] P[0]
 1
 
-cmpFuneRes : FUNE(FP_DP_IMM REG_DP)
+cmpFuneRes : FUNE(FP_DP_IMM dpreg)
+> ucomisd P[0] P[1]
+1
+
+cmpFuneRes : FUNE(dpreg dpreg)
 > ucomisd P[0] P[1]
 1
 
