@@ -14,10 +14,10 @@ public class FunctionSignature {
     @Override
     public String toString() {
         StringBuilder str = new StringBuilder();
-        str.append(returnType.toString());
+        str.append(returnType.prettyPrint());
         str.append(" (");
         for (int i = 0; i < paramTypes.size(); i++) {
-            str.append(paramTypes.get(i));
+            str.append(paramTypes.get(i).prettyPrint());
             if (i != paramTypes.size() - 1)
                 str.append(", ");
         }

@@ -79,4 +79,10 @@ public abstract class Instruction extends IRTreeNode {
     public boolean isBranching() {
     	return false;
     }
+    
+    public String prettyPrintWithDef() {
+    	if (def == null)
+    		return prettyPrint();
+    	else return def.prettyPrint() + " = " + prettyPrint();
+    }
 }

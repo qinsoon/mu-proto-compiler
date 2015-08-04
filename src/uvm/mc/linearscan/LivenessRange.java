@@ -192,14 +192,13 @@ public class LivenessRange {
     	}
     	for (Position p : positions) {
     		try {
-    		if (p.isUse())
-    			output[p.index] = 'U';
-    		else if (p.isDefine())
-    			output[p.index] = 'D';
+	    		if (p.isUse())
+	    			output[p.index] = 'U';
+	    		else if (p.isDefine())
+	    			output[p.index] = 'D';
     		} catch (Exception e) {
-    			e.printStackTrace();
     			System.out.println("bitset size=" + bitset.size());
-    			System.exit(1);
+    			throw e;
     		}
     	}
     	

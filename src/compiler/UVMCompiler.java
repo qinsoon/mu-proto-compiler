@@ -40,6 +40,7 @@ import uvm.Function;
 import uvm.Instruction;
 import uvm.MicroVM;
 import uvm.mc.AbstractMCDriver;
+import uvm.util.RecordUVMStats;
 import compiler.util.Pair;
 
 public class UVMCompiler {
@@ -186,10 +187,9 @@ public class UVMCompiler {
             	
             	reportElapseTime();
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+        	e.printStackTrace();
+        	error(e.getMessage());
         }
 
     }
@@ -214,6 +214,11 @@ public class UVMCompiler {
     public static final void error(String message) {
         System.err.println(message);
         Thread.dumpStack();
+        
+        String errorDumpDir = BASE_DIR + "/errordump/";
+        System.out.println("dump info to " + errorDumpDir);
+        new RecordUVMStats(errorDumpDir).output();
+        
         System.exit(1);
     }
     

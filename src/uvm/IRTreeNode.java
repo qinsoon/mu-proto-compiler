@@ -57,8 +57,7 @@ public abstract class IRTreeNode {
         return ret.toString();
     }
     
-    public abstract String prettyPrint();
-    
+    public abstract String prettyPrint();    
     
     MCOperand mcOp;
     

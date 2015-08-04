@@ -131,4 +131,23 @@ public class Function {
     public BasicBlock getCFG() {
     	return CFG;
     }
+    
+    public String printIRTree() {
+    	StringBuilder ret = new StringBuilder();
+            
+        for (IRTreeNode node : tree) {
+        	if (node instanceof Instruction) {
+        		Instruction inst = (Instruction) node;
+        		if (inst.getLabel() != null) {
+        			ret.append("#" + inst.getLabel().getName() + ":");
+        			ret.append("\n");
+        		}
+        	}
+
+            ret.append("+" + node.printNode());
+            ret.append("\n");
+        }
+        
+        return ret.toString();
+    }
 }
