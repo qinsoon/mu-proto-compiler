@@ -150,4 +150,15 @@ public class Function {
         
         return ret.toString();
     }
+    
+    public String printInstructionSelectionMatching() {
+    	StringBuilder ret = new StringBuilder();
+    	
+    	for (IRTreeNode node : tree) {
+    		ret.append(node.printMatchingRules());
+    		ret.append("\n");
+    	}
+    	
+    	return ret.toString();
+    }
 }

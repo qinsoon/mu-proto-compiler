@@ -306,6 +306,7 @@ public class Burg {
                 IR_NODE_TYPE));
         
         code.increaseIndent();
+        code.appendStmtln("node.pickedRule = rule");
         code.appendStmtln(String.format("List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>()"));
         code.appendStmtln("if (rule == -1) return ret");
         code.appendln();
