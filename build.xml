@@ -47,10 +47,11 @@
 		<mkdir dir="${burg-exec-dir}"/>
 		
 		<echo message="javac some uVM classes..."/>
-		<javac srcdir="${uvm-dir}/uvm:${burg-impl-dir}/burm"
+		<javac srcdir="${uvm-dir}/uvm:${burg-impl-dir}/burm:${uvm-dir}/uvm/mc"
 		       includeantruntime="false"
-		       classpath="${burg-impl-dir}:${uvm-dir}:${uvm-dir}/uvm"
+		       classpath="${burg-impl-dir}:${uvm-dir}:${uvm-dir}/uvm:${uvm-dir}/uvm/mc"
 		       destdir="${burg-exec-dir}">
+		       <include name="MCOperand.java"/>
 		       <include name="OpCode.java"/>
 		       <include name="IRTreeNode.java"/>
 		       <include name="BurmState.java"/>
@@ -109,10 +110,11 @@
 	<target name="build" depends="build-eclipse, build-runtime">
 		<mkdir dir="${build}"/>
 		<echo message="Building BURM (static)..."/>
-		<javac srcdir="${uvm-dir}/uvm:${burg-impl-dir}/burm"
+		<javac srcdir="${uvm-dir}/uvm:${burg-impl-dir}/burm:${uvm-dir}/uvm/mc"
 		       includeantruntime="false"
 		       classpath="${burg-impl-dir}:${uvm-dir}"
 		       destdir="${build}">
+		       <include name="MCOperand.java"/>
 		       <include name="OpCode.java"/>
 		       <include name="IRTreeNode.java"/>
 		       <include name="BurmState.java"/>

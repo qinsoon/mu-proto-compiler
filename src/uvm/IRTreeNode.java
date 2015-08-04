@@ -3,11 +3,7 @@ package uvm;
 import java.util.ArrayList;
 import java.util.List;
 
-import uvm.mc.MCDPImmediate;
-import uvm.mc.MCIntImmediate;
-import uvm.mc.MCLabel;
 import uvm.mc.MCOperand;
-import uvm.mc.MCSPImmediate;
 import burm.BurmState;
 
 public abstract class IRTreeNode {
