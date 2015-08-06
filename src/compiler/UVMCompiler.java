@@ -217,7 +217,13 @@ public class UVMCompiler {
         
         String errorDumpDir = BASE_DIR + "/errordump/";
         System.out.println("dump info to " + errorDumpDir);
-        new RecordUVMStats(errorDumpDir).output();
+        try {
+        	new RecordUVMStats(errorDumpDir).output();
+        } catch (Exception e) {
+        	System.err.println("Error during dumping stats");
+        	e.printStackTrace();
+        	System.exit(1);
+        }
         
         System.exit(1);
     }

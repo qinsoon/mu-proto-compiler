@@ -332,10 +332,17 @@ ireg : SUB(ivalue ivalue)
 > sub %res_reg P[1] -> %res_reg
 2
 
-ireg : SHL(ivalue ivalue)
+ireg : SHL(ivalue ireg)
 // shl
 > mov P[0] -> %res_reg
-> shl %res_reg P[1] -> %res_reg
+> mov P[1] -> %rcx
+> shl_cl %res_reg -> %res_reg
+3
+
+ireg : SHL(ivalue iimm)
+// shl
+> mov P[0] -> %res_reg
+> shl_imm %res_reg P[1] -> %res_reg
 2
 
 // ********************************
@@ -783,7 +790,13 @@ label : LABEL
 	"subq %s,%s", OP[1], OP[0];
 }
 
-.mc_def shl = {
+.mc_def shl_cl(1) = {
+	GPR = GPR/MEM;
+	"shlq %%cl,%s", OP[0];
+	uses: rcx(GPR);
+}
+
+.mc_def shl_imm = {
 	GPR = GPR GPR/MEM;
 	"shlq %s,%s", OP[1], OP[0];
 }
