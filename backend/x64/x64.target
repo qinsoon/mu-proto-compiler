@@ -333,6 +333,7 @@ ireg : SUB(ivalue ivalue)
 2
 
 ireg : SHL(ivalue ivalue)
+// shl
 > mov P[0] -> %res_reg
 > shl %res_reg P[1] -> %res_reg
 2

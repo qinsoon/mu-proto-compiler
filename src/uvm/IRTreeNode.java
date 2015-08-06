@@ -62,7 +62,7 @@ public abstract class IRTreeNode {
     public final String printMatchingRules() {
     	StringBuilder ret = new StringBuilder();
         ret.append(printNode());
-        ret.append("->" + pickedRule);
+        ret.append(" -> " + pickedRule);
         ret.append("\n");
         ret.append(state.prettyPrint());
         ret.append("\n");
