@@ -113,6 +113,10 @@
 	.label %entry:
 	%depth = PARAM 0
 	%iNumIters = CALL <int<64> (int<64>)> @NumIters(%depth)
+	PRINTSTR "Creating "
+	CCALL DEFAULT <void (int<64>)> @_uvmPrintInt64 (%iNumIters)
+	PRINTSTR " trees of depth "
+	CCALL DEFAULT <void (int<64>)> @_uvmPrintInt64 (%depth)
 	BRANCH %forLoop1
 	
 	.label %forLoop1:
@@ -142,6 +146,8 @@
 	BRANCH %body1
 	
 	.label %body1:
+	PRINTSTR "Garbage Collector Test"
+	PRINTSTR "Make tree"
 	// stretch the memory space quickly
 	%tempTree = CALL <ref<@Node> (int<64>)> @MakeTree(@kStretchTreeDepth)
 	
