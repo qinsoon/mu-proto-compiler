@@ -29,6 +29,19 @@ public class CodeEmission extends AbstractMCCompilationPhase {
     }
     
     @Override
+    protected void preChecklist() {
+    	File fDir = new File(dir);
+    	
+    	if (!fDir.exists())
+    		fDir.mkdirs();
+    	else {
+    		for (File f : fDir.listFiles()) {
+    			f.delete();
+    		}
+    	}
+    }
+    
+    @Override
     protected void postChecklist() {
     	File runtime = new File(UVMCompiler.BASE_DIR + "/" + UVMRuntime.LIB_PATH);
     	Path dst = Paths.get(dir + "/" + UVMRuntime.LIB_NAME);

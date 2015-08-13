@@ -80,6 +80,9 @@ public class UVMCompiler {
         
         try {
         	long parsingStart = 0;
+        	
+        	RecordUVMStats.clearPreviousStats(ERROR_DUMP_DIR);
+        	
         	if (TIMING_COMPILATION) {
         		parsingStart = System.currentTimeMillis();
         		startTime = parsingStart;
@@ -169,7 +172,7 @@ public class UVMCompiler {
             new SimpleLinearScan("simplelinearscan", Verbose.LINEAR_SCAN).execute();
             new X64PostRegisterAllocPatching("postregallocpatching", false).execute();
             
-            dumpInfo("AfterRegAlloc");
+//            dumpInfo("AfterRegAlloc");
             
             /*
              * post register allocation code transform (be careful of using any registers, and concern about calling convention)
@@ -177,7 +180,7 @@ public class UVMCompiler {
             new InsertYieldpoint("insertYP", Verbose.INSERT_YIELDPOINT).execute();
             new SimpleBranchAlignment("simplebralign", Verbose.SIMPLE_BRANCH_ALIGN).execute();
             
-            dumpInfo("AfterBranchAlign");
+//            dumpInfo("AfterBranchAlign");
             
             /*
              *  code emission
@@ -230,12 +233,14 @@ public class UVMCompiler {
         System.exit(1);
     }
     
+    public static final String ERROR_DUMP_DIR = "errordump";
+    
     public static final void dumpInfo() {
     	dumpInfo(null);
     }
     
     public static final void dumpInfo(String suffix) {
-        String errorDumpDir = BASE_DIR + "/errordump" + (suffix != null ? suffix : "")+ "/";
+        String errorDumpDir = BASE_DIR + "/" + ERROR_DUMP_DIR + (suffix != null ? suffix : "")+ "/";
         System.out.println("dump info to " + errorDumpDir);
         
         File dir = new File(errorDumpDir);

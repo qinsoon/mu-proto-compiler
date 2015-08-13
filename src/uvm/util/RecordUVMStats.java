@@ -1,9 +1,11 @@
 package uvm.util;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import compiler.UVMCompiler;
 import uvm.BasicBlock;
 import uvm.CompiledFunction;
 import uvm.Function;
@@ -16,6 +18,19 @@ import uvm.mc.AbstractMachineCode;
 
 public class RecordUVMStats {
 	String path;
+	
+	public static final void clearPreviousStats(String keyword) {
+		File base = new File(UVMCompiler.BASE_DIR);
+		
+		for (File f : base.listFiles()) {
+			if (f.isDirectory() && f.getName().contains(keyword)) {
+				for (File subF : f.listFiles())
+					subF.delete();
+				
+				f.delete();
+			}
+		}
+	}
 	
 	public RecordUVMStats(String path) {
 		this.path = path;
