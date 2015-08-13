@@ -98,7 +98,7 @@
 	
 	.label %thenBlock:
 	%new1 = NEW <@Node>
-	RET <ref<@Node>> @new1
+	RET <ref<@Node>> %new1
 	
 	.label %elseBlock:
 	%new2 = NEW <@Node>
@@ -106,7 +106,7 @@
 	%ret1 = CALL <ref<@Node> (int<64>)> @MakeTree (%iDepth2)
 	%ret2 = CALL <ref<@Node> (int<64>)> @MakeTree (%iDepth2)
 	CALL <void (ref<@Node> ref<@Node> ref<@Node>)> @initNode2 (%new2 %ret1 %ret2)
-	RET <ref<@Node>> @new2
+	RET <ref<@Node>> %new2
 }
 
 .funcdef @TimeConstruction <void (int<64>)> {
@@ -114,9 +114,9 @@
 	%depth = PARAM 0
 	%iNumIters = CALL <int<64> (int<64>)> @NumIters(%depth)
 	PRINTSTR "Creating "
-	CCALL DEFAULT <void (int<64>)> @_uvmPrintInt64 (%iNumIters)
+	PRINTINT64 %iNumIters
 	PRINTSTR " trees of depth "
-	CCALL DEFAULT <void (int<64>)> @_uvmPrintInt64 (%depth)
+	PRINTINT64 %depth
 	BRANCH %forLoop1
 	
 	.label %forLoop1:
@@ -150,6 +150,7 @@
 	PRINTSTR "Make tree"
 	// stretch the memory space quickly
 	%tempTree = CALL <ref<@Node> (int<64>)> @MakeTree(@kStretchTreeDepth)
+	PRINTSTR "Finished Make Tree"
 	
 	// create a long lived object
 	%longLivedTree = NEW <@Node>

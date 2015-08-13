@@ -244,20 +244,27 @@ public class CompiledFunction {
     public void printInterval() {        
         System.out.println("Live interval for " + getOriginFunction().getName());
         
-        int maxRegNameLength = -1;
-        for (MCRegister reg : intervals.keySet()) {
-            if (reg.getName().length() > maxRegNameLength)
-                maxRegNameLength = reg.getName().length();
-        }
-        
-        for (MCRegister reg : intervals.keySet()) {
-            System.out.print(String.format("%-"+maxRegNameLength+"s ", reg.getName()));
-            
-            Interval interval = intervals.get(reg);
-            System.out.print(interval.prettyPrint());
-            
-            System.out.println(" " + reg.prettyPrint());
-        }
+        System.out.println(printIntervalString());
+    }
+    
+    public String printIntervalString() {
+    	StringBuilder ret = new StringBuilder();
+    	
+    	int maxRegNameLength = -1;
+    	for (MCRegister reg : intervals.keySet()) {
+    		if (reg.getName().length() > maxRegNameLength)
+    			maxRegNameLength = reg.getName().length();
+    	}    	
+		
+		for (MCRegister reg : intervals.keySet()) {
+			ret.append(String.format("%-"+maxRegNameLength+"s ", reg.getName()));
+			
+			Interval interval = intervals.get(reg);
+			ret.append(interval.prettyPrint());
+			ret.append("\n");
+		}
+		
+		return ret.toString();
     }
 
     public List<AbstractMachineCode> getEpilogue() {

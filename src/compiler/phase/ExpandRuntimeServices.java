@@ -20,6 +20,8 @@ import uvm.inst.InstGetElemIRefConstIndex;
 import uvm.inst.InstGetFieldIRef;
 import uvm.inst.InstGetIRef;
 import uvm.inst.InstInternalIRefOffset;
+import uvm.inst.InstInternalPrintInt64;
+import uvm.inst.InstInternalPrintPtr;
 import uvm.inst.InstInternalPrintStr;
 import uvm.inst.InstLoadInt;
 import uvm.inst.InstNew;
@@ -186,10 +188,24 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 					newInsts.add(callPrintStr);
 				}
 				
+				else if (inst instanceof InstInternalPrintInt64) {
+					InstInternalPrintInt64 printInt64 = (InstInternalPrintInt64) inst;
+					
+					Instruction callPrintInt64 = ccallRuntimeFunction(RuntimeFunction.uvmPrintInt64, Arrays.asList(printInt64.getValue()));
+					newInsts.add(callPrintInt64);
+				}
+				else if (inst instanceof InstInternalPrintPtr) {
+					InstInternalPrintPtr printPtr = (InstInternalPrintPtr) inst;
+					
+					Instruction callPrintPtr = ccallRuntimeFunction(RuntimeFunction.uvmPrintPtr, Arrays.asList(printPtr.getValue()));
+					newInsts.add(callPrintPtr);
+				}
+				
 				else {
 					UVMCompiler.error("unimplemented runtime service expansion for " + inst.getClass().getName());
 				}
 			} else if (bb.getFunction().isMain() && (inst instanceof InstRet || inst instanceof InstRetVoid)) {
+				// we want to call uvmMainExit to properly quit main thread before return
 				Value retVal;
 				if (inst instanceof InstRet) {
 					retVal = ((InstRet) inst).getVal();

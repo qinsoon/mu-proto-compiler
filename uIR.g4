@@ -158,7 +158,9 @@ instBody
     |   'CCALL' callConv funcCallBody                   # InstCCall
 
     // for debug use
-    |   'PRINTSTR ' STRINGLITERAL                       # InstPrintStr
+    |   'PRINTSTR' STRINGLITERAL                        # InstPrintStr
+    |   'PRINTINT64' value                              # InstPrintInt64
+    |   'PRINTPTR' value                                # InstPrintPtr
     ;
 
 funcCallBody

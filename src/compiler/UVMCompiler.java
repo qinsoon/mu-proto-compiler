@@ -1,5 +1,6 @@
 package compiler;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -57,6 +58,8 @@ public class UVMCompiler {
     public static final int MC_REG_SIZE_IN_BYTES = MC_REG_SIZE / 8;
     public static final int MC_FP_REG_SIZE = 64;
     public static final int MC_FP_REG_SIZE_IN_BYTES = MC_FP_REG_SIZE / 8;
+    
+    public static final boolean ALWAYS_DUMP_INFO = true;
     
     public static void main(String[] args) {
         if (args.length == 0)
@@ -166,11 +169,15 @@ public class UVMCompiler {
             new SimpleLinearScan("simplelinearscan", Verbose.LINEAR_SCAN).execute();
             new X64PostRegisterAllocPatching("postregallocpatching", false).execute();
             
+            dumpInfo("AfterRegAlloc");
+            
             /*
              * post register allocation code transform (be careful of using any registers, and concern about calling convention)
              */
             new InsertYieldpoint("insertYP", Verbose.INSERT_YIELDPOINT).execute();
             new SimpleBranchAlignment("simplebralign", Verbose.SIMPLE_BRANCH_ALIGN).execute();
+            
+            dumpInfo("AfterBranchAlign");
             
             /*
              *  code emission
@@ -186,6 +193,10 @@ public class UVMCompiler {
             	endTime = System.currentTimeMillis();
             	
             	reportElapseTime();
+            }
+            
+            if (ALWAYS_DUMP_INFO) {
+            	dumpInfo();
             }
         } catch (Exception e) {
         	e.printStackTrace();
@@ -214,9 +225,29 @@ public class UVMCompiler {
     public static final void error(String message) {
         System.err.println(message);
         Thread.dumpStack();
+        dumpInfo();
         
-        String errorDumpDir = BASE_DIR + "/errordump/";
+        System.exit(1);
+    }
+    
+    public static final void dumpInfo() {
+    	dumpInfo(null);
+    }
+    
+    public static final void dumpInfo(String suffix) {
+        String errorDumpDir = BASE_DIR + "/errordump" + (suffix != null ? suffix : "")+ "/";
         System.out.println("dump info to " + errorDumpDir);
+        
+        File dir = new File(errorDumpDir);
+        if (!dir.exists()) {
+        	dir.mkdirs();
+        } else {
+        	// clear its content
+        	for (File f : dir.listFiles()) {
+        		f.delete();
+        	}
+        }
+        
         try {
         	new RecordUVMStats(errorDumpDir).output();
         } catch (Exception e) {
@@ -224,8 +255,6 @@ public class UVMCompiler {
         	e.printStackTrace();
         	System.exit(1);
         }
-        
-        System.exit(1);
     }
     
     public static final void exit() {

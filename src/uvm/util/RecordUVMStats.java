@@ -103,6 +103,20 @@ public class RecordUVMStats {
 			for (AbstractMachineCode mc : cf.getMachineCode()) {
 				writer.println("#" + mc.sequence + " " + mc.prettyPrint());
 			}
+			writer.println();
+			
+			writer.println("final MC:");
+			if (cf.finalMC == null)
+				writer.println("not ready yet");
+			else {
+				for (AbstractMachineCode mc : cf.finalMC) {
+					writer.println(mc.prettyPrint());
+				}
+			}
+			writer.println();
+			
+			writer.println("intervals:");
+			writer.println(cf.printIntervalString());
 			
 			writer.close();
 		} catch (FileNotFoundException e) {

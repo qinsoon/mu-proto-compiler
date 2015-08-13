@@ -578,6 +578,22 @@ public abstract class ASTHelper {
         	Instruction node = new InstInternalPrintStr(literal);
         	return node;
         }
+        else if (inst instanceof parser.uIRParser.InstPrintInt64Context) {
+        	parser.uIRParser.InstPrintInt64Context printInt64Ctx = (parser.uIRParser.InstPrintInt64Context) inst;
+        	
+        	Value v = getValue(f, printInt64Ctx.value(), Int.I64);
+        	
+        	Instruction node = new InstInternalPrintInt64(v);
+        	return node;
+        }
+        else if (inst instanceof parser.uIRParser.InstPrintPtrContext) {
+        	parser.uIRParser.InstPrintPtrContext printPtrCtx = (parser.uIRParser.InstPrintPtrContext) inst;
+        	
+        	Value v = getValue(f, printPtrCtx.value(), Int.I64);
+        	
+        	Instruction node = new InstInternalPrintPtr(v);
+        	return node;
+        }
         
         else {
             UVMCompiler.error("incomplete implementation of " + ctx.toStringTree());

@@ -21,6 +21,8 @@ import uvm.runtime.UVMRuntime;
 public class CodeEmission extends AbstractMCCompilationPhase {
     String dir;
     
+    public static final boolean EMIT_DEBUG_INFO = true;
+    
     public CodeEmission(String name, String dir, boolean verbose) {
         super(name, verbose);
         this.dir = dir;
@@ -75,6 +77,9 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             }
             
             writer.write(cf.getOriginFunction().getName() + ":\n");
+            if (EMIT_DEBUG_INFO) {
+            	writer.write("\t.cfi_startproc\n");
+            }
             
             if (!cf.prologue.isEmpty()) {
                 for (AbstractMachineCode mc : cf.prologue)
@@ -90,6 +95,10 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             
             for (AbstractMachineCode mc : cf.finalMC) {
                 emitMCInsertingEpilogueBeforeRet(writer, cf, mc);
+            }            
+            
+            if (EMIT_DEBUG_INFO) {
+            	writer.write("\t.cfi_endproc\n");
             }
         } catch (IOException e) {
             UVMCompiler.error("Error when emitting " + fileName);
@@ -119,7 +128,7 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             // emit ret
             writer.write('\t');
             writer.write(mc.emit());
-            writer.write('\n');
+            writer.write('\n');            
         } else emitMC(writer, mc);
     }
     

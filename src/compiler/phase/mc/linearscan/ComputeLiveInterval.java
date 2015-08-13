@@ -63,6 +63,11 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
                 if (mc.getDefine() != null) {
                     defined.add(mc.getDefineAsReg().REP());
                 }
+                
+                if (mc.getNumberOfImplicitDefines() != 0) {
+                	for (int i = 0; i < mc.getNumberOfImplicitDefines(); i++)
+                		defined.add(mc.getImplicitDefine(i));
+                }
             }
             
             if (verbose) {

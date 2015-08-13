@@ -20,6 +20,8 @@ public class RuntimeFunction {
 	public static final RuntimeFunction uvmMainExit;
 	
 	public static final RuntimeFunction uvmPrintStr;
+	public static final RuntimeFunction uvmPrintInt64;
+	public static final RuntimeFunction uvmPrintPtr;
 	public static final RuntimeFunction malloc;
 	
 	static {
@@ -55,6 +57,14 @@ public class RuntimeFunction {
 		
 		uvmPrintStr = new RuntimeFunction(InstCCall.CC_DEFAULT,
 				"_uvmPrintStr",
+				uvm.type.Void.T,
+				Arrays.asList(Int.I64));
+		uvmPrintInt64 = new RuntimeFunction(InstCCall.CC_DEFAULT, 
+				"_uvmPrintInt64",
+				uvm.type.Void.T,
+				Arrays.asList(Int.I64));
+		uvmPrintPtr = new RuntimeFunction(InstCCall.CC_DEFAULT, 
+				"_uvmPrintPtr",
 				uvm.type.Void.T,
 				Arrays.asList(Int.I64));
 		

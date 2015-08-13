@@ -128,6 +128,10 @@ void fillAlignmentGap(Address start, Address end) {
     memset((void*)start, ALIGNMENT_VALUE, end - start);
 }
 
+void uvmPrintPtr(int64_t s) {
+	printf("0x%p\n", (void*)s);
+}
+
 void uvmPrintInt64(int64_t s) {
 	printf("%lld\n", s);
 }

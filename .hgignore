@@ -17,4 +17,4 @@ package-list
 parser-generated
 backend/codegengen-gen
 debug
-errordump
+errordump*

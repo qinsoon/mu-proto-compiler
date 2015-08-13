@@ -11,13 +11,13 @@ public abstract class AbstractMachineCode {
     protected String name;
     protected List<MCOperand> operands;
     protected List<Boolean> opRegOnly;
-    protected List<MCOperand> implicitUses = new ArrayList<MCOperand>();
+    protected List<MCRegister> implicitUses = new ArrayList<MCRegister>();
     
     protected uvm.mc.MCLabel label;
     
     protected uvm.mc.MCOperand define;
     protected Boolean defineRegOnly;
-    protected List<MCOperand> implicitDefines = new ArrayList<MCOperand>();
+    protected List<MCRegister> implicitDefines = new ArrayList<MCRegister>();
     
     protected uvm.IRTreeNode highLevelIR;
     
@@ -78,11 +78,11 @@ public abstract class AbstractMachineCode {
         return implicitUses.size();
     }
     
-    public MCOperand getImplicitUse(int index) {
+    public MCRegister getImplicitUse(int index) {
         return implicitUses.get(index);
     }
     
-    public void addImplicitUse(MCOperand op) {
+    public void addImplicitUse(MCRegister op) {
         implicitUses.add(op);
     }
     
@@ -90,11 +90,11 @@ public abstract class AbstractMachineCode {
         return implicitDefines.size();
     }
     
-    public MCOperand getImplicitDefine(int index) {
+    public MCRegister getImplicitDefine(int index) {
         return implicitDefines.get(index);
     }
     
-    public void addImplicitDefine(MCOperand op) {
+    public void addImplicitDefine(MCRegister op) {
         implicitDefines.add(op);        
     }
     
@@ -222,5 +222,18 @@ public abstract class AbstractMachineCode {
 
     public void setHighLevelIR(uvm.IRTreeNode highLevelIR) {
         this.highLevelIR = highLevelIR;
+    }
+    
+    String cfi;
+    /**
+     * may return null
+     * @return
+     */
+    public String getCallFrameInfo() {
+    	return cfi;
+    }
+    
+    public void setCallFrameInfo(String cfi) {
+    	this.cfi = cfi;
     }
 }
