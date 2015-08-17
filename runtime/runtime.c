@@ -10,6 +10,7 @@ Address yieldpoint_protect_page;
 Address heapStart;
 
 ImmixSpace* immixSpace;
+FreeListSpace* largeObjectSpace;
 
 GCPhase_t phase;
 

@@ -163,12 +163,12 @@
 	
 	.label %fillingArray:
 	%i = PHI <int<64>> {%body1: 0; %fillingArray: %iNew;}
-	%irefElem = GETELEMIREF <array<double 500000> int<64>> %irefArray %i
+	%irefElem = GETELEMIREF <array<double 50000> int<64>> %irefArray %i
 	%if = SITOFP <int<64> double> %i
 	%v = FDIV <double> 1.0 %if
 	STORE <double> %irefElem %v
 	%iNew = ADD <int<64>> %i 1
-	%cond = SLT <int<64>> %iNew 250000
+	%cond = SLT <int<64>> %iNew 25000
 	BRANCH2 %cond %fillingArray %body2
 	
 	.label %body2:
@@ -183,7 +183,7 @@
 	BRANCH2 %check1 %fail %nextCheck
 	
 	.label %nextCheck:
-	%irefElem1000 = GETELEMIREF <array<double 500000> int<64>> %irefArray 1000
+	%irefElem1000 = GETELEMIREF <array<double 50000> int<64>> %irefArray 1000
 	%ele1000 = LOAD <double> %irefElem1000
 	%supposedValue = FDIV <double> 1.0 1000.0
 	%check2 = FUNE <double> %ele1000 %supposedValue

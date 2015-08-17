@@ -22,7 +22,7 @@ void debug_printBlock(ImmixBlock* block) {
     printf(">>state:%d, lineMarkTable:%llx\n", block->state, (Address)block->lineMarkTable);
 }
 
-ImmixSpace* newSpace(Address immixStart, Address freelistStart) {
+ImmixSpace* newImmixSpace(Address immixStart, Address freelistStart) {
     ImmixSpace* ret = (ImmixSpace*) malloc(sizeof(ImmixSpace));
     
     ret->immixStart = immixStart;
@@ -152,9 +152,10 @@ Address ImmixMutator_tryAllocFromLocal(ImmixMutator* mutator, int64_t size, int6
     }
 }
 
+extern Address allocLarge(FreeListSpace* flSpace, int64_t size, int64_t align);
+
 Address ImmixMutator_allocLarge(ImmixMutator* mutator, int64_t size, int64_t align) {
-    uVM_fail("allocLarge not implemented");
-    return 0;
+	return allocLarge(largeObjectSpace, size, align);
 }
 
 int ImmixSpace_getNextAvailableLine(uint8_t* markTable, int currentLine) {
@@ -205,7 +206,7 @@ bool ImmixSpace_getNextBlock(ImmixMutator* mutator) {
         if (space->usedBlocks != NULL)
             space->usedBlocks->prev = newBlock;
         space->usedBlocks = newBlock;
-        
+        space->used = space->used + IMMIX_BYTES_IN_BLOCK;
         DEBUG_PRINT(5, ("adding to usedBlocks\n"));
         
         // set mutator with new block

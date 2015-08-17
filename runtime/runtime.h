@@ -71,7 +71,24 @@ typedef struct ImmixSpace {
     ImmixBlock* usedBlocks;
     
     pthread_mutex_t lock;
+
+    int64_t used;
 } ImmixSpace;
+
+struct FreeListNode;
+typedef struct FreeListNode {
+	struct FreeListNode* next;
+	Address addr;
+} FreeListNode;
+
+typedef struct FreeListSpace {
+	FreeListNode* head;
+	FreeListNode* last;
+
+	pthread_mutex_t lock;
+
+	int64_t used;
+} FreeListSpace;
 
 typedef struct ImmixCollector {
     
@@ -79,6 +96,7 @@ typedef struct ImmixCollector {
 
 typedef struct ImmixMutator {
     ImmixSpace* globalSpace;
+    FreeListSpace* largeObjectSpace;
     
     Address cursor;
     Address limit;
@@ -180,9 +198,11 @@ extern pthread_key_t currentUVMThread;
  * new mutator context
  */
 extern ImmixMutator* ImmixMutator_init(ImmixMutator* mutator, ImmixSpace* space);
-extern ImmixSpace* newSpace(Address, Address);
+extern ImmixSpace* newImmixSpace(Address, Address);
+extern FreeListSpace* newFreeListSpace();
 
 extern ImmixSpace* immixSpace;
+extern FreeListSpace* largeObjectSpace;
 
 /*
  * higher verbose level, more detailed output
