@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <signal.h>
 
 typedef uint64_t Address;
 
@@ -79,6 +80,7 @@ struct FreeListNode;
 typedef struct FreeListNode {
 	struct FreeListNode* next;
 	Address addr;
+	int64_t size;
 } FreeListNode;
 
 typedef struct FreeListSpace {

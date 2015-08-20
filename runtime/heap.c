@@ -84,17 +84,20 @@ Address allocLarge(FreeListSpace* flSpace, int64_t size, int64_t align) {
 	pthread_mutex_lock( &(flSpace->lock));
 
 	// actually allocation
-	Address addr;
-	int ret = posix_memalign((void*)&addr, align, size);
-	if (ret != 0) {
-		printf("trying to alloc from freelist space: size=%lld, align=%lld\n", size, align);
-		uVM_fail("failed posix_memalign alloc");
-	}
+//	Address addr;
+//	int ret = posix_memalign((void*)&addr, align, size);
+//	if (ret != 0) {
+//		printf("trying to alloc from freelist space: size=%lld, align=%lld\n", size, align);
+//		uVM_fail("failed posix_memalign alloc");
+//	}
+	DEBUG_PRINT(3, ("acquiring22 from global memory (allocLarge(), size=%lld, align=%lld)\n", size, align));
+	Address addr = (Address) malloc(size);
 
 	// metadata
 	FreeListNode* node = (FreeListNode*) malloc(sizeof(FreeListNode));
 	node->next = NULL;
 	node->addr = addr;
+	node->size = size;
 
 	// update freelist space
 	if (flSpace->last == NULL) {

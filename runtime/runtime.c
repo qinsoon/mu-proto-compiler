@@ -15,8 +15,10 @@ FreeListSpace* largeObjectSpace;
 GCPhase_t phase;
 
 void initYieldpoint();
+void initSignalHandler();
 
 void initRuntime() {
+	initSignalHandler();
     initHeap();
     initThread();
     initYieldpoint();
@@ -119,6 +121,85 @@ void turnOnYieldpoints() {
 #ifdef PAGE_PROTECTION_YIELDPOINT
     mprotect((void*) yieldpoint_protect_page, BYTES_IN_PAGE, PROT_NONE);
 #endif
+}
+
+void runtimeSignalHandler(int signum, siginfo_t *info, void *ptr) {
+	void* si_addr = info->si_addr;
+	int   si_code = info->si_code;
+
+	char* sig;
+	char* sig_code;
+	switch(signum) {
+	case SIGSEGV:
+		sig = "SIGSEGV";
+		switch (si_code) {
+		case SEGV_MAPERR: sig_code = "Address not mapped (SEGV_MAPERR)"; break;
+		case SEGV_ACCERR: sig_code = "Invalid permission (SEGV_ACCERR)"; break;
+		}
+		break;
+	case SIGBUS:
+		sig = "SIGBUS";
+		switch (si_code) {
+		case BUS_ADRALN: sig_code = "Invalid address alignment (BUS_ADRALN)"; break;
+		case BUS_ADRERR: sig_code = "Non-existent physical address (BUS_ADRERR)"; break;
+		case BUS_OBJERR: sig_code = "Object-specific hardware error (BUS_OBJERR)"; break;
+		}
+		break;
+	}
+
+	printf("VM abort for receiving signals\n");
+	printf("  signal: %s\n", sig);
+	printf("  sig code: %s\n", sig_code);
+	printf("  address: %p\n", si_addr);
+	printf("\n");
+
+	// trying to find out where the address belongs to
+	Address addr = (Address) si_addr;
+	bool found = false;
+
+	// check if it is stack address
+	for (int i = 0; i < stackCount; i++) {
+		UVMStack* stack = uvmStacks[i];
+
+		if (stack != NULL) {
+			if (addr >= stack->lowerBound && addr <= stack->upperBound) {
+				printf("The address is within stack %d\n", i);
+				printStackInfo(stack);
+				found = true;
+			}
+		}
+	}
+
+	// check if it is in immix space
+	if (addr >= immixSpace->immixStart && addr <= immixSpace->freelistStart) {
+		printf("The address is within immix space (from 0x%llx to 0x%llx)\n", immixSpace->immixStart, immixSpace->freelistStart);
+		found = true;
+	}
+
+	// check if it is in large object space
+	FreeListNode* cursor;
+	for (cursor = largeObjectSpace->head; cursor != NULL; cursor = cursor->next) {
+		if (addr >= cursor->addr && addr <= cursor->addr + cursor->size) {
+			printf("The address is within large object space (node from 0x%llx to 0x%llx)\n", cursor->addr, cursor->addr + cursor->size);
+			found = true;
+		}
+	}
+
+	if (!found)
+		printf("The address is beyond VM/runtime-used address space. \n");
+
+	uVM_fail("Caught signal (fatal error)");
+}
+
+struct sigaction sig_act;
+
+void initSignalHandler() {
+	memset(&sig_act, 0, sizeof(sig_act));
+
+	sig_act.sa_sigaction = runtimeSignalHandler;
+	sig_act.sa_flags = SA_SIGINFO;
+	sigaction(SIGSEGV, &sig_act, NULL);
+	sigaction(SIGBUS,  &sig_act, NULL);
 }
 
 Address alignUp(Address region, int align) {

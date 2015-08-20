@@ -1,6 +1,6 @@
 LIBS  = 
-CFLAGS = -O3 -g
-CC = gcc
+CFLAGS = -std=c11 -Wall -Wpedantic -O0 -g -fsanitize=undefined
+CC = gcc-4.9
 LD = $(CC)
 AR = ar
 
