@@ -39,7 +39,7 @@ void printStackInfo(UVMStack* s) {
     printf("   bp=%llx\n", s->_bp);
     printf("   ip=%llx\n", s->_ip);
     printf("stackSize=%lld\n", s->stackSize);
-    printf("entryFunc=%p\n", s->entry_func);
+    printf("entryFunc=%p\n", (void*)(Address) s->entry_func);
     printf("------------------\n");
 }
 
@@ -57,7 +57,7 @@ void inspectStack(UVMStack* stack, int64_t maxValues) {
 }
 
 Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {
-    DEBUG_PRINT(3, ("Allocate for new stack (size:%lld, entry:%p, args:%p)\n", stackSize, entry_func, args));
+    DEBUG_PRINT(3, ("Allocate for new stack (size:%lld, entry:%p, args:%p)\n", stackSize, (void*) (Address) entry_func, args));
 
     size_t actualStackSize = sizeof(UVMStack) + stackSize;
     Address ret = (Address) malloc(actualStackSize);
@@ -67,7 +67,7 @@ Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {
 
     // create stack and initialize
     UVMStack* stackStruct = (UVMStack*) ret;
-    stackStruct->_sp = ret + actualStackSize;
+    stackStruct->_sp = ret + actualStackSize - 8;
     stackStruct->_bp = stackStruct->_sp;
     stackStruct->_ip = 0;
     stackStruct->stackSize = stackSize;

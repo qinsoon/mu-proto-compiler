@@ -90,7 +90,6 @@ Address allocLarge(FreeListSpace* flSpace, int64_t size, int64_t align) {
 //		printf("trying to alloc from freelist space: size=%lld, align=%lld\n", size, align);
 //		uVM_fail("failed posix_memalign alloc");
 //	}
-	DEBUG_PRINT(3, ("acquiring22 from global memory (allocLarge(), size=%lld, align=%lld)\n", size, align));
 	Address addr = (Address) malloc(size);
 
 	// metadata

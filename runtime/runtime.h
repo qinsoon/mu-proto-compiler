@@ -93,7 +93,7 @@ typedef struct FreeListSpace {
 } FreeListSpace;
 
 typedef struct ImmixCollector {
-    
+    int64_t placeholder;		// so gcc doesnt complain
 } ImmixCollector;
 
 typedef struct ImmixMutator {
@@ -136,7 +136,7 @@ typedef struct UVMStack {
 extern int UVMStackMetaSize;
 
 // this constant should match Java part implementation
-#define STACK_SIZE		65535
+#define STACK_SIZE		65536
 
 #define MAX_STACK_COUNT 65535
 extern UVMStack* uvmStacks[MAX_STACK_COUNT];

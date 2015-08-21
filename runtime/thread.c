@@ -109,8 +109,8 @@ void* uVMThreadLaunch(void* a) {
 	UVMStack* stack = (UVMStack*) a;
 	UVMThread* thread = stack->thread;
 	void* (*entry)() = stack->entry_func;
-	DEBUG_PRINT(3, ("uVMThreadLaunch: stack=%p, thread=%p\n", stack, thread));
-	DEBUG_PRINT(3, ("                 entry func=%p\n", entry));
+	DEBUG_PRINT(3, ("uVMThreadLaunch: stack=%p, thread=%p\n", (void*) stack, (void*) thread));
+	DEBUG_PRINT(3, ("                 entry func=%p\n", (void*) (Address) entry));
 
 	DEBUG_PRINT(3, ("about to invoke entry function...\n"));
 
@@ -119,9 +119,9 @@ void* uVMThreadLaunch(void* a) {
 
 	// change stack (RBP) to nominated address
 	void* saved_rsp;
-	void* saved_rbp;
+//	void* saved_rbp;
 
-	asm(
+	__asm__(
 			// save rsp
 			"mov %%rsp, %0		\n"
 			// change rbp, rsp
@@ -148,9 +148,12 @@ void* uVMThreadLaunch(void* a) {
 			// call entry function
 			"jmp *%2			\n"
 
-			: "=m" (saved_rsp)
-			: "m" (stack->_sp),
-			  "r" (entry)
+			: "=rm" (saved_rsp)
+			: "rm" (stack->_sp),
+			  "rm" (entry)
+			: "memory", "rsp",
+			  "xmm7", "xmm6", "xmm5", "xmm4", "xmm3", "xmm2", "xmm1", "xmm0",
+			  "r9", "r8", "rcx", "rdx", "rsi", "rdi"
 	);
 
 	DEBUG_PRINT(3, ("new thread finished, returned to uVMThreadLaunch (SHOULD NOT REACH HERE)\n"));
@@ -161,7 +164,7 @@ void* uVMThreadLaunch(void* a) {
 void threadExit() {
 	UVMThread* uvmT = getThreadContext();
 
-	DEBUG_PRINT(3, ("Thread%d (%p) exits\n", uvmT->threadSlot, uvmT));
+	DEBUG_PRINT(3, ("Thread%d (%p) exits\n", uvmT->threadSlot, (void*) uvmT));
 	freeThreadContext(uvmT);
 	pthread_exit(NULL);
 }

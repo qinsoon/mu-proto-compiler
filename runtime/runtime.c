@@ -39,7 +39,7 @@ int main(int c, char** args) {
 	initRuntime();
 
 	// alloc stack
-	printf("uvmMain at %p\n", uvmMain);
+	printf("uvmMain at %p\n", (void*)(Address) uvmMain);
 	UVMStack* mainStack = (UVMStack*) allocStack(STACK_SIZE, uvmMain, NULL);
 
 	// init stack
@@ -47,6 +47,8 @@ int main(int c, char** args) {
 	memset((void*) stackStart, 0, STACK_SIZE);
 	mainStack->_sp = mainStack->_sp - 120;		// see java part: X64MachineCodeExpansion
 												// the thread trampoline will pop registers
+
+	inspectStack(mainStack, 50);
 
 	// launch thread
 	UVMThread* t = (UVMThread*) newThread((Address)mainStack);
@@ -68,11 +70,11 @@ void yieldpoint() {
     }
 }
 
-static void handler(int sig, siginfo_t *si, void* unused) {
-    printf("yieldpoint enabled\n");
-//    disableYieldpoint();
-    uVM_fail("havent implement yieldpoint");
-}
+//static void handler(int sig, siginfo_t *si, void* unused) {
+//    printf("yieldpoint enabled\n");
+////    disableYieldpoint();
+//    uVM_fail("havent implement yieldpoint");
+//}
 
 void initYieldpoint() {
 

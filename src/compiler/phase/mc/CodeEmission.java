@@ -21,7 +21,7 @@ import uvm.runtime.UVMRuntime;
 public class CodeEmission extends AbstractMCCompilationPhase {
     String dir;
     
-    public static final boolean EMIT_DEBUG_INFO = true;
+    public static final boolean EMIT_DEBUG_INFO = false;
     
     public CodeEmission(String name, String dir, boolean verbose) {
         super(name, verbose);

@@ -1,6 +1,7 @@
 LIBS  = 
-CFLAGS = -std=c11 -Wall -Wpedantic -O0 -g -fsanitize=undefined
-CC = gcc-4.9
+CFLAGS = -std=gnu99 -Wall -Wpedantic -O0 -g #-fsanitize=undefined
+#CFLAGS = -O3 -g
+CC = gcc
 LD = $(CC)
 AR = ar
 
