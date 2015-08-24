@@ -125,7 +125,7 @@ void turnOnYieldpoints() {
 #endif
 }
 
-void runtimeSignalHandler(int signum, siginfo_t *info, void *ptr) {
+void runtimeSignalHandler(int signum, siginfo_t *info, void *context) {
 	void* si_addr = info->si_addr;
 	int   si_code = info->si_code;
 
@@ -154,6 +154,26 @@ void runtimeSignalHandler(int signum, siginfo_t *info, void *ptr) {
 	printf("  sig code: %s\n", sig_code);
 	printf("  address: %p\n", si_addr);
 	printf("\n");
+
+   ucontext_t *psContext = (ucontext_t*)context;
+   printf("--------------------------------------------\n");
+   printf("Register RAX:   0x%llx\n", IA32_RAX(psContext));
+   printf("Register RBX:   0x%llx\n", IA32_RBX(psContext));
+   printf("Register RCX:   0x%llx\n", IA32_RCX(psContext));
+   printf("Register RDX:   0x%llx\n", IA32_RDX(psContext));
+   printf("Register RDI:   0x%llx\n", IA32_RDI(psContext));
+   printf("Register RSI:   0x%llx\n", IA32_RSI(psContext));
+   printf("Register RSP:   0x%llx\n", IA32_RSP(psContext));
+   printf("Register RBP:   0x%llx\n", IA32_RBP(psContext));
+   printf("Register RIP:   0x%llx\n", IA32_RIP(psContext));
+   printf("Register EFLAGS:0x%llx\n", IA32_RFLAGS(psContext));
+//   printf("Register SS:   %llx\n",  IA32_SS(psContext));
+//   printf("Register CS:  %llx\n", IA32_CS(psContext));
+//   printf("Register DS:  %llx\n", IA32_DS(psContext));
+//   printf("Register ES:  %llx\n", IA32_ES(psContext));
+//   printf("Register FS:  %llx\n", IA32_FS(psContext));
+//   printf("Register GS:  %llx\n", IA32_GS(psContext));
+   printf("--------------------------------------------\n");
 
 	// trying to find out where the address belongs to
 	Address addr = (Address) si_addr;

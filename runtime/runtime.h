@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <signal.h>
 
+#include "osx_ucontext.h"
+
 typedef uint64_t Address;
 
 // *** yieldpoint ***
