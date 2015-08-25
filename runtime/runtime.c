@@ -189,6 +189,18 @@ void runtimeSignalHandler(int signum, siginfo_t *info, void *context) {
 				printStackInfo(stack);
 				found = true;
 			}
+
+			if (addr >= stack->overflowGuard && addr <= stack->overflowGuard + BYTES_IN_PAGE) {
+				printf("Stack overflow\n");
+				printStackInfo(stack);
+				found = true;
+			}
+
+			if (addr >= stack->underflowGuard && addr <= stack->underflowGuard + BYTES_IN_PAGE) {
+				printf("Stack underflow\n");
+				printStackInfo(stack);
+				found = true;
+			}
 		}
 	}
 

@@ -129,8 +129,14 @@ typedef struct UVMStack {
     int64_t stackSize;
     void *(*entry_func)(void*);
 
+    //     | overflow guard page | actual stack ..................... | underflow guard page|
+    //     |                     |                                    |                     |
+    // overflowGuard           lowerBound                           upperBound
+    //                                                              underflowGuard
     Address lowerBound;
+    Address overflowGuard;
     Address upperBound;
+    Address underflowGuard;
 
     struct UVMThread* thread;
 } UVMStack;
@@ -138,7 +144,7 @@ typedef struct UVMStack {
 extern int UVMStackMetaSize;
 
 // this constant should match Java part implementation, see uvm.type.Stack
-#define STACK_SIZE		(1 << 20)
+#define STACK_SIZE		(4 << 20)
 
 #define MAX_STACK_COUNT 65535
 extern UVMStack* uvmStacks[MAX_STACK_COUNT];
