@@ -166,7 +166,7 @@ void runtimeSignalHandler(int signum, siginfo_t *info, void *context) {
    printf("Register RSP:   0x%llx\n", IA32_RSP(psContext));
    printf("Register RBP:   0x%llx\n", IA32_RBP(psContext));
    printf("Register RIP:   0x%llx\n", IA32_RIP(psContext));
-   printf("Register EFLAGS:0x%llx\n", IA32_RFLAGS(psContext));
+//   printf("Register EFLAGS:0x%llx\n", IA32_RFLAGS(psContext));
 //   printf("Register SS:   %llx\n",  IA32_SS(psContext));
 //   printf("Register CS:  %llx\n", IA32_CS(psContext));
 //   printf("Register DS:  %llx\n", IA32_DS(psContext));
@@ -225,10 +225,18 @@ void initSignalHandler() {
 }
 
 Address alignUp(Address region, int align) {
+	if (align != 2 && align != 4 && align != 8 && align % 8 != 0) {
+		printf("alignUp(), align=%d\n", align);
+		uVM_fail("possibly wrong align in alignUp()");
+	}
+
     return (region + align - 1) & ~ (align - 1);
 }
 
 void fillAlignmentGap(Address start, Address end) {
+	if (end <= start)
+		return;
+
     memset((void*)start, ALIGNMENT_VALUE, end - start);
 }
 
@@ -262,5 +270,6 @@ void NOT_REACHED() {
 
 void uVM_fail(const char* str) {
     printf("uVM failed in runtime: %s\n", str);
+    threadExit();
     exit(1);
 }

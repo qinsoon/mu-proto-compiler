@@ -1,5 +1,5 @@
 LIBS  = 
-CFLAGS = -std=gnu99 -Wall -Wpedantic -O0 -g #-fsanitize=undefined
+CFLAGS = -std=gnu99 -Wall -Wpedantic -O0 -g #-mmacosx-version-min=10.9 #-fsanitize=undefined
 #CFLAGS = -O3 -g
 CC = gcc
 LD = $(CC)

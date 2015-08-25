@@ -28,7 +28,7 @@ public class StackManager {
 	public StackManager(CompiledFunction cf) {
 		this.current = cf;
 		this.stackSlot = 0;
-		this.stackDisp = - UVMCompiler.MC_REG_SIZE_IN_BYTES;
+		this.stackDisp = 0;
 		this.allocated = new HashMap<MCRegister, MCMemoryOperand>();
 	}
 	

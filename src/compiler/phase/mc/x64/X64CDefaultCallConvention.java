@@ -414,8 +414,21 @@ public class X64CDefaultCallConvention {
     }
     
     public static void postRegAllocPatching(CompiledFunction cf) {
+    	int stackDisp = cf.stackManager.getStackDisp();
+    	
+    	UVMCompiler._assert(stackDisp <= 0, "expecting a stack displacement to be zero or negative");
+    	
+    	int absDisp = Math.abs(stackDisp);
+    	if (absDisp % 16 != 0) {    		
+    		absDisp = (absDisp / 16 + 1) * 16;
+    		stackDisp = - absDisp;
+    	}
+    	if (stackDisp == 0) {
+    		stackDisp = -16;
+    	}
+    	
     	X64add dispRSP = (X64add) cf.prologue.get(2);
-    	dispRSP.setOperand(1, new MCIntImmediate(cf.stackManager.getStackDisp()));
+    	dispRSP.setOperand(1, new MCIntImmediate(stackDisp));
     }
     
     public void genEpilogue(CompiledFunction cf) {

@@ -4,7 +4,7 @@ package uvm.type;
 public class Stack extends AbstractOpaqueType {
 	public static final Stack T = new Stack();
 	
-	public static final int MAX_STACK_SIZE_IN_BYTES = 65536;	// 64Kb
+	public static final int MAX_STACK_SIZE_IN_BYTES = 1 << 20;	// 1Mb
 
 	@Override
 	public String prettyPrint() {

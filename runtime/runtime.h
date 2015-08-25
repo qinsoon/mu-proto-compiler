@@ -137,8 +137,8 @@ typedef struct UVMStack {
 
 extern int UVMStackMetaSize;
 
-// this constant should match Java part implementation
-#define STACK_SIZE		65536
+// this constant should match Java part implementation, see uvm.type.Stack
+#define STACK_SIZE		(1 << 20)
 
 #define MAX_STACK_COUNT 65535
 extern UVMStack* uvmStacks[MAX_STACK_COUNT];
