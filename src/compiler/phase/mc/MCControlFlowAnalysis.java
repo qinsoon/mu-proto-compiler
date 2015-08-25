@@ -1,6 +1,7 @@
 package compiler.phase.mc;
 
 import uvm.CompiledFunction;
+import uvm.Label;
 import uvm.MicroVM;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
@@ -84,6 +85,46 @@ public class MCControlFlowAnalysis extends AbstractMCCompilationPhase{
                 bb.addSuccessor(next);
                 next.addPredecessors(bb);
             }
+        }
+        
+        // check if all phi nodes have valid labels
+        // e.g. BB1 -> BB2
+        //          -> BB3
+        // then BB1 would have two branching instructions at the end, the previous step, it will be rewritten into
+        // e.g. BB1 -> BB2
+        //          -> fallthroughX -> BB3
+        // if we have a PHI in BB3, it would expect fallthroughX instead of BB1
+        // we find and fix it here
+        for (MCBasicBlock bb : cf.BBs) {
+        	if (bb.getPhi() != null) {
+        		for (AbstractMachineCode mc : bb.getMC()) {
+        			if (mc.isPhi()) {
+        				for (int i = 1; i < mc.getNumberOfOperands(); i += 2) {
+        					MCLabel l = (MCLabel) mc.getOperand(i);
+        					
+        					boolean foundPredecessor = false;
+        					for (MCBasicBlock pre : bb.getPredecessors()) {
+        						if (pre.getName().equals(l.getName()))
+        							foundPredecessor = true;
+        					}
+        					
+        					if (foundPredecessor)
+        						continue;
+        					else {
+        						// we are gonna need to fix it
+        						for (MCBasicBlock pre : bb.getPredecessors()) {
+        							if (pre.getName().contains(FALL_THROUGH_BLOCK)) {
+        								UVMCompiler._assert(pre.getPredecessors().size() == 1, "a fallthrough block should have exactly 1 predecessor");
+        								
+        								if (pre.getPredecessors().get(0).getName().equals(l.getName()))
+        									mc.setOperand(i, pre.getLabel());
+        							}
+        						}
+        					}
+        				}
+        			}
+        		}
+        	}
         }
         
         // print

@@ -42,8 +42,15 @@ public class RecordUVMStats {
 	
 	public final void output() {
 		uvmInfo();
-		for (CompiledFunction cf : MicroVM.v.compiledFuncs) {
-			compiledFuncInfo(cf);
+		
+		if (MicroVM.v.compiledFuncs.size() != 0)
+			for (CompiledFunction cf : MicroVM.v.compiledFuncs) {
+				compiledFuncInfo(cf);
+			}
+		else {
+			for (Function f : MicroVM.v.funcs.values()) {
+				funcInfo(f);
+			}
 		}
 	}
 	
@@ -83,6 +90,33 @@ public class RecordUVMStats {
 			
 			writer.close();
 		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void funcInfo(Function f) {
+
+		try {
+			PrintWriter writer = getPrintWriter(f.getName() + ".txt");
+
+			writer.println("IR:");
+			for (BasicBlock bb : f.getBBs()) {
+				for (Instruction inst : bb.getInsts()) {
+					writer.print(inst.prettyPrintWithDef());
+					writer.println("  NODE" + inst.getId());
+				}
+				
+			}
+			writer.println();
+			
+			writer.println("Tree IR:");
+			writer.println(f.printIRTree());
+			writer.println();
+			
+			writer.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
 	}

@@ -108,14 +108,14 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         /*
          * PHI
          */
-        else if (inst instanceof InstPhi) {
-            InstPhi phi = (InstPhi) inst;
-            
-            for (Entry<Label, Value> entry : phi.getValues().entrySet()) {
-                checkAndAddValue(phi, entry.getValue());
-                inst.addChild(entry.getKey());
-            }
-        } 
+//        else if (inst instanceof InstPhi) {
+//            InstPhi phi = (InstPhi) inst;
+//            
+//            for (Entry<Label, Value> entry : phi.getValues().entrySet()) {
+//                checkAndAddValue(phi, entry.getValue());
+//                inst.addChild(entry.getKey());
+//            }
+//        } 
         /*
          * CALL
          */

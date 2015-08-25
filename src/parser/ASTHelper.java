@@ -226,11 +226,12 @@ public abstract class ASTHelper {
         else if (inst instanceof parser.uIRParser.InstPhiContext) {
             Type t = getType(((parser.uIRParser.InstPhiContext) inst).type());
             
-            HashMap<Label, Value> values = new HashMap<Label, Value>();
+            List<Value> values = new ArrayList<Value>();
             for (int i = 0; i < ((parser.uIRParser.InstPhiContext) inst).IDENTIFIER().size(); i++) {
                 Value v = getValue(f, ((parser.uIRParser.InstPhiContext) inst).value(i), t);
                 Label l = f.findOrCreateLabel(getIdentifierName(((parser.uIRParser.InstPhiContext) inst).IDENTIFIER(i), false));
-                values.put(l, v);
+                values.add(v);
+                values.add(l);
             }
             
             Instruction node = new InstPhi(t, values);

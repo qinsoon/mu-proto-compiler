@@ -133,6 +133,8 @@ public class UVMCompiler {
             new DefUseGeneration("defusegen", Verbose.DEF_USE_GEN).execute();
             new IRTreeGeneration("treegen", Verbose.TREE_GEN).execute();
             
+            dumpInfo("Tree");
+            
             /*
              *  instruction selection (use BURM)
              */
