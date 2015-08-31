@@ -80,6 +80,7 @@ public class UVMCompiler {
         
         try {
         	compile(file, TIMING_COMPILATION, ALWAYS_DUMP_INFO);
+        	System.out.println("======= Compilation Succeed! ======");
         } catch (Exception e) {
         	e.printStackTrace();
         	error(e.getMessage());

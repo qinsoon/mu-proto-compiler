@@ -27,7 +27,7 @@
 
 .funcdef @main <int<32> (void)> {
 	.label %entry:
-	%iNumIters = CALL <int<64> (int<64>)> @NumIters(4)
+	%iNumIters = CALL <int<64> (int<64>)> @NumIters(8)
 	PRINTINT64 %iNumIters
 	RET <int<32>> %iNumIters
 }

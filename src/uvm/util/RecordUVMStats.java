@@ -102,8 +102,10 @@ public class RecordUVMStats {
 			writer.println("IR:");
 			for (BasicBlock bb : f.getBBs()) {
 				for (Instruction inst : bb.getInsts()) {
+					if (inst.getLabel() != null)
+						writer.println("-------------#" + inst.getLabel().prettyPrint());
 					writer.print(inst.prettyPrintWithDef());
-					writer.println("  NODE" + inst.getId());
+					writer.println("  (NODE" + inst.getId() + ")");
 				}
 				
 			}
@@ -129,6 +131,8 @@ public class RecordUVMStats {
 			writer.println("IR:");
 			for (BasicBlock bb : f.getBBs()) {
 				for (Instruction inst : bb.getInsts()) {
+					if (inst.getLabel() != null)
+						writer.println("-------------#" + inst.getLabel().prettyPrint());
 					writer.print(inst.prettyPrintWithDef());
 					writer.println("  NODE" + inst.getId());
 				}

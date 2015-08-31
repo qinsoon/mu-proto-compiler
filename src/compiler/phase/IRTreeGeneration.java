@@ -1,5 +1,7 @@
 package compiler.phase;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 
 import uvm.BasicBlock;
@@ -23,11 +25,18 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
     
     // do not move load/store which may break dependency
     // do not move PARAM (it may eliminates param_reg)
-    private static boolean isMovable(Instruction inst) {
-    	return !(inst instanceof AbstractLoad || inst instanceof InstStore || inst instanceof InstParam);
+    // do not move values that appears in phi nodes
+    private boolean isMovable(Instruction inst) {
+    	if (inst instanceof AbstractLoad || inst instanceof InstStore || inst instanceof InstParam)
+    		return false;
+    	
+    	if (valuesInPhiNodes.contains(inst.getDefReg()))
+    		return false;
+    	
+    	return true;
     }
     
-    private static void checkAndAddValue(Instruction inst, Value v) {
+    private void checkAndAddValue(Instruction inst, Value v) {
         if (v instanceof Register) {
             Register reg = (Register) v;
             if (reg.usesOnlyOnce() && isMovable(reg.getDef())) {
@@ -77,6 +86,13 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
     	// remove the label (we put label when we finish a basic block)
     	if (inst.getLabel() != null)
     		inst.setLabel(null);
+    	
+    	if (inst instanceof InstPhi) {
+    		for (Value v : inst.getOperands()) {
+    			if (!(v instanceof Label))
+    				valuesInPhiNodes.add(v);
+    		}
+    	}
     	
     	Instruction addedInst = TranslateIntoTreeNode(inst);
     	if (addedInst != null && firstInBB == null)
@@ -204,10 +220,12 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
     BasicBlock curBB;
     int instIndex;
     Instruction firstInBB;
+    List<Value> valuesInPhiNodes;
     
     @Override
     protected void visitFunction(Function f) {
         this.f = f;
+        this.valuesInPhiNodes = new ArrayList<Value>();
     }
 
     @Override

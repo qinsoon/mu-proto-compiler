@@ -32,7 +32,7 @@ extern Address yieldpoint_protect_page;
 // *** heap general ***
 extern Address heapStart;
 
-#define HEAP_SIZE (50 << 20)
+#define HEAP_SIZE (1024 << 20)
 #define HEAP_IMMIX_FRACTION 0.7
 #define HEAP_FREELIST_FRACTION 0.3
 
