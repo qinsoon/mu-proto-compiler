@@ -91,10 +91,14 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
         if (isFixedRegister(x) && !isFixedRegister(y))
             return join(cf, bb, mc, y, x);
         
+        // from this point, x, y should be
+        // 1) symbolic reg, symbolic reg
+        // 2) symbolic reg, machine reg
+        // 3) machine reg,  machime reg
+        
         if (isNonGeneralPurposeMachineReg(x) || isNonGeneralPurposeMachineReg(y)) {
         	return false;
-        }
-        
+        }  
 
         Interval intervalX = cf.intervals.get(x.REP());
         Interval intervalY = cf.intervals.get(y.REP());
@@ -160,6 +164,12 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
         if (x.getDataType() != y.getDataType()) 
             return false;
         
+        // if x is symbolic reg, and y is machine reg, and y is redefined (though it may not be alive/have a live range)
+        // we cant join them
+        if (isFixedRegister(y) && cf.intervals.get(y).isDefinedDuring(cf.intervals.get(x))) {
+        	return false;
+        }
+        
         // both do not have to be in specific registers
         if (!isFixedRegister(x) && !isFixedRegister(y))
             return true;
@@ -176,17 +186,22 @@ public class RegisterCoalescing extends AbstractMCCompilationPhase {
             return true;
         
         else if (isFixedRegister(y) && !cf.intervals.get(x).intersectOtherThan(cf.intervals.get(y), mc.sequence))
-            return true;
+            return true;        
         
         else return false;
+    }
+    
+    private static boolean isMachineRegister(MCRegister reg) {
+    	if (reg.getREPType() == MCRegister.MACHINE_REG)
+    		return true;
+    	return false;
     }
     
     private static boolean isFixedRegister(MCRegister reg) {
         if (reg.getREPType() == MCRegister.OTHER_SYMBOL_REG ||  reg.getREPType() == MCRegister.RES_REG)
             return false;
         else return true;
-    }
-    
+    }    
     
     public static boolean isNonGeneralPurposeMachineReg(MCRegister reg) {
     	if (reg.getREPType() == MCRegister.MACHINE_REG) {

@@ -189,6 +189,10 @@ public class Interval {
         return liveness.firstIntersectOtherThan(interval.liveness, sequence) != -1;
     }
     
+    public boolean isDefinedDuring(Interval interval) {
+    	return liveness.isDefinedDuring(interval.liveness);
+    }
+    
     public void setLivenessRange(LivenessRange lr) {
         this.liveness = lr;
     }

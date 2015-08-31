@@ -247,12 +247,21 @@ public class LivenessRange {
 		return count;
 	}
 
-
 	public boolean hasDefineAt(int pos) {
 		Position find = getPosition(pos);
 		if (find == null)
 			return false;
 		
 		return find.isDefine();
+	}
+
+	public boolean isDefinedDuring(LivenessRange otherLiveness) {
+		for (int i = 0; i < otherLiveness.bitset.length(); i++) {
+			boolean otherIsLive = bitset.get(i);
+			if (otherIsLive && this.hasDefineAt(i))
+				return true;
+		}
+		
+		return false;
 	}
 }
