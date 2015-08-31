@@ -81,7 +81,7 @@ void* freeThreadContext(void* a) {
 
 void block(UVMThread* uvmThread) {
     if (TRACE_BLOCK)
-        DEBUG_PRINT(3, ("Thread%d is about to block\n", uvmThread->threadSlot));
+        DEBUG_PRINT(3, ("Thread%p is about to block\n", uvmThread->_pthread));
     uvmThread->_block_status = BLOCKED;
     
     pthread_mutex_lock(&(uvmThread->_mutex));
@@ -91,12 +91,12 @@ void block(UVMThread* uvmThread) {
     pthread_mutex_unlock(&(uvmThread->_mutex));
     
     if (TRACE_BLOCK)
-        DEBUG_PRINT(3, ("Thread%d finished block\n", uvmThread->threadSlot));
+        DEBUG_PRINT(3, ("Thread%p finished block\n", uvmThread->_pthread));
 }
 
 void unblock(UVMThread* uvmThread) {
     if (TRACE_BLOCK)
-        DEBUG_PRINT(3, ("Thread%d is about to unblock\n", uvmThread->threadSlot));
+        DEBUG_PRINT(3, ("Thread%p is about to unblock\n", uvmThread->_pthread));
     
     uvmThread->_block_status = RUNNING;
     

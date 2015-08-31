@@ -42,7 +42,7 @@ void *collector_controller_run(void *param) {
         DEBUG_PRINT(1, ("Collector Controller is awaken to block all mutators\n"));
         for (int i = 0; i < threadCount; i++) {
             UVMThread* t = uvmThreads[i];
-            if (t != NULL) {
+            if (t != NULL && t->_block_status == RUNNING) {
                 t->_block_status = NEED_TO_BLOCK;
             }
         }
@@ -61,7 +61,7 @@ void *collector_controller_run(void *param) {
                 	continue;
                 }
                 else {
-//                	DEBUG_PRINT(3, ("not blocked\n"));
+//                	DEBUG_PRINT(3, ("not blocked. Status: %d\n", t->_block_status));
                     worldStopped = false;
                     break;
                 }

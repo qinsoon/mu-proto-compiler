@@ -62,7 +62,7 @@ int main(int c, char** args) {
 void yieldpoint() {
     UVMThread* t = getThreadContext();
     
-    DEBUG_PRINT(3, ("Thread%d reaches a yieldpoint\n", t->threadSlot));
+    DEBUG_PRINT(3, ("Thread%p reaches a yieldpoint\n", t->_pthread));
     
     // if we need to block
     if (t->_block_status == NEED_TO_BLOCK) {
