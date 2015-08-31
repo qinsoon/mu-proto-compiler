@@ -1,0 +1,33 @@
+.const @kStretchTreeDepth   <int<64>> = 18
+
+.funcdef @TreeSize <int<64> (int<64>)> {
+	.label %entry:
+	%i = PARAM 0
+	%i2 = ADD <int<64>> %i 1
+	%i3 = SHL <int<64>> 1 %i2
+	%i4 = SUB <int<64>> %i3 1
+	BRANCH %ret
+	
+	.label %ret:
+	RET <int<64>> %i4
+}
+
+.funcdef @NumIters <int<64> (int<64>)> {
+	.label %entry:
+	%i = PARAM0
+	%i2 = CALL <int<64> (int<64>)> @TreeSize (@kStretchTreeDepth)
+	%i3 = MUL <int<64>> 2 %i2
+	%i4 = CALL <int<64> (int<64>)> @TreeSize (%i)
+	%i5 = SDIV <int<64>> %i3 %i4
+	BRANCH %ret
+	
+	.label %ret:
+	RET <int<64>> %i5
+}
+
+.funcdef @main <int<32> (void)> {
+	.label %entry:
+	%iNumIters = CALL <int<64> (int<64>)> @NumIters(4)
+	PRINTINT64 %iNumIters
+	RET <int<32>> %iNumIters
+}

@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.stringtemplate.v4.compiler.CodeGenerator.region_return;
+
 import uvm.CompiledFunction;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
@@ -52,12 +54,30 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         for (MCBasicBlock bb : cf.BBs) {
             Set<MCRegister> defined = new HashSet<MCRegister>();
             for (AbstractMachineCode mc : bb.getMC()) {
+            	verboseln("check " + mc.prettyPrint());
                 for (int i = 0; i < mc.getNumberOfOperands(); i++) {
                     MCOperand op = mc.getOperand(i);
-                    if (op instanceof uvm.mc.MCRegister && !defined.contains(((uvm.mc.MCRegister) op).REP())) 
+                    verboseln("  op: " + op.prettyPrint());
+                    if (op instanceof uvm.mc.MCRegister && !defined.contains(((uvm.mc.MCRegister) op).REP()))  {
+                    	verboseln("    is a live-in");
                         // if this mc uses a register which is not defined within this basic block, then it is a live-in register
                         if (!bb.liveIn.contains( ((MCRegister)op).REP()))
                             bb.liveIn.add(((MCRegister) op).REP());
+                    }
+                }
+                
+                // need to specially deal with mc that has implicit uses (such as calls)
+                if (mc.isCall()) {
+                	for (int i = 0; i < mc.getNumberOfImplicitUses(); i++) {
+                		MCOperand op = mc.getImplicitUse(i);
+                		if (op instanceof uvm.mc.MCRegister) {
+                			MCRegister reg  = (MCRegister) op;
+                			if (reg.getType() != MCRegister.MACHINE_REG && !defined.contains(reg.REP())) {
+                				if (!bb.liveIn.contains(reg.REP()))
+                					bb.liveIn.add(reg.REP());
+                			}
+                		}
+                	}
                 }
                 
                 if (mc.getDefine() != null) {
@@ -85,8 +105,7 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         
         for (MCBasicBlock bb : cf.BBs) { 
         	verboseln(bb.getName());
-        	for (AbstractMachineCode mc : bb.getMC())
-        		verboseln(mc.prettyPrintOneline());
+        	verboseln(bb.prettyPrint());
         	verboseln();
         }
         
@@ -96,9 +115,14 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         }
         
         for (MCBasicBlock bb : cf.BBs) {
+        	verboseln("reversely traverse BB: " + bb.getName());
+        	verboseln();
+        	
             // in reverse order
             for (int i = bb.getMC().size() - 1; i >= 0; i--) {
                 AbstractMachineCode mc = bb.getMC().get(i);
+                verboseln("MC = " + mc.prettyPrint());
+                verboseln();
                 
                 if (mc.isPhi()) {
                 	// mc is phi inst, then we ignore its use operands
