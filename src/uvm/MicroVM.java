@@ -18,11 +18,32 @@ public class MicroVM {
     /*
      * TYPES
      */
-    public HashMap<String, Type> types = new HashMap<String, Type>();
+    private HashMap<String, Type> types = new HashMap<String, Type>();
+    private HashMap<Integer, Type> typesByID = new HashMap<Integer, Type>();
     
     public void declareType(String name, Type t) {
+    	if (name == null || name.equals(""))
+    		name = t.prettyPrint();
+    	
         types.put(name, t);
-        System.out.println("declared type: " + t.prettyPrint());
+        typesByID.put(t.ID, t);
+        System.out.println(String.format("declared type: ID=%d, %s=%s", t.getID(), name, t.prettyPrint()));
+    }
+    
+    public Type getType(String name) {
+    	return types.get(name);
+    }
+    
+    public HashMap<String, Type> getTypesMap() {
+    	return types;
+    }
+    
+    public Type getTypeByID(int id) {
+    	return typesByID.get(id);
+    }
+    
+    public HashMap<Integer, Type> getTypesByIDMap() {
+    	return typesByID;
     }
     
     /*

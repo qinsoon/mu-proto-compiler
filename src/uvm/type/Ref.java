@@ -13,13 +13,13 @@ public class Ref extends AbstractPointerType {
 	}
 
 	public static Ref findOrCreateRef(Type referencedType) {
-    	for (Type t : MicroVM.v.types.values()) {
+    	for (Type t : MicroVM.v.getTypesMap().values()) {
     		if (t instanceof Ref && ((Ref) t).referenced.equals(referencedType))
     			return (Ref) t;
     	}
     	
     	Ref ret = new Ref(referencedType);
-    	MicroVM.v.declareType(null, referencedType);
+    	MicroVM.v.declareType(null, ret);
     	
     	return ret;
     }

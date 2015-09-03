@@ -4,11 +4,15 @@ import java.util.HashMap;
 
 public abstract class Type {
     private static int typeCount = 0;
+    public static int getTypeCount() {
+    	return typeCount;
+    }
     
     int ID;
 
     protected Type() {
         this.ID = typeCount;
+        System.out.println("Created type: ID=" + ID + ", class:" + this.getClass().getName());
         typeCount++;
     }
     

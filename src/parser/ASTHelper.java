@@ -147,7 +147,7 @@ public abstract class ASTHelper {
         } else {
             // referring a type via IDENTIFIER
         	String id = getIdentifierName(typeContext.IDENTIFIER(), false);
-        	Type t = MicroVM.v.types.get(id);
+        	Type t = MicroVM.v.getType(id);
         	if (t == null)
         		throw new ASTParsingException("Retrieving a type that is not defined before: " + id);
         	return t;

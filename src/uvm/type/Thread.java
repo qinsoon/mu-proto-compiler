@@ -4,6 +4,13 @@ import uvm.MicroVM;
 
 public class Thread extends AbstractOpaqueType {
 	public static final Thread T = new Thread();
+	static {
+		MicroVM.v.declareType(null, T);
+	}
+	
+	private Thread() {
+		super();
+	}
 
 	@Override
 	public String prettyPrint() {

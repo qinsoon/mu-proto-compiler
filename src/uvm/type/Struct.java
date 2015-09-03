@@ -22,7 +22,7 @@ public class Struct extends Type {
     }
 
 	public static Struct findOrCreateStruct(List<Type> types) {
-		for (Type t : MicroVM.v.types.values()) {
+		for (Type t : MicroVM.v.getTypesMap().values()) {
 			if (t instanceof Struct && isTypeListEqual(types, ((Struct) t).types))
 				return (Struct) t;
 		}
@@ -64,6 +64,12 @@ public class Struct extends Type {
     }
     
     private static boolean isTypeListEqual(List<Type> types1, List<Type> types2) {
+    	if (types1 == null && types2 == null)
+    		return true;
+    	
+    	if (types1 == null || types2 == null)
+    		return false;
+    	
     	if (types1.size() != types2.size())
     		return false;
     	

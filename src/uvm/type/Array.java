@@ -8,13 +8,13 @@ public class Array extends Type {
     int length;
     
     public static final Array findOrCreate(Type eleType, int length) {
-    	for (Type t : MicroVM.v.types.values()) {
+    	for (Type t : MicroVM.v.getTypesMap().values()) {
     		if (t instanceof Array && ((Array) t).eleType.equals(eleType) && ((Array) t).length == length)
     			return (Array) t;
     	}
     	
     	Array ret = new Array(eleType, length);
-    	MicroVM.v.types.put(null, ret);
+    	MicroVM.v.declareType(null, ret);
     	return ret;
     }
     

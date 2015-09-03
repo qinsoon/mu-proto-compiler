@@ -60,9 +60,10 @@ public class RecordUVMStats {
 			
 			// types
 			writer.println("TYPES:");
-			for (String s : MicroVM.v.types.keySet()) {
-				Type t = MicroVM.v.types.get(s);
-				writer.println(s + "=" + t.prettyPrint());
+			for (int i = 0; i < Type.getTypeCount(); i++) {
+				Type t = MicroVM.v.getTypeByID(i);
+				System.out.println("ID=" + i + ": " + (t != null ? t.prettyPrint() : "null"));
+				writer.println("ID=" + i + ": " + (t != null ? t.prettyPrint() : "null"));
 			}
 			writer.println();
 			

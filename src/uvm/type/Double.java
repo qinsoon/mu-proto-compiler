@@ -1,9 +1,13 @@
 package uvm.type;
 
+import uvm.MicroVM;
 import uvm.Type;
 
 public class Double extends Type {
     public static final Double DOUBLE = new Double();
+    static {
+    	MicroVM.v.declareType(null, DOUBLE);
+    }
     
     protected Double() {
         super();

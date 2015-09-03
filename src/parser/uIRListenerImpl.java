@@ -31,11 +31,11 @@ public class uIRListenerImpl extends uIRBaseListener {
     @Override
     public void exitTypeDef(@NotNull uIRParser.TypeDefContext ctx) {
     	try {
-	    	String typeID = ASTHelper.getIdentifierName(ctx.IDENTIFIER(), true);
-	    	if (MicroVM.v.types.containsKey(typeID)) {
-	    		UVMCompiler.error("duplicate type def on " + typeID);
+	    	String typeName = ASTHelper.getIdentifierName(ctx.IDENTIFIER(), true);
+	    	if (MicroVM.v.getType(typeName) != null) {
+	    		UVMCompiler.error("duplicate type def on " + typeName);
 	    	} else {
-				Type t = ASTHelper.defineType(typeID, ctx.type());
+				Type t = ASTHelper.defineType(typeName, ctx.type());
 	    	}
     	} catch (ASTParsingException e) {
     		UVMCompiler.error("exception in processing typedef: (" + e.getClass().toString() + ")" + e.getMessage());

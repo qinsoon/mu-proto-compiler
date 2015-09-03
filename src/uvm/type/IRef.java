@@ -9,7 +9,7 @@ public class IRef extends AbstractPointerType {
     Type referenced;
     
     public static IRef findOrCreateIRef(Type referencedType) {
-    	for (Type t : MicroVM.v.types.values()) {
+    	for (Type t : MicroVM.v.getTypesMap().values()) {
     		if (t instanceof IRef && ((IRef) t).referenced.equals(referencedType))
     			return (IRef) t;
     	}

@@ -12,7 +12,7 @@ public class Int extends Type {
     int size;
     
     public static Int findOrCreate(int size) {
-        for (Type t : MicroVM.v.types.values()) {
+        for (Type t : MicroVM.v.getTypesMap().values()) {
             if (t instanceof Int && ((Int)t).size == size)
                 return (Int)t;
         }
