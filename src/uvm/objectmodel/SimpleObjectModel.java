@@ -33,47 +33,20 @@ public class SimpleObjectModel {
 	 * 1st bit is never used (sign bit), left as zero
 	 * otherwise the header initialization const may be larger than a java int
 	 *
+	 * for array and scalar
 	 * 
-	 * 1. If the 2nd bit is 0 (Scalar)
-	 * 
-	 * (1) if the 3rd bit is 1
-	 * 
-	 * high                                                                     low
-	 * | 001xxxxx xxxxxxxx | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx|
-	 *    GC bits            Reference Bitmap
-	 *  
-	 * (2) if the 3rd bit is 0
-	 * 
-	 * high																		 low
-	 * | 000xxxxx xxxxxxxx | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx|
-	 *    GC bits            Pointer to external reference bitmap
-	 * 
-	 * 
-	 * E.g. int<32>
-	 * Bitmap = 0
-	 * 
-	 * E.g. ref<double>
-	 * Bitmap = 1
-	 * 
-	 * E.g. struct{int<32>, int<32>, ref<int<32>>, int<64>, ref<int<64>>}  
-	 * Bitmap = 0101
-	 * 
-	 * 2. If the 2nd bit is 1 (Array)
-	 * 
-	 * high
-	 * | 01yxxxxx xxxxxxxx | xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx |
-	 *    GC bits			 Length of array
-	 *    
-	 * the 3rd bit tells if the array element is reference or not 
+	 * |   GC bits   |   type ID   |
+	 * |  (8 bytes)  |  (8 bytes)  |
 	 * 
 	 */
 	
-	public static final long BITMAP_MASK = 0x00FFFFFFL;
-	public static final long GCBITS_MASK = 0x7F000000L;
+	public static final long TYPEID_MASK = 0x0000FFFFL;
+	public static final long GCBITS_MASK = 0x7FFF0000L;
 	
-//	public static final int BITMAP_LENGTH_SIZE_IN_BYTES = 4;
-	public static final int GC_HEADER_SIZE_IN_BYTES = 2;
-	public static final int BITMAP_SIZE_IN_BYTES = 6;
+	public static final int GCBITS_IN_BYTES = 4;
+	public static final int TYPEID_SIZE_IN_BYTES = 4;
+	
+	public static final int HEADER_SIZE_IN_BYTES = GCBITS_IN_BYTES + TYPEID_SIZE_IN_BYTES;
 	
 	/*
 	 * >>>Object Header<<<
@@ -82,41 +55,12 @@ public class SimpleObjectModel {
 	 */
 	
 	public long getHeaderInitialization(Type t) {
-		if (t instanceof Array) {
-			long ret;
-			if (((Array) t).getEleType().isReference()) {
-				// 0110 0000 ...
-				ret = 0x60000000L;
-			} else
-				// 0100 0000 ...
-				ret = 0x40000000L;
-			
-			// put length into last 6 bytes
-			int length = ((Array) t).getLength();
-			int maskedLength = length & 0x00FFFFFF;
-			if (length != maskedLength) {
-				UVMCompiler.error("Length excceds max length that can be put in the header. ");
-			}
-			
-			ret |= maskedLength;
-			return ret;
-		}
+		int id = t.getID();
+		long gcBits = getGCBitsInitialization(t);
 		
-		// we use 1 bit in the bitmap to represent 8bytes
-		// check if we can fit the type into a 48bits bitmap
-		if (t.sizeInBytes() > 48 * 8) {
-			// we use 48bits as pointer to an external bitmap
-			UVMCompiler.error("unimplemented for external bitmap");
-			return 0;
-		} else {
-			long ret = (1 << 62);
-			long gc = getGCBitsInitialization(t);
-			long bitmap = getReferenceBitMap(t);
-			ret |= gc;
-			ret |= bitmap;
-			return ret;
-		}
-
+		if (gcBits == 0)
+			return id;
+		else return (gcBits << (TYPEID_SIZE_IN_BYTES * 8)) & GCBITS_MASK + id;
 	}
 	
 	private long getGCBitsInitialization(Type t) {
@@ -128,6 +72,7 @@ public class SimpleObjectModel {
 	 * @param t
 	 * @return
 	 */
+	@Deprecated
 	public long getReferenceBitMap(Type t) {		
 		if (t instanceof Struct) {
 			long ret = 0;
@@ -178,7 +123,7 @@ public class SimpleObjectModel {
 //		int bitmapSizeInBits = size % 8 == 0? size / 8 : size /8 + 1;
 //		int bitmapSizeInBytes = bitmapSizeInBits % 8 == 0 ? bitmapSizeInBits / 8 : bitmapSizeInBits / 8 + 1;
 		
-		return  GC_HEADER_SIZE_IN_BYTES + BITMAP_SIZE_IN_BYTES;
+		return HEADER_SIZE_IN_BYTES;
 	}
 	
 	public void layoutStruct(Struct struct) {
