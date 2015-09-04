@@ -19,6 +19,7 @@ import compiler.phase.IRTreeGeneration;
 import compiler.phase.InstructionSelection;
 import compiler.phase.MCRepresentationGeneration;
 import compiler.phase.ReplaceConsts;
+import compiler.phase.RuntimeCodeEmission;
 import compiler.phase.mc.*;
 import compiler.phase.mc.linearscan.AddingJumpInstruction;
 import compiler.phase.mc.linearscan.ComputeLiveInterval;
@@ -202,6 +203,7 @@ public class UVMCompiler {
 		 * machine dependent transformation
 		 */
 		new CodeEmission("codeemit", "emit", Verbose.CODE_EMIT).execute();
+		new RuntimeCodeEmission("rtemit", "emit", false).execute();
 		
 		if (timeCompilation) {
 			endTime = System.currentTimeMillis();

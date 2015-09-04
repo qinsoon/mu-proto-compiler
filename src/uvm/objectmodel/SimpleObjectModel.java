@@ -132,7 +132,7 @@ public class SimpleObjectModel {
 		if (DEBUG)
 			System.out.println("layout struct " + struct.prettyPrint());
 		
-		List<Integer> offsets = new ArrayList<Integer>();
+		List<Integer> offsets    = new ArrayList<Integer>();
 		int cur = 0;
 		
 		for (int i = 0; i < struct.getTypes().size(); i++) {
@@ -168,6 +168,48 @@ public class SimpleObjectModel {
 		
 		struct.setOffsets(offsets);
 		struct.setSize(cur * 8);	// from bytes to bits
+	}
+	
+	public int[] getRefOffsets(Type t) {
+		if (t instanceof Struct) {
+			Struct structT = (Struct) t;
+			ArrayList<Integer> temp = new ArrayList<Integer>();
+			
+			for (int i = 0; i < structT.getTypes().size(); i++) {
+				int[] fieldRefOffsets = getRefOffsets(structT.getType(i));
+				int base = structT.getOffset(i);
+				for (int off : fieldRefOffsets)
+					temp.add(base + off);
+			}
+			
+			int[] ret = new int[temp.size()];
+			for (int i = 0; i < ret.length; i++)
+				ret[i] = temp.get(i);
+			return ret;
+		} else if (t instanceof Array) {
+			Array arrayT = (Array) t;
+			Type eleT    = arrayT.getEleType();
+			int[] eleTRefOffsets = getRefOffsets(eleT);
+			
+			if (eleTRefOffsets.length == 0) {
+				return new int[0];
+			} else {
+				int[] ret = new int[eleTRefOffsets.length * arrayT.getLength()];
+				for (int i = 0; i < arrayT.getLength(); i++) {
+					for (int j = 0; j < eleTRefOffsets.length; j++)
+					ret[i * eleTRefOffsets.length + j] = i * eleT.sizeInBytes() + eleTRefOffsets[j];
+				}
+				return ret;
+			}			
+		} else{
+			// t is scalar
+			if (t.isReference()) {
+				return new int[] {0};
+			} else {
+				return new int[0];
+			}
+		}
+			
 	}
 	
 	public int getAlignment(Type t) {

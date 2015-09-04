@@ -194,6 +194,34 @@ void block(UVMThread* uvmThread);
 void unblock(UVMThread* uvmThread);
 
 /*
+ * type information
+ *
+ * compiler.phase.RuntimeCodeEmission will generate code that
+ * uses the type information. Make sure the code here complies
+ * with the Java code.
+ *
+ */
+typedef struct TypeInfo {
+	int64_t id;
+
+	int64_t size;
+	int64_t align;
+
+	// for arrays
+	int64_t eleSize;
+	int64_t length;
+
+	// offsets
+	int64_t nFixedRefOffsets;
+	int64_t nVarRefOffsets;
+	int64_t refOffsets[];
+} TypeInfo;
+
+extern TypeInfo* allocScalarTypeInfo(int64_t id, int64_t size, int64_t align, int64_t nRefOffsets);
+extern TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length, int64_t align, int64_t nRefOffsets);
+extern TypeInfo* allocHybridTypeInfo(int64_t id, int64_t size, int64_t align, int64_t eleSize, int64_t length, int64_t nFixedRefOffsets, int64_t nVarRefOffsets);
+
+/*
  * FUNCTIONS
  */
 extern void initRuntime();

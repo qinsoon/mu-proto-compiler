@@ -16,6 +16,7 @@ GCPhase_t phase;
 
 void initYieldpoint();
 void initSignalHandler();
+extern void initTypeTable();
 
 void initRuntime() {
 	initSignalHandler();
@@ -24,6 +25,7 @@ void initRuntime() {
     initYieldpoint();
     initCollector();
     initStack();
+    initTypeTable();
 }
 
 int64_t retval;
@@ -250,6 +252,35 @@ void fillAlignmentGap(Address start, Address end) {
 		return;
 
     memset((void*)start, ALIGNMENT_VALUE, end - start);
+}
+
+void fillTypeInfo(TypeInfo* t, int64_t id, int64_t size, int64_t align,
+		int64_t eleSize, int64_t length,
+		int64_t nFixedRefOffsets, int64_t nVarRefOffsets) {
+	t->id 				= id;
+	t->size 			= size;
+	t->align 			= align;
+	t->eleSize 			= eleSize;
+	t->length 			= length;
+	t->nFixedRefOffsets = nFixedRefOffsets;
+	t->nVarRefOffsets 	= nVarRefOffsets;
+}
+
+TypeInfo* allocScalarTypeInfo(int64_t id, int64_t size, int64_t align, int64_t nRefOffsets) {
+	TypeInfo* ret = (TypeInfo*) malloc(sizeof(TypeInfo) + nRefOffsets * sizeof(int64_t));
+	fillTypeInfo(ret, id, size, align, size, 1, nRefOffsets, 0);
+	return ret;
+}
+
+TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length, int64_t align, int64_t nRefOffsets) {
+	TypeInfo* ret = (TypeInfo*) malloc(sizeof(TypeInfo) + nRefOffsets * sizeof(int64_t));
+	fillTypeInfo(ret, id, eleSize * length, align, eleSize, length, nRefOffsets, 0);
+	return ret;
+}
+
+TypeInfo* allocHybridTypeInfo(int64_t id, int64_t size, int64_t align, int64_t eleSize, int64_t length, int64_t nFixedRefOffsets, int64_t nVarRefOffsets) {
+	uVM_fail("allocHybridTypeInfo() unimplemented");
+	return NULL;
 }
 
 void uvmPrintPtr(int64_t s) {
