@@ -69,6 +69,15 @@ public class MicroVM {
         compiledFuncs.add(cf);
     }
     
+    public CompiledFunction getCompiledFunc(String funcName) {
+    	for (CompiledFunction cf : compiledFuncs) {
+    		if (cf.getOriginFunction().getName().equals(funcName))
+    			return cf;
+    	}
+    	
+    	return null;
+    }
+    
     /*
      * GLOBAL LABELS
      */

@@ -11,6 +11,7 @@ import uvm.Function;
 import uvm.FunctionSignature;
 import uvm.IRTreeNode;
 import uvm.Instruction;
+import uvm.MicroVM;
 import uvm.OpCode;
 import uvm.Type;
 import uvm.Value;
@@ -409,49 +410,62 @@ public class X64CDefaultCallConvention {
         }
     }
     
-    public static void postRegAllocPatching(CompiledFunction cf) {    	
+    public void postRegAllocPatching(CompiledFunction cf) {    	
     	// remove non caller-saved registers
-    	List<AbstractMachineCode> calleeSavedRegPush = new ArrayList<AbstractMachineCode>();
-    	
-    	for (MCBasicBlock bb : cf.BBs) {
-    		List<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
-			MCLabel label = null;
-			
-    		for (AbstractMachineCode mc : bb.getMC()) {    			
-    			if (mc.getHighLevelIR() instanceof InstPseudoCCInstruction) {
-    				InstPseudoCCInstruction pi = (InstPseudoCCInstruction) mc.getHighLevelIR();
-    				if (pi.getType() == InstPseudoCCInstruction.CCInstType.CALLEE_SAVE_REGISTERS) {
-    					MCRegister reg = (MCRegister) mc.getOperand(0);
-    					boolean isCalleeSaved = UVMCompiler.MCDriver.isCalleeSave(reg.getName());
-    					if (reg.getType() == MCRegister.MACHINE_REG && isCalleeSaved) {
-    						// drop it
-    						
-    						// check if it has a label
-    						if (mc.getLabel() != null) {
-    							label = mc.getLabel();
-    							mc.setLabel(null);
-    						}
-    						
-    						// its callee saved
-    						calleeSavedRegPush.add(mc);
-    						
-    						continue;
-    					}
-    				}
-    			}
-    			
-    			if (label != null) {
-    				UVMCompiler._assert(mc.getLabel() != null, mc.prettyPrint() + " already has a label but we have a label that should attach to it");
-    				mc.setLabel(label);
-    				label = null;
-    			}
-    			
-    			newMC.add(mc);
-    		}
-    	}
+//    	List<AbstractMachineCode> calleeSavedRegPush = new ArrayList<AbstractMachineCode>();
+//    	
+//    	for (MCBasicBlock bb : cf.BBs) {
+//    		List<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
+//			MCLabel label = null;
+//			
+//    		for (AbstractMachineCode mc : bb.getMC()) {    			
+//    			if (mc.getHighLevelIR() instanceof InstPseudoCCInstruction) {
+//    				InstPseudoCCInstruction pi = (InstPseudoCCInstruction) mc.getHighLevelIR();
+//    				if (pi.getType() == InstPseudoCCInstruction.CCInstType.CALLER_SAVE_REGISTERS) {
+//    					MCRegister reg = (MCRegister) mc.getOperand(0);
+//    					boolean isCalleeSaved = UVMCompiler.MCDriver.isCalleeSave(reg.getName());
+//    					if (reg.getType() == MCRegister.MACHINE_REG && isCalleeSaved) {
+//    						// drop it
+//    						
+//    						// check if it has a label
+//    						if (mc.getLabel() != null) {
+//    							label = mc.getLabel();
+//    							mc.setLabel(null);
+//    						}
+//    						
+//    						// its callee saved
+//    						calleeSavedRegPush.add(mc);
+//    						
+//    						continue;
+//    					}
+//    				}
+//    			}
+//    			
+//    			if (calleeSavedRegPush.size() != 0 && mc.getHighLevelIR() instanceof InstCCall) {
+//    				// the callee is c code, it obeys callee-saved convention
+//    				calleeSavedRegPush.clear();
+//    			}
+//    			
+//    			if (calleeSavedRegPush.size() != 0 && mc.getHighLevelIR() instanceof InstCall) {
+//    				// the callee is uvm generated code, we should obey callee-saved convention
+//    				InstCall call = (InstCall)mc.getHighLevelIR();
+//    				CompiledFunction callee = MicroVM.v.getCompiledFunc(call.getFunc());
+//    				callee.prologue.addAll(calleeSavedRegPush);
+//    				calleeSavedRegPush.clear();
+//    			}
+//    			
+//    			if (label != null) {
+//    				UVMCompiler._assert(mc.getLabel() == null, mc.prettyPrint() + " already has a label but we have a label that should attach to it");
+//    				mc.setLabel(label);
+//    				label = null;
+//    			}
+//    			
+//    			newMC.add(mc);
+//    		}
+//    	}
     	
     	// add callee saved regs
-    	cf.prologue.addAll(calleeSavedRegPush);
+//    	cf.prologue.addAll(calleeSavedRegPush);
     	
     	// patch the stack pointer change
     	int stackDisp = cf.stackManager.getStackDisp();
