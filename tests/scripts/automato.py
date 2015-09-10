@@ -207,7 +207,8 @@ def compile_uir(source, dir, output):
 	assembly = os.listdir(emit_dir)
 	assembly_abs_path = []
 	for a in assembly:
-		assembly_abs_path.append(os.path.join(emit_dir, a))
+		if a.endswith('.s') or a.endswith('.c') or a.endswith('.a'):
+			assembly_abs_path.append(os.path.join(emit_dir, a))
 	rv = subprocess.call(['gcc'] + assembly_abs_path + ['-o', os.path.join(dir, output)])
 	
 	if rv == 0:

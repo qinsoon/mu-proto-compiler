@@ -12,6 +12,7 @@ import uvm.mc.MCLabel;
 
 public class InstCCall extends AbstractCall {
 	public static final int CC_DEFAULT = 0;
+	public static final int CC_SAVE_ALL_GPRS = 1;
 	
 	int callConv;
 	FunctionSignature sig;

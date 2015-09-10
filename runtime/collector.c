@@ -22,6 +22,45 @@ void wakeCollectorController() {
     pthread_mutex_unlock(&controller_mutex);
 }
 
+/*
+ * a linked list that would be useful when scanning object
+ */
+struct AddressNode;
+typedef struct AddressNode {
+	struct AddressNode* next;
+	Address addr;
+} AddressNode;
+
+AddressNode* roots;
+AddressNode* alive;
+
+AddressNode* pushToList(Address addr, AddressNode** list) {
+	AddressNode* ret = (AddressNode*) malloc(sizeof(AddressNode));
+	ret->addr = addr;
+
+	ret->next = *list;	// this is fine even if ret is the first elem in the list
+	*list = ret;
+
+	return ret;
+}
+
+AddressNode* popFromList(AddressNode** list) {
+	AddressNode* ret = *list;
+
+	if (ret != NULL)
+		*list = ret->next;
+	else *list = NULL;
+
+	return ret;
+}
+
+void scanGlobal() {}
+void scanStacks() {}
+void scanRegisters() {
+	// suppose all the registers that represent uvm values are on the stack already
+	// do nothing here
+}
+
 void *collector_controller_run(void *param) {
     DEBUG_PRINT(1, ("Collector Controller running...\n"));
     
@@ -75,7 +114,10 @@ void *collector_controller_run(void *param) {
         // start to work
         DEBUG_PRINT(1, ("Collector is going to work (currently sleep for 1 secs)\n"));
         phase = GC;
-        usleep(1000000);
+//        usleep(1000000);
+        scanGlobal();	// empty
+        scanStacks();
+        scanRegisters();
         
         // reset all mutators
         for (int i = 0; i < threadCount; i++) {
