@@ -53,11 +53,69 @@ void inspectStack(UVMStack* stack, int64_t maxValues) {
 
 	printf("STACK STARTS (hi to lo, printing %lld values)\n", maxValues);
 	printf("     -------------------\n");
-	for (cur = stackTop - 8; cur >= stack->lowerBound && stackTop - cur < maxValues*8; cur -= 8) {
+	for (cur = stackTop - WORD_SIZE; cur >= stack->lowerBound && stackTop - cur < maxValues*WORD_SIZE; cur -= WORD_SIZE) {
 		printf("     0x%llx | %llx \n", cur, *((uint64_t*)cur));
 	}
 	printf("     ...\n");
 	printf("     -------------------\n");
+}
+
+extern int typeCount;
+
+void scanStackForRoots(UVMStack* stack, AddressNode* roots) {
+	Address sp = stack->_sp;
+	Address stackTop = stack->upperBound;
+
+	if (stackTop < sp)
+		uVM_fail("sp is not under stack top");
+
+	Address cur;
+
+	int scannedSlots = 0;
+
+	int immixObjs = 0;
+	int largeObjs = 0;
+	int notObjs   = 0;
+
+	int refs = 0;
+	int irefs = 0;
+
+	for (cur = sp; cur < stackTop; cur += WORD_SIZE) {
+		scannedSlots ++;
+		// check if *cur is a ref
+		uint64_t candidate = *((uint64_t*)cur);
+		printf("checking value: 0x%llx at stack 0x%p\n", candidate, (void*) cur);
+
+		bool isObj = false;
+		if (isInImmixSpace(candidate)) {
+			immixObjs ++;
+			isObj = true;
+			printf("  immix obj\n");
+		} else if (isInLargeObjectSpace(candidate)) {
+			largeObjs ++;
+			isObj = true;
+			printf("  large obj\n");
+		} else {
+			notObjs ++;
+		}
+
+		if (isObj) {
+			int typeId = getTypeID(candidate);
+			if (typeId < typeCount) {
+				refs ++;
+			} else {
+				irefs ++;
+			}
+		}
+	}
+
+	printf("Total scanned stack slots: %d\n", scannedSlots);
+	printf("1. immix space objects: %d\n", immixObjs);
+	printf("   large objects: %d\n", largeObjs);
+	printf("   not objects: %d\n", notObjs);
+	printf("2. refs: %d\n", refs);
+	printf("   irefs: %d\n", irefs);
+	printf("----------------\n");
 }
 
 Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {

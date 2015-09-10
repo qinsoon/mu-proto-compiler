@@ -22,15 +22,6 @@ void wakeCollectorController() {
     pthread_mutex_unlock(&controller_mutex);
 }
 
-/*
- * a linked list that would be useful when scanning object
- */
-struct AddressNode;
-typedef struct AddressNode {
-	struct AddressNode* next;
-	Address addr;
-} AddressNode;
-
 AddressNode* roots;
 AddressNode* alive;
 
@@ -55,7 +46,22 @@ AddressNode* popFromList(AddressNode** list) {
 }
 
 void scanGlobal() {}
-void scanStacks() {}
+
+void scanStacks() {
+	for (int i = 0; i < stackCount; i++) {
+		UVMStack* stack = uvmStacks[i];
+		if (stack != NULL) {
+			if (stack->thread != NULL) {
+				// scan it
+				scanStackForRoots(stack, roots);
+			} else {
+				// this is an inactive stack, we didn't have correct rsp and register values on the stack yet?
+				uVM_fail("cant scan an inactive stack");
+			}
+		}
+	}
+}
+
 void scanRegisters() {
 	// suppose all the registers that represent uvm values are on the stack already
 	// do nothing here
@@ -118,6 +124,7 @@ void *collector_controller_run(void *param) {
         scanGlobal();	// empty
         scanStacks();
         scanRegisters();
+        uVM_fail("didnt implement tracing");
         
         // reset all mutators
         for (int i = 0; i < threadCount; i++) {

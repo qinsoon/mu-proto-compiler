@@ -68,6 +68,13 @@ void yieldpoint() {
     
     // if we need to block
     if (t->_block_status == NEED_TO_BLOCK) {
+    	// save rsp first
+    	void* rsp;
+    	__asm__(
+    			"mov %%rsp, %0		\n"
+    			: "=rm" (rsp));
+    	t->stack->_sp = (Address) rsp;
+
         block(t);
     }
 }
@@ -157,17 +164,18 @@ void runtimeSignalHandler(int signum, siginfo_t *info, void *context) {
 	printf("  address: %p\n", si_addr);
 	printf("\n");
 
-   ucontext_t *psContext = (ucontext_t*)context;
-   printf("--------------------------------------------\n");
-   printf("Register RAX:   0x%llx\n", IA32_RAX(psContext));
-   printf("Register RBX:   0x%llx\n", IA32_RBX(psContext));
-   printf("Register RCX:   0x%llx\n", IA32_RCX(psContext));
-   printf("Register RDX:   0x%llx\n", IA32_RDX(psContext));
-   printf("Register RDI:   0x%llx\n", IA32_RDI(psContext));
-   printf("Register RSI:   0x%llx\n", IA32_RSI(psContext));
-   printf("Register RSP:   0x%llx\n", IA32_RSP(psContext));
-   printf("Register RBP:   0x%llx\n", IA32_RBP(psContext));
-   printf("Register RIP:   0x%llx\n", IA32_RIP(psContext));
+	// dump registers
+    ucontext_t *psContext = (ucontext_t*)context;
+    printf("--------------------------------------------\n");
+    printf("Register RAX:   0x%llx\n", IA32_RAX(psContext));
+    printf("Register RBX:   0x%llx\n", IA32_RBX(psContext));
+    printf("Register RCX:   0x%llx\n", IA32_RCX(psContext));
+    printf("Register RDX:   0x%llx\n", IA32_RDX(psContext));
+    printf("Register RDI:   0x%llx\n", IA32_RDI(psContext));
+    printf("Register RSI:   0x%llx\n", IA32_RSI(psContext));
+    printf("Register RSP:   0x%llx\n", IA32_RSP(psContext));
+    printf("Register RBP:   0x%llx\n", IA32_RBP(psContext));
+    printf("Register RIP:   0x%llx\n", IA32_RIP(psContext));
 //   printf("Register EFLAGS:0x%llx\n", IA32_RFLAGS(psContext));
 //   printf("Register SS:   %llx\n",  IA32_SS(psContext));
 //   printf("Register CS:  %llx\n", IA32_CS(psContext));
@@ -175,7 +183,20 @@ void runtimeSignalHandler(int signum, siginfo_t *info, void *context) {
 //   printf("Register ES:  %llx\n", IA32_ES(psContext));
 //   printf("Register FS:  %llx\n", IA32_FS(psContext));
 //   printf("Register GS:  %llx\n", IA32_GS(psContext));
-   printf("--------------------------------------------\n");
+    printf("--------------------------------------------\n");
+
+    // dump thread info
+    for (int i = 0; i < threadCount; i++) {
+    	UVMThread* t = uvmThreads[i];
+    	if (t != NULL)
+    		printThreadInfo(t);
+    }
+    // dump stack info
+    for (int i = 0; i < stackCount; i++) {
+    	UVMStack* s = uvmStacks[i];
+    	if (s != NULL)
+    		printStackInfo(s);
+    }
 
 	// trying to find out where the address belongs to
 	Address addr = (Address) si_addr;
@@ -207,18 +228,15 @@ void runtimeSignalHandler(int signum, siginfo_t *info, void *context) {
 	}
 
 	// check if it is in immix space
-	if (addr >= immixSpace->immixStart && addr <= immixSpace->freelistStart) {
+	if (isInImmixSpace(addr)) {
 		printf("The address is within immix space (from 0x%llx to 0x%llx)\n", immixSpace->immixStart, immixSpace->freelistStart);
 		found = true;
 	}
 
 	// check if it is in large object space
-	FreeListNode* cursor;
-	for (cursor = largeObjectSpace->head; cursor != NULL; cursor = cursor->next) {
-		if (addr >= cursor->addr && addr <= cursor->addr + cursor->size) {
-			printf("The address is within large object space (node from 0x%llx to 0x%llx)\n", cursor->addr, cursor->addr + cursor->size);
-			found = true;
-		}
+	if (isInLargeObjectSpace(addr)) {
+		printf("The address is within large object space\n");
+		found = true;
 	}
 
 	if (!found)
@@ -281,6 +299,14 @@ TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length, int64
 TypeInfo* allocHybridTypeInfo(int64_t id, int64_t size, int64_t align, int64_t eleSize, int64_t length, int64_t nFixedRefOffsets, int64_t nVarRefOffsets) {
 	uVM_fail("allocHybridTypeInfo() unimplemented");
 	return NULL;
+}
+
+int getTypeID(Address ref) {
+	uint64_t header = * ((uint64_t*)ref);
+	printf("header = %llx\n", header);
+	int id = (int) (header & 0x0000FFFF);
+	printf("id = %d\n", id);
+	return id;
 }
 
 void uvmPrintPtr(int64_t s) {

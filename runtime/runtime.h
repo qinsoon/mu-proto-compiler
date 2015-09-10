@@ -11,6 +11,7 @@
 #include "osx_ucontext.h"
 
 typedef uint64_t Address;
+#define WORD_SIZE sizeof(Address)
 
 // *** yieldpoint ***
 
@@ -32,7 +33,7 @@ extern Address yieldpoint_protect_page;
 // *** heap general ***
 extern Address heapStart;
 
-#define HEAP_SIZE (1024 << 20)
+#define HEAP_SIZE (500 << 20)
 #define HEAP_IMMIX_FRACTION 0.7
 #define HEAP_FREELIST_FRACTION 0.3
 
@@ -150,7 +151,6 @@ extern int UVMStackMetaSize;
 extern UVMStack* uvmStacks[MAX_STACK_COUNT];
 extern int stackCount;
 
-extern Address newThread(Address stack);
 extern Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args);
 extern void addNewStack(UVMStack* stack);
 extern UVMStack* getCurrentStack();
@@ -171,7 +171,7 @@ typedef struct UVMThread {
     // for garbage collection
     ImmixMutator _mutator;
 
-    struct UVMThread* stack;
+    struct UVMStack* stack;
 } UVMThread;
 
 #define MAX_THREAD_COUNT 1024
@@ -179,7 +179,8 @@ extern UVMThread* uvmThreads[MAX_THREAD_COUNT];
 extern int threadCount;
 
 extern void addNewThread(UVMThread* thread);
-
+extern Address newThread(Address stack);
+extern void printThreadInfo(UVMThread* t);
 extern void threadExit();
 
 /*
@@ -221,6 +222,7 @@ extern TypeInfo* allocScalarTypeInfo(int64_t id, int64_t size, int64_t align, in
 extern TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length, int64_t align, int64_t nRefOffsets);
 extern TypeInfo* allocHybridTypeInfo(int64_t id, int64_t size, int64_t align, int64_t eleSize, int64_t length, int64_t nFixedRefOffsets, int64_t nVarRefOffsets);
 
+extern int getTypeID(Address ref);
 /*
  * FUNCTIONS
  */
@@ -275,8 +277,28 @@ extern void initObj(Address addr, uint64_t header);
 typedef enum {MUTATOR, BLOCKING_FOR_GC, BLOCKED_FOR_GC, GC} GCPhase_t;
 extern GCPhase_t phase;
 
+extern bool isInImmixSpace(Address addr);
+extern bool isInLargeObjectSpace(Address addr);
+
+// collection
 extern void triggerGC();
 extern void wakeCollectorController();
+
+/*
+ * a linked list that would be useful when scanning object
+ */
+struct AddressNode;
+typedef struct AddressNode {
+	struct AddressNode* next;
+	Address addr;
+} AddressNode;
+
+extern AddressNode* pushToList(Address addr, AddressNode** list);
+extern AddressNode* popFromList(AddressNode** list);
+
+extern void scanStackForRoots(UVMStack* stack, AddressNode* roots);
+
+// utils
 
 extern Address alignUp(Address region, int align);
 extern void fillAlignmentGap(Address start, Address end);

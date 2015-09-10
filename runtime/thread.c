@@ -105,6 +105,15 @@ void unblock(UVMThread* uvmThread) {
     pthread_mutex_unlock(&(uvmThread->_mutex));
 }
 
+void printThreadInfo(UVMThread* t) {
+	printf("----THREAD INFO (%p)----\n", t);
+	printf("slot=%d\n", t->threadSlot);
+	printf("pthread=%p\n", (void*)t->_pthread);
+	printf("block stat=%d\n", t->_block_status);
+	printf("stack=%p\n", t->stack);
+    printf("------------------\n");
+}
+
 void* uVMThreadLaunch(void* a) {
 	UVMStack* stack = (UVMStack*) a;
 	UVMThread* thread = stack->thread;
@@ -113,6 +122,10 @@ void* uVMThreadLaunch(void* a) {
 	DEBUG_PRINT(3, ("                 entry func=%p\n", (void*) (Address) entry));
 
 	DEBUG_PRINT(3, ("about to invoke entry function...\n"));
+
+	// associate the stack with the thread
+	stack->thread = thread;
+	thread->stack = stack;
 
 	// set current uvmthread key (TLS)
 	pthread_setspecific(currentUVMThread, thread);
@@ -163,9 +176,10 @@ void* uVMThreadLaunch(void* a) {
 
 void threadExit() {
 	UVMThread* uvmT = getThreadContext();
-
-	DEBUG_PRINT(3, ("Thread%d (%p) exits\n", uvmT->threadSlot, (void*) uvmT));
-	freeThreadContext(uvmT);
+	if (uvmT != NULL) {
+		DEBUG_PRINT(3, ("Thread%d (%p) exits\n", uvmT->threadSlot, (void*) uvmT));
+		freeThreadContext(uvmT);
+	}
 	pthread_exit(NULL);
 }
 

@@ -65,6 +65,23 @@ void spaceInfo() {
 	printf("Large Object Space: used = %lld bytes\n", largeObjectSpace->used);
 }
 
+bool isInImmixSpace(Address addr) {
+	// check Immix space first
+	if (immixSpace->immixStart <= addr && immixSpace->freelistStart >= addr)
+		return true;
+	else return false;
+}
+
+bool isInLargeObjectSpace(Address addr) {
+	FreeListNode* node = largeObjectSpace->head;
+	FreeListNode* cur;
+	for (cur = node; cur != NULL; cur = cur->next) {
+		if (cur->addr <= addr && cur->addr + cur->size >= addr)
+			return true;
+	}
+	return false;
+}
+
 /*
  * freelist space (now using global malloc)
  */

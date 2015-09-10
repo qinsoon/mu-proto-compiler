@@ -45,6 +45,7 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
     		
     		// declare typeInfo table
     		writer.write(String.format("TypeInfo* typeInfoTable[%d]; \n", MicroVM.v.getTypesByIDMap().size()));
+    		writer.write(String.format("int typeCount = %d; \n", MicroVM.v.getTypesByIDMap().size()));
     		writer.write("\n");
     		
     		// init typeTable
