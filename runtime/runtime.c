@@ -70,10 +70,16 @@ void yieldpoint() {
     if (t->_block_status == NEED_TO_BLOCK) {
     	// save rsp first
     	void* rsp;
+    	void* rbp;
+
     	__asm__(
     			"mov %%rsp, %0		\n"
-    			: "=rm" (rsp));
+    			"mov %%rbp, %1		\n"
+    			: "=rm" (rsp),
+				  "=rm" (rbp)
+		);
     	t->stack->_sp = (Address) rsp;
+    	t->stack->_bp = (Address) rbp;
 
         block(t);
     }

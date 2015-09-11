@@ -65,6 +65,7 @@ extern int typeCount;
 void scanStackForRoots(UVMStack* stack, AddressNode* roots) {
 	Address sp = stack->_sp;
 	Address stackTop = stack->upperBound;
+	Address curBP = stack->_bp;
 
 	if (stackTop < sp)
 		uVM_fail("sp is not under stack top");
@@ -72,6 +73,8 @@ void scanStackForRoots(UVMStack* stack, AddressNode* roots) {
 	Address cur;
 
 	int scannedSlots = 0;
+
+	int frames = 0;
 
 	int immixObjs = 0;
 	int largeObjs = 0;
@@ -82,8 +85,15 @@ void scanStackForRoots(UVMStack* stack, AddressNode* roots) {
 
 	for (cur = sp; cur < stackTop; cur += WORD_SIZE) {
 		scannedSlots ++;
-		// check if *cur is a ref
 		uint64_t candidate = *((uint64_t*)cur);
+
+		if (cur == curBP) {
+			printf("---finish a frame---\n");
+			curBP = candidate;
+			frames ++;
+		}
+
+		// check if *cur is a ref
 		printf("checking value: 0x%llx at stack 0x%p\n", candidate, (void*) cur);
 
 		bool isObj = false;
@@ -109,7 +119,7 @@ void scanStackForRoots(UVMStack* stack, AddressNode* roots) {
 		}
 	}
 
-	printf("Total scanned stack slots: %d\n", scannedSlots);
+	printf("Total scanned stack slots: %d, in %d frames\n", scannedSlots, frames);
 	printf("1. immix space objects: %d\n", immixObjs);
 	printf("   large objects: %d\n", largeObjs);
 	printf("   not objects: %d\n", notObjs);
