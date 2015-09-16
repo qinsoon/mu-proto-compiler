@@ -371,6 +371,5 @@ void NOT_REACHED() {
 
 void uVM_fail(const char* str) {
     printf("uVM failed in runtime: %s\n", str);
-    threadExit();
     exit(1);
 }
