@@ -45,7 +45,7 @@ extern Address yieldpoint_protect_page;
 // *** heap general ***
 extern Address heapStart;
 
-#define HEAP_SIZE (5 << 20)
+#define HEAP_SIZE (50 << 20)
 #define HEAP_IMMIX_FRACTION 0.7
 #define HEAP_FREELIST_FRACTION 0.3
 
@@ -310,6 +310,7 @@ extern GCPhase_t phase;
 extern bool isInImmixSpace(Address addr);
 extern bool isInLargeObjectSpace(Address addr);
 extern bool isLargeObjectStart(Address addr);
+extern Address getLargeObjectStart(Address addr);
 
 // collection
 extern void triggerGC();
@@ -327,7 +328,7 @@ typedef struct AddressNode {
 extern AddressNode* pushToList(Address addr, AddressNode** list);
 extern AddressNode* popFromList(AddressNode** list);
 
-extern void scanStackForRoots(UVMStack* stack, AddressNode* roots);
+extern void scanStackForRoots(UVMStack* stack, AddressNode** roots);
 
 // utils
 

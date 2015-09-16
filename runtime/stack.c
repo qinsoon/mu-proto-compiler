@@ -62,7 +62,7 @@ void inspectStack(UVMStack* stack, int64_t maxValues) {
 
 extern int typeCount;
 
-void scanStackForRoots(UVMStack* stack, AddressNode* roots) {
+void scanStackForRoots(UVMStack* stack, AddressNode** roots) {
 	Address sp = stack->_sp;
 	Address stackTop = stack->upperBound;
 	Address curBP = stack->_bp;
@@ -103,6 +103,8 @@ void scanStackForRoots(UVMStack* stack, AddressNode* roots) {
 			if (isObjectStart(candidate)) {
 				refs ++;
 				printf("ref. \n");
+				printf("push to roots: %llx\n", candidate);
+				pushToList(candidate, roots);
 			} else {
 				Address ref = getObjectStart(candidate);
 				if (ref == (Address) NULL) {
@@ -112,6 +114,8 @@ void scanStackForRoots(UVMStack* stack, AddressNode* roots) {
 				} else {
 					irefs ++;
 					printf("iref. \n");
+					printf("push to roots: %llx\n", ref);
+					pushToList(ref, roots);
 				}
 			}
 		} else if (isInLargeObjectSpace(candidate)) {
@@ -121,9 +125,14 @@ void scanStackForRoots(UVMStack* stack, AddressNode* roots) {
 			if (isLargeObjectStart(candidate)) {
 				refs ++;
 				printf("ref. \n");
+				printf("push to roots: %llx\n", candidate);
+				pushToList(candidate, roots);
 			} else {
+				Address loStart = getLargeObjectStart(candidate);
 				irefs ++;
 				printf("iref. \n");
+				printf("push to roots: %llx\n", loStart);
+				pushToList(loStart, roots);
 			}
 		} else {
 			notObjs ++;

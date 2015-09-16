@@ -95,6 +95,16 @@ bool isLargeObjectStart(Address addr) {
 	return false;
 }
 
+Address getLargeObjectStart(Address addr) {
+	FreeListNode* node = largeObjectSpace->head;
+	FreeListNode* cur;
+	for (cur = node; cur != NULL; cur = cur->next) {
+		if (cur->addr <= addr && cur->addr + cur->size >= addr)
+			return cur->addr;
+	}
+	return (Address) NULL;
+}
+
 /*
  * freelist space (now using global malloc)
  */
@@ -171,7 +181,7 @@ void markInObjectMap(Address ref) {
 	if (bitI > objectMap->bitmapSize)
 		uVM_fail("exceeding object map size");
 	set_bit(objectMap->bitmap, bitI);
-	printf("Obj %llx marked at %d\n", ref, bitI);
+//	printf("Obj %llx marked at %d\n", ref, bitI);
 }
 
 bool isObjectStart(Address ref) {

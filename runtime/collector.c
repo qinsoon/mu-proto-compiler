@@ -26,6 +26,13 @@ AddressNode* roots;
 AddressNode* alive;
 
 AddressNode* pushToList(Address addr, AddressNode** list) {
+	// check if it already exists
+	AddressNode* cur = *list;
+	for (; cur != NULL; cur = cur->next) {
+		if (cur->addr == addr)
+			return cur;
+	}
+
 	AddressNode* ret = (AddressNode*) malloc(sizeof(AddressNode));
 	ret->addr = addr;
 
@@ -53,7 +60,14 @@ void scanStacks() {
 		if (stack != NULL) {
 			if (stack->thread != NULL) {
 				// scan it
-				scanStackForRoots(stack, roots);
+				scanStackForRoots(stack, &roots);
+
+				// check roots
+				printf("Roots:\n");
+				AddressNode* cur = roots;
+				for (; cur != NULL; cur = cur->next) {
+					printf("0x%llx\n", cur->addr);
+				}
 			} else {
 				// this is an inactive stack, we didn't have correct rsp and register values on the stack yet?
 				uVM_fail("cant scan an inactive stack");
