@@ -112,13 +112,16 @@ Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align) {
     
     if (end > mutator->limit) {
         DEBUG_PRINT(5, ("current local lines are consumed, try get some from block\n"));
-        return ImmixMutator_tryAllocFromLocal(mutator, size, align);
+        Address ret = ImmixMutator_tryAllocFromLocal(mutator, size, align);
+        markInObjectMap(ret);
+        return ret;
     }
     
     fillAlignmentGap(mutator->cursor, start);
     mutator->cursor = end;
     
     DEBUG_PRINT(5, ("---alloc DONE: %llx---\n", start));
+    markInObjectMap(start);
     return start;
 }
 

@@ -21,6 +21,9 @@ void initHeap() {
     
     immixSpace = newImmixSpace(immixSpaceStart, freelistSpaceStart);
     largeObjectSpace = newFreeListSpace();
+
+    DEBUG_PRINT(1, ("-init object map\n"));
+    initObjectMap();
 }
 
 extern Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align);
@@ -82,6 +85,16 @@ bool isInLargeObjectSpace(Address addr) {
 	return false;
 }
 
+bool isLargeObjectStart(Address addr) {
+	FreeListNode* node = largeObjectSpace->head;
+	FreeListNode* cur;
+	for (cur = node; cur != NULL; cur = cur->next) {
+		if (cur->addr == addr)
+			return true;
+	}
+	return false;
+}
+
 /*
  * freelist space (now using global malloc)
  */
@@ -128,4 +141,84 @@ Address allocLarge(FreeListSpace* flSpace, int64_t size, int64_t align) {
 	pthread_mutex_unlock( &(flSpace->lock));
 
 	return addr;
+}
+
+/**
+ * object map related - for immix space
+ */
+ObjectMap* objectMap;
+void initObjectMap() {
+	int64_t immixSpaceSize = immixSpace->freelistStart - immixSpace->immixStart;
+	// as we use 1 bit for WORD_SIZE in the immix space
+	int objectMapSize = (immixSpaceSize / WORD_SIZE);
+	int objectMapSizeInBytes = objectMapSize / 8;
+	int bitmapN = objectMapSizeInBytes / sizeof(Word);
+
+	printf("object map size (in bytes)=%d\n", objectMapSizeInBytes);
+	printf("we will need a uint64_t[%d] array\n", bitmapN);
+
+	objectMap = (ObjectMap*) malloc(sizeof(ObjectMap) + objectMapSizeInBytes);
+
+	// init
+	objectMap->start = immixSpace->immixStart;
+	objectMap->bitmapSize = objectMapSize;
+	memset(objectMap->bitmap, 0, objectMapSizeInBytes);
+}
+
+void markInObjectMap(Address ref) {
+	int64_t offset = ref - objectMap->start;
+	int bitI = (offset / WORD_SIZE);
+	if (bitI > objectMap->bitmapSize)
+		uVM_fail("exceeding object map size");
+	set_bit(objectMap->bitmap, bitI);
+	printf("Obj %llx marked at %d\n", ref, bitI);
+}
+
+bool isObjectStart(Address ref) {
+	int64_t offset = ref - objectMap->start;
+	int bitI = (offset / WORD_SIZE);
+	if (bitI > objectMap->bitmapSize)
+		return false;
+	else return get_bit(objectMap->bitmap, bitI) != 0;
+}
+
+extern int typeCount;
+Address getObjectStart(Address iref) {
+	if (isObjectStart(iref))
+		return iref;
+
+	// iref could a valid iref or not an iref at all
+	int64_t offset = iref - objectMap->start;
+	int bitI = (offset / WORD_SIZE);
+	for (; bitI >= 0; bitI--) {
+//		printf("bitI = %d\n", bitI);
+		if (get_bit(objectMap->bitmap, bitI) != 0) {
+			Address potentialObjectStart = objectMap->start + bitI * WORD_SIZE;
+
+//			printf("***bitI = %d***\n", bitI);
+//			printf("***iref = %llx, potential ref=%llx***\n", iref, potentialObjectStart);
+//			printf("***header = %llx***\n", *((uint64_t*)potentialObjectStart));
+
+			int typeId = getTypeID(potentialObjectStart);
+
+//			printf("***typeID = %d***\n", typeId);
+			if (typeId >= typeCount)
+				return (Address) NULL;
+
+			TypeInfo* typeInfo = getTypeInfo(potentialObjectStart);
+			int64_t objSize = typeInfo->size;
+
+//			printf("***type size = %lld***\n", objSize);
+//			printf("***offset = %lld***\n", offset);
+			// check if iref is within the object size
+			if ((iref - potentialObjectStart) <= objSize)
+				return potentialObjectStart;
+			else {
+				// it is not an iref
+				return (Address) NULL;
+			}
+		}
+	}
+
+	return (Address) NULL;
 }

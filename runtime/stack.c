@@ -96,26 +96,37 @@ void scanStackForRoots(UVMStack* stack, AddressNode* roots) {
 		// check if *cur is a ref
 		printf("checking value: 0x%llx at stack 0x%p\n", candidate, (void*) cur);
 
-		bool isObj = false;
 		if (isInImmixSpace(candidate)) {
 			immixObjs ++;
-			isObj = true;
-			printf("  immix obj\n");
+			printf("  in immix space: ");
+
+			if (isObjectStart(candidate)) {
+				refs ++;
+				printf("ref. \n");
+			} else {
+				Address ref = getObjectStart(candidate);
+				if (ref == (Address) NULL) {
+					immixObjs --;
+					notObjs ++;
+					printf("not a ref. \n");
+				} else {
+					irefs ++;
+					printf("iref. \n");
+				}
+			}
 		} else if (isInLargeObjectSpace(candidate)) {
 			largeObjs ++;
-			isObj = true;
-			printf("  large obj\n");
-		} else {
-			notObjs ++;
-		}
+			printf("  in large obj space:");
 
-		if (isObj) {
-			int typeId = getTypeID(candidate);
-			if (typeId < typeCount) {
+			if (isLargeObjectStart(candidate)) {
 				refs ++;
+				printf("ref. \n");
 			} else {
 				irefs ++;
+				printf("iref. \n");
 			}
+		} else {
+			notObjs ++;
 		}
 	}
 

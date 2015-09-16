@@ -7,11 +7,23 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <signal.h>
+#include <limits.h>
 
 #include "osx_ucontext.h"
 
 typedef uint64_t Address;
-#define WORD_SIZE sizeof(Address)
+typedef uint64_t Word;
+
+#define WORD_SIZE sizeof(Word)
+
+// bit map
+enum { BITS_PER_WORD = sizeof(Word) * CHAR_BIT };
+#define WORD_OFFSET(b) ((b) / BITS_PER_WORD)
+#define BIT_OFFSET(b)  ((b) % BITS_PER_WORD)
+
+extern void set_bit(Word*, int);
+extern void clear_bit(Word*, int);
+extern int get_bit(Word*, int);
 
 // *** yieldpoint ***
 
@@ -33,7 +45,7 @@ extern Address yieldpoint_protect_page;
 // *** heap general ***
 extern Address heapStart;
 
-#define HEAP_SIZE (500 << 20)
+#define HEAP_SIZE (5 << 20)
 #define HEAP_IMMIX_FRACTION 0.7
 #define HEAP_FREELIST_FRACTION 0.3
 
@@ -78,6 +90,23 @@ typedef struct ImmixSpace {
 
     int64_t used;
 } ImmixSpace;
+
+/*
+ * object map for immix space
+ */
+typedef struct ObjectMap {
+	Address start;
+
+	int bitmapSize;		// how many bits
+	Word bitmap[1];
+} ObjectMap;
+
+extern ObjectMap* objectMap;
+
+extern void initObjectMap();
+extern void markInObjectMap(Address ref);
+extern bool isObjectStart(Address ref);
+extern Address getObjectStart(Address ref);
 
 struct FreeListNode;
 typedef struct FreeListNode {
@@ -215,7 +244,7 @@ typedef struct TypeInfo {
 	// offsets
 	int64_t nFixedRefOffsets;
 	int64_t nVarRefOffsets;
-	int64_t refOffsets[];
+	int64_t refOffsets[1];
 } TypeInfo;
 
 extern TypeInfo* allocScalarTypeInfo(int64_t id, int64_t size, int64_t align, int64_t nRefOffsets);
@@ -223,6 +252,7 @@ extern TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length
 extern TypeInfo* allocHybridTypeInfo(int64_t id, int64_t size, int64_t align, int64_t eleSize, int64_t length, int64_t nFixedRefOffsets, int64_t nVarRefOffsets);
 
 extern int getTypeID(Address ref);
+extern TypeInfo* getTypeInfo(Address ref);
 /*
  * FUNCTIONS
  */
@@ -279,6 +309,7 @@ extern GCPhase_t phase;
 
 extern bool isInImmixSpace(Address addr);
 extern bool isInLargeObjectSpace(Address addr);
+extern bool isLargeObjectStart(Address addr);
 
 // collection
 extern void triggerGC();

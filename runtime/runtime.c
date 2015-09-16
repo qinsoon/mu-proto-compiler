@@ -309,11 +309,37 @@ TypeInfo* allocHybridTypeInfo(int64_t id, int64_t size, int64_t align, int64_t e
 
 int getTypeID(Address ref) {
 	uint64_t header = * ((uint64_t*)ref);
-	printf("header = %llx\n", header);
+//	printf("header = %llx\n", header);
 	int id = (int) (header & 0x0000FFFF);
-	printf("id = %d\n", id);
+//	printf("id = %d\n", id);
 	return id;
 }
+
+extern TypeInfo* typeInfoTable[];
+TypeInfo* getTypeInfo(Address ref) {
+	int id = getTypeID(ref);
+	return typeInfoTable[id];
+}
+
+/*
+ * bit map
+ */
+void set_bit(Word *words, int n) {
+    words[WORD_OFFSET(n)] |= (1 << BIT_OFFSET(n));
+}
+
+void clear_bit(Word *words, int n) {
+    words[WORD_OFFSET(n)] &= ~(1 << BIT_OFFSET(n));
+}
+
+int get_bit(Word *words, int n) {
+    Word bit = words[WORD_OFFSET(n)] & (1 << BIT_OFFSET(n));
+    return bit != 0;
+}
+
+/*
+ * printing
+ */
 
 void uvmPrintPtr(int64_t s) {
 	printf("0x%p\n", (void*)s);
