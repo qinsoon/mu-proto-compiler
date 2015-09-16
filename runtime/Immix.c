@@ -168,7 +168,7 @@ int ImmixSpace_getNextAvailableLine(uint8_t* markTable, int currentLine) {
 
 int ImmixSpace_getNextUnavailableLine(uint8_t* markTable, int currentLine) {
     int i = currentLine;
-    while (markTable[i] == IMMIX_LINE_MARK_FREE && i < IMMIX_LINES_IN_BLOCK)
+    while (i < IMMIX_LINES_IN_BLOCK && markTable[i] == IMMIX_LINE_MARK_FREE)
         i++;
     
     return i;
@@ -179,7 +179,7 @@ int ImmixSpace_getNextUnavailableLine(uint8_t* markTable, int currentLine) {
  */
 
 bool ImmixSpace_getNextBlock(ImmixMutator* mutator) {
-    DEBUG_PRINT(3, ("acquiring from global memory (getNextBlock())\n"));
+    DEBUG_PRINT(4, ("acquiring from global memory (getNextBlock())\n"));
     ImmixSpace* space = mutator->globalSpace;
     
     // lock acquired
