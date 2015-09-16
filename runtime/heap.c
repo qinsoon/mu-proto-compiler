@@ -232,3 +232,21 @@ Address getObjectStart(Address iref) {
 
 	return (Address) NULL;
 }
+
+Address findBaseRef(Address candidate) {
+	if (isInImmixSpace(candidate)) {
+		if (isObjectStart(candidate)) {
+			return candidate;
+		} else {
+			return getObjectStart(candidate);
+		}
+	} else if (isInLargeObjectSpace(candidate)) {
+		if (isLargeObjectStart(candidate)) {
+			return candidate;
+		} else {
+			return getLargeObjectStart(candidate);
+		}
+	} else {
+		return (Address) NULL;
+	}
+}

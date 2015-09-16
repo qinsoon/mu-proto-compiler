@@ -22,6 +22,7 @@ void wakeCollectorController() {
     pthread_mutex_unlock(&controller_mutex);
 }
 
+// when passed for push and pop, always use these two with &
 AddressNode* roots;
 AddressNode* alive;
 
@@ -81,6 +82,45 @@ void scanRegisters() {
 	// do nothing here
 }
 
+void traceObject(Address ref) {
+	printf("tracing 0x%llx\n", ref);
+
+	TypeInfo* typeInfo = getTypeInfo(ref);
+	for (int i = 0; i < typeInfo->nFixedRefOffsets; i++) {
+		Address field = ref + OBJECT_HEADER_SIZE + typeInfo->refOffsets[i];
+
+		// field could be iref
+		// need to find its base ref here
+		Address fieldObj = findBaseRef(field);
+		printf("field: 0x%llx\n", field);
+		printf("fieldBase: 0x%llx\n", fieldObj);
+
+		if (fieldObj == (Address) NULL)
+			uVM_fail("cannot find a base ref for a ref field");
+
+		pushToList(fieldObj, &alive);
+	}
+}
+
+void traceObjects() {
+	// trace roots
+	while (roots != NULL) {
+		AddressNode* node = popFromList(&roots);
+		Address ref = node->addr;
+		free(node);
+
+		traceObject(ref);
+	}
+
+	while (alive != NULL) {
+		AddressNode* node = popFromList(&alive);
+		Address ref = node->addr;
+		free(node);
+
+		traceObject(ref);
+	}
+}
+
 void *collector_controller_run(void *param) {
     DEBUG_PRINT(1, ("Collector Controller running...\n"));
     
@@ -138,8 +178,11 @@ void *collector_controller_run(void *param) {
         scanGlobal();	// empty
         scanStacks();
         scanRegisters();
-        uVM_fail("didnt implement tracing");
+
+        traceObjects();
         
+        uVM_fail("didnt implement sweeping");
+
         // reset all mutators
         for (int i = 0; i < threadCount; i++) {
             UVMThread* t = uvmThreads[i];

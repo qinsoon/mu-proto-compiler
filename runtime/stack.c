@@ -76,12 +76,9 @@ void scanStackForRoots(UVMStack* stack, AddressNode** roots) {
 
 	int frames = 0;
 
-	int immixObjs = 0;
-	int largeObjs = 0;
-	int notObjs   = 0;
-
-	int refs = 0;
-	int irefs = 0;
+	int refs 	= 0;
+	int irefs 	= 0;
+	int nonRefs = 0;
 
 	for (cur = sp; cur < stackTop; cur += WORD_SIZE) {
 		scannedSlots ++;
@@ -96,55 +93,23 @@ void scanStackForRoots(UVMStack* stack, AddressNode** roots) {
 		// check if *cur is a ref
 		printf("checking value: 0x%llx at stack 0x%p\n", candidate, (void*) cur);
 
-		if (isInImmixSpace(candidate)) {
-			immixObjs ++;
-			printf("  in immix space: ");
+		Address baseRef = findBaseRef(candidate);
 
-			if (isObjectStart(candidate)) {
-				refs ++;
-				printf("ref. \n");
-				printf("push to roots: %llx\n", candidate);
-				pushToList(candidate, roots);
-			} else {
-				Address ref = getObjectStart(candidate);
-				if (ref == (Address) NULL) {
-					immixObjs --;
-					notObjs ++;
-					printf("not a ref. \n");
-				} else {
-					irefs ++;
-					printf("iref. \n");
-					printf("push to roots: %llx\n", ref);
-					pushToList(ref, roots);
-				}
-			}
-		} else if (isInLargeObjectSpace(candidate)) {
-			largeObjs ++;
-			printf("  in large obj space:");
+		if (baseRef != (Address) NULL) {
+			pushToList(baseRef, roots);
 
-			if (isLargeObjectStart(candidate)) {
+			if (baseRef == candidate)
 				refs ++;
-				printf("ref. \n");
-				printf("push to roots: %llx\n", candidate);
-				pushToList(candidate, roots);
-			} else {
-				Address loStart = getLargeObjectStart(candidate);
-				irefs ++;
-				printf("iref. \n");
-				printf("push to roots: %llx\n", loStart);
-				pushToList(loStart, roots);
-			}
+			else irefs ++;
 		} else {
-			notObjs ++;
+			nonRefs ++;
 		}
 	}
 
 	printf("Total scanned stack slots: %d, in %d frames\n", scannedSlots, frames);
-	printf("1. immix space objects: %d\n", immixObjs);
-	printf("   large objects: %d\n", largeObjs);
-	printf("   not objects: %d\n", notObjs);
-	printf("2. refs: %d\n", refs);
+	printf("   refs: %d\n", refs);
 	printf("   irefs: %d\n", irefs);
+	printf("   not objects: %d\n", nonRefs);
 	printf("----------------\n");
 }
 

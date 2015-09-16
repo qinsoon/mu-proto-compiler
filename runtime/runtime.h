@@ -51,6 +51,8 @@ extern Address heapStart;
 
 #define ALIGNMENT_VALUE 9
 
+#define OBJECT_HEADER_SIZE 8
+
 // *** immix ***
 
 #define IMMIX_LOG_BYTES_IN_BLOCK 16
@@ -315,6 +317,8 @@ extern Address getLargeObjectStart(Address addr);
 // collection
 extern void triggerGC();
 extern void wakeCollectorController();
+
+extern Address findBaseRef(Address iref);
 
 /*
  * a linked list that would be useful when scanning object
