@@ -35,7 +35,12 @@ public class IRef extends AbstractPointerType {
 	}
 
 	@Override
-	public boolean isReference() {
+	public boolean isBaseRef() {
+		return false;
+	}
+
+	@Override
+	public boolean isIRef() {
 		return true;
 	}
 

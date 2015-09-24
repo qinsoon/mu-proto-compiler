@@ -53,7 +53,12 @@ public class Array extends Type {
     }
 
 	@Override
-	public boolean isReference() {
+	public boolean isBaseRef() {
+		return false;
+	}
+
+	@Override
+	public boolean isIRef() {
 		return false;
 	}
 }

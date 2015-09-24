@@ -45,6 +45,7 @@ void initObj(Address addr, uint64_t header) {
     DEBUG_PRINT(5, ("========Calling on initObj========\n"));
     DEBUG_PRINT(5, ("addr=0x%llx, header=0x%llx\n", addr, header));
 
+    uVM_assert(isObjectStart(addr) || isLargeObjectStart(addr), "not writing into header in initObj()");
     *((uint64_t*) addr) = header;
 }
 
@@ -69,7 +70,6 @@ void spaceInfo() {
 }
 
 bool isInImmixSpace(Address addr) {
-	// check Immix space first
 	if (immixSpace->immixStart <= addr && immixSpace->freelistStart >= addr)
 		return true;
 	else return false;
@@ -181,7 +181,7 @@ void markInObjectMap(Address ref) {
 	if (bitI > objectMap->bitmapSize)
 		uVM_fail("exceeding object map size");
 	set_bit(objectMap->bitmap, bitI);
-//	printf("Obj %llx marked at %d\n", ref, bitI);
+	printf("Obj %llx marked at %d\n", ref, bitI);
 }
 
 bool isObjectStart(Address ref) {
@@ -205,14 +205,15 @@ Address getObjectStart(Address iref) {
 		if (get_bit(objectMap->bitmap, bitI) != 0) {
 			Address potentialObjectStart = objectMap->start + bitI * WORD_SIZE;
 
-//			printf("***bitI = %d***\n", bitI);
-//			printf("***iref = %llx, potential ref=%llx***\n", iref, potentialObjectStart);
-//			printf("***header = %llx***\n", *((uint64_t*)potentialObjectStart));
+			printf("***bitI = %d***\n", bitI);
+			printf("***iref = %llx, potential ref=%llx***\n", iref, potentialObjectStart);
+			printf("***header = %llx***\n", *((uint64_t*)potentialObjectStart));
+			printObject(potentialObjectStart);
 
 			int typeId = getTypeID(potentialObjectStart);
 
 //			printf("***typeID = %d***\n", typeId);
-			if (typeId >= typeCount)
+			if (typeId >= typeCount && typeId < 0)
 				return (Address) NULL;
 
 			TypeInfo* typeInfo = getTypeInfo(potentialObjectStart);

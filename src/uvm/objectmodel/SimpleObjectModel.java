@@ -170,13 +170,13 @@ public class SimpleObjectModel {
 		struct.setSize(cur * 8);	// from bytes to bits
 	}
 	
-	public int[] getRefOffsets(Type t) {
+	public int[] getBaseRefOffsets(Type t) {
 		if (t instanceof Struct) {
 			Struct structT = (Struct) t;
 			ArrayList<Integer> temp = new ArrayList<Integer>();
 			
 			for (int i = 0; i < structT.getTypes().size(); i++) {
-				int[] fieldRefOffsets = getRefOffsets(structT.getType(i));
+				int[] fieldRefOffsets = getBaseRefOffsets(structT.getType(i));
 				int base = structT.getOffset(i);
 				for (int off : fieldRefOffsets)
 					temp.add(base + off);
@@ -189,7 +189,7 @@ public class SimpleObjectModel {
 		} else if (t instanceof Array) {
 			Array arrayT = (Array) t;
 			Type eleT    = arrayT.getEleType();
-			int[] eleTRefOffsets = getRefOffsets(eleT);
+			int[] eleTRefOffsets = getBaseRefOffsets(eleT);
 			
 			if (eleTRefOffsets.length == 0) {
 				return new int[0];
@@ -203,7 +203,49 @@ public class SimpleObjectModel {
 			}			
 		} else{
 			// t is scalar
-			if (t.isReference()) {
+			if (t.isBaseRef()) {
+				return new int[] {0};
+			} else {
+				return new int[0];
+			}
+		}
+			
+	}
+	
+	public int[] getIRefOffsets(Type t) {
+		if (t instanceof Struct) {
+			Struct structT = (Struct) t;
+			ArrayList<Integer> temp = new ArrayList<Integer>();
+			
+			for (int i = 0; i < structT.getTypes().size(); i++) {
+				int[] fieldRefOffsets = getIRefOffsets(structT.getType(i));
+				int base = structT.getOffset(i);
+				for (int off : fieldRefOffsets)
+					temp.add(base + off);
+			}
+			
+			int[] ret = new int[temp.size()];
+			for (int i = 0; i < ret.length; i++)
+				ret[i] = temp.get(i);
+			return ret;
+		} else if (t instanceof Array) {
+			Array arrayT = (Array) t;
+			Type eleT    = arrayT.getEleType();
+			int[] eleTRefOffsets = getIRefOffsets(eleT);
+			
+			if (eleTRefOffsets.length == 0) {
+				return new int[0];
+			} else {
+				int[] ret = new int[eleTRefOffsets.length * arrayT.getLength()];
+				for (int i = 0; i < arrayT.getLength(); i++) {
+					for (int j = 0; j < eleTRefOffsets.length; j++)
+					ret[i * eleTRefOffsets.length + j] = i * eleT.sizeInBytes() + eleTRefOffsets[j];
+				}
+				return ret;
+			}			
+		} else{
+			// t is scalar
+			if (t.isIRef()) {
 				return new int[] {0};
 			} else {
 				return new int[0];

@@ -83,22 +83,35 @@ void scanRegisters() {
 }
 
 void traceObject(Address ref) {
-	printf("tracing 0x%llx\n", ref);
-
 	TypeInfo* typeInfo = getTypeInfo(ref);
+
+	uVM_assert(typeInfo != NULL, "meet a non-ref in traceObject()");
+
+	printf("tracing 0x%llx of type %lld\n", ref, typeInfo->id);
+	printObject(ref);
+
 	for (int i = 0; i < typeInfo->nFixedRefOffsets; i++) {
 		Address field = ref + OBJECT_HEADER_SIZE + typeInfo->refOffsets[i];
 
-		// field could be iref
-		// need to find its base ref here
-		Address fieldObj = findBaseRef(field);
+		Address ref = * ((Address*) field);
 		printf("field: 0x%llx\n", field);
-		printf("fieldBase: 0x%llx\n", fieldObj);
+		printf("->ref: 0x%llx\n", ref);
 
-		if (fieldObj == (Address) NULL)
-			uVM_fail("cannot find a base ref for a ref field");
+		if (ref != (Address) NULL)
+			pushToList(ref, &alive);
+	}
 
-		pushToList(fieldObj, &alive);
+	for (int i = typeInfo->nFixedRefOffsets; i < typeInfo->nFixedRefOffsets + typeInfo->nFixedIRefOffsets; i++) {
+		Address field = ref + OBJECT_HEADER_SIZE + typeInfo->refOffsets[i];
+
+		Address iref = *((Address*) field);
+		Address ref  = findBaseRef(iref);
+		printf("field: 0x%llx\n", field);
+		printf("->iref:0x%llx\n", iref);
+		printf("->ref: 0x%llx\n", ref);
+
+		if (ref != (Address) NULL)
+			pushToList(ref, &alive);
 	}
 }
 
@@ -108,8 +121,8 @@ void traceObjects() {
 		AddressNode* node = popFromList(&roots);
 		Address ref = node->addr;
 		free(node);
-
-		traceObject(ref);
+		Address baseRef = findBaseRef(ref);
+		traceObject(baseRef);
 	}
 
 	while (alive != NULL) {

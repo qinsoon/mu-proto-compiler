@@ -20,23 +20,23 @@ public class RefOffset {
 	@Test
 	public void testNonRef() {
 		Int i1 = Int.I1;
-		int[] res_i1 = objModel.getRefOffsets(i1);
+		int[] res_i1 = objModel.getBaseRefOffsets(i1);
 		assertEquals("non ref Int<1> should have no ref offsets", 0, res_i1.length);
 		
 		Double d = Double.DOUBLE;
-		int[] res_d = objModel.getRefOffsets(d);
+		int[] res_d = objModel.getBaseRefOffsets(d);
 		assertEquals("non ref Double should have no ref offsets", 0, res_d.length);
 	}
 
 	@Test
 	public void testRef() {
 		Ref refVoid = Ref.REF_VOID;
-		int[] res_refvoid = objModel.getRefOffsets(refVoid);
+		int[] res_refvoid = objModel.getBaseRefOffsets(refVoid);
 		assertEquals("refvoid should have 1 ref offset", 1, res_refvoid.length);
 		assertEquals("refvoid should have 1st ref offset as 0", 0, res_refvoid[0]);
 		
 		IRef irefVoid = IRef.IREF_VOID;
-		int[] res_irefvoid = objModel.getRefOffsets(irefVoid);
+		int[] res_irefvoid = objModel.getBaseRefOffsets(irefVoid);
 		assertEquals("irefvoid should have 1 ref offset", 1, res_irefvoid.length);
 		assertEquals("irefvoid should have 1st ref offset as 0", 0, res_irefvoid[0]);
 	}
@@ -44,14 +44,14 @@ public class RefOffset {
 	@Test
 	public void testNonRefArray() {
 		Array arrayInt64_5 = Array.findOrCreate(Int.I64, 5);
-		int[] res_arrayInt64_5 = objModel.getRefOffsets(arrayInt64_5);
+		int[] res_arrayInt64_5 = objModel.getBaseRefOffsets(arrayInt64_5);
 		assertEquals("arrayInt64_5 should have 0 ref offsets", 0, res_arrayInt64_5.length);
 	}
 	
 	@Test
 	public void testRefArray() {
 		Array arrayRefVoid_5 = Array.findOrCreate(Ref.REF_VOID, 5);
-		int[] res_arrayRefVoid_5 = objModel.getRefOffsets(arrayRefVoid_5);
+		int[] res_arrayRefVoid_5 = objModel.getBaseRefOffsets(arrayRefVoid_5);
 		assertEquals("arrayRefVoid_5 should have 5 ref offsets", 5, res_arrayRefVoid_5.length);
 		assertEquals("arrayRefVoid_5.refoffset[0] should be 0", 0, res_arrayRefVoid_5[0]);
 		assertEquals("arrayRefVoid_5.refoffset[1] should be 8", 8, res_arrayRefVoid_5[1]);
@@ -63,7 +63,7 @@ public class RefOffset {
 	@Test
 	public void testStruct() {
 		Struct struct1 = Struct.findOrCreateStruct(Arrays.asList(Ref.REF_VOID, Int.I64, Ref.REF_VOID, Int.I64));
-		int[] res_struct1 = objModel.getRefOffsets(struct1);
+		int[] res_struct1 = objModel.getBaseRefOffsets(struct1);
 		assertEquals("struct1 should have 2 ref offsets", 2, res_struct1.length);
 		assertEquals("struct1.refoffset[0] should be 0", 0, res_struct1[0]);
 		assertEquals("struct1.refoffset[1] should be 16", 16, res_struct1[1]);
@@ -73,7 +73,7 @@ public class RefOffset {
 	public void testArrayOfStruct() {
 		Struct struct1 = Struct.findOrCreateStruct(Arrays.asList(Ref.REF_VOID, Int.I64, Ref.REF_VOID, Int.I64));
 		Array arrayOfStruct = Array.findOrCreate(struct1, 5);
-		int[] res_arrayOfStruct = objModel.getRefOffsets(arrayOfStruct);
+		int[] res_arrayOfStruct = objModel.getBaseRefOffsets(arrayOfStruct);
 		assertEquals("arrayOfStruct should have 10 ref offsets", 10, res_arrayOfStruct.length);
 		assertEquals("arrayOfStruct.refoffset[0] should be 0", 0, res_arrayOfStruct[0]);
 		assertEquals("arrayOfStruct.refoffset[1] should be 16", 16, res_arrayOfStruct[1]);
@@ -85,7 +85,7 @@ public class RefOffset {
 		Array arrayRef_5 = Array.findOrCreate(Ref.REF_VOID, 5);
 		Struct struct2 = Struct.findOrCreateStruct(Arrays.asList(struct1, arrayRef_5));
 		Array arrayOfStruct2 = Array.findOrCreate(struct2, 3);
-		int[] res_arrayOfStruct2 = objModel.getRefOffsets(arrayOfStruct2);
+		int[] res_arrayOfStruct2 = objModel.getBaseRefOffsets(arrayOfStruct2);
 		assertEquals("arrayOfStruct2 should have 21 ref offsets", 21, res_arrayOfStruct2.length);
 		assertEquals("arrayOfStruct2.refoffset[0] should be 0", 0, res_arrayOfStruct2[0]);
 		assertEquals("arrayOfStruct2.refoffset[1] should be 16", 16, res_arrayOfStruct2[1]);

@@ -91,11 +91,11 @@ void scanStackForRoots(UVMStack* stack, AddressNode** roots) {
 		}
 
 		// check if *cur is a ref
-		printf("checking value: 0x%llx at stack 0x%p\n", candidate, (void*) cur);
+		printf("checking value: 0x%llx at stack %p\n", candidate, (void*) cur);
 
 		Address baseRef = findBaseRef(candidate);
-
 		if (baseRef != (Address) NULL) {
+			printf("  baseref = %p\n", (void*) baseRef);
 			pushToList(baseRef, roots);
 
 			if (baseRef == candidate)

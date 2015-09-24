@@ -13,7 +13,6 @@
 
 typedef uint64_t Address;
 typedef uint64_t Word;
-
 #define WORD_SIZE sizeof(Word)
 
 // bit map
@@ -245,16 +244,21 @@ typedef struct TypeInfo {
 
 	// offsets
 	int64_t nFixedRefOffsets;
-	int64_t nVarRefOffsets;
-	int64_t refOffsets[1];
+	int64_t nFixedIRefOffsets;
+//	int64_t nVarRefOffsets;
+//	int64_t nVarIRefOffsets;
+	int64_t refOffsets[1];	// fixed ref offsets, fixed iref offsets,
+							// var ref offsets, var iref offsets
 } TypeInfo;
 
-extern TypeInfo* allocScalarTypeInfo(int64_t id, int64_t size, int64_t align, int64_t nRefOffsets);
-extern TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length, int64_t align, int64_t nRefOffsets);
-extern TypeInfo* allocHybridTypeInfo(int64_t id, int64_t size, int64_t align, int64_t eleSize, int64_t length, int64_t nFixedRefOffsets, int64_t nVarRefOffsets);
+extern TypeInfo* allocScalarTypeInfo(int64_t id, int64_t size, int64_t align, int64_t nRefOffsets, int64_t nIRefOffsets);
+extern TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length, int64_t align, int64_t nRefOffsets, int64_t nIRefOffsets);
+//extern TypeInfo* allocHybridTypeInfo(int64_t id, int64_t size, int64_t align, int64_t eleSize, int64_t length, int64_t nFixedRefOffsets, int64_t nFixedIRefOffsets, int64_t nVarRefOffsets, int64_t nVarIRefOffsets);
 
 extern int getTypeID(Address ref);
 extern TypeInfo* getTypeInfo(Address ref);
+
+extern void printObject(Address ref);
 /*
  * FUNCTIONS
  */
@@ -350,4 +354,7 @@ extern void uvmMainExit(int64_t);
 extern void turnOffYieldpoints();
 extern void turnOnYieldpoints();
 extern void uVM_fail(const char* str);
+
+#define uVM_assert(a, b) if (!(a)) uVM_fail(b)
+
 extern void NOT_REACHED();

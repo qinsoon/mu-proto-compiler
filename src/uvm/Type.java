@@ -45,7 +45,11 @@ public abstract class Type {
         return ID;
     }
     
-    public abstract boolean isReference();
+    public final boolean isReference() {
+    	return isBaseRef() || isIRef();
+    }
+    public abstract boolean isBaseRef();
+    public abstract boolean isIRef();
     
     public abstract String prettyPrint();
     

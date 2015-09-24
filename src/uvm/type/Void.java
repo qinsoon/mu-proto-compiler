@@ -30,7 +30,12 @@ public class Void extends Type {
     }
 
 	@Override
-	public boolean isReference() {
-		return true;
+	public boolean isBaseRef() {
+		return false;
+	}
+
+	@Override
+	public boolean isIRef() {
+		return false;
 	}
 }

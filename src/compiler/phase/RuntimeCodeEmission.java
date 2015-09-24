@@ -55,7 +55,8 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
     			Type t = MicroVM.v.getTypeByID(id);
     			int size = t.sizeInBytes();
     			int align = t.alignmentInBytes();
-				int[] refOffsets = MicroVM.v.objectModel.getRefOffsets(t);
+				int[] refOffsets  = MicroVM.v.objectModel.getBaseRefOffsets(t);
+				int[] irefOffsets = MicroVM.v.objectModel.getIRefOffsets(t); 
     			
     			String curTypeInfo = String.format("tid%d", id);
     			
@@ -67,25 +68,34 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
     				int eleSize = arrayT.getEleType().sizeInBytes();
     				int length = arrayT.getLength();
     				
-    				// allocArrayTypeInfo(id, eleSize, length, align, nRefOffsets)
+    				// allocArrayTypeInfo(id, eleSize, length, align, nRefOffsets, nIRefOffsets)
     				writer.write(String.format(
-    						"allocArrayTypeInfo(%d, %d, %d, %d, %d);\n", 
-    						id, eleSize, length, align, refOffsets.length));
+    						"allocArrayTypeInfo(%d, %d, %d, %d, %d, %d);\n", 
+    						id, eleSize, length, align, refOffsets.length, irefOffsets.length));
     			} else {
     				// scalar or hybrid(unimplemented)
     				// scalar then
     				
-    				// allocScalarTypeInfo(id, size, align, nRefOffsets)
+    				// allocScalarTypeInfo(id, size, align, nRefOffsets, nIRefOffsets)
     				writer.write(String.format(
-    						"allocScalarTypeInfo(%d, %d, %d, %d);\n", 
-    						id, size, align, refOffsets.length));
+    						"allocScalarTypeInfo(%d, %d, %d, %d, %d);\n", 
+    						id, size, align, refOffsets.length, irefOffsets.length));
     			}    			
 				
+    			// refs
 				// tid0->refOffsets[0] = x;
 				for (int i = 0; i < refOffsets.length; i++) {
 					writer.write(String.format(
 							"%s->refOffsets[%d] = %s;\n", 
 							curTypeInfo, i, refOffsets[i]));
+				}
+				
+				// irefs
+				// tid0->refOffsets[nRef + i] = x;
+				for (int i = 0; i < irefOffsets.length; i++) {
+					writer.write(String.format(
+							"%s->refOffsets[%d] = %s;\n", 
+							curTypeInfo, refOffsets.length + i, irefOffsets[i]));
 				}
 				
 				// save the type info in the table
