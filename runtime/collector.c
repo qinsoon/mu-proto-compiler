@@ -187,14 +187,24 @@ void *collector_controller_run(void *param) {
         // start to work
         DEBUG_PRINT(1, ("Collector is going to work (currently sleep for 1 secs)\n"));
         phase = GC;
-//        usleep(1000000);
+
+        // check object map
+        int i = 0;
+        for (; i < objectMap->bitmapSize; i++) {
+        	printf("check bitmap[%d]...\n", i);
+        	if (get_bit(objectMap->bitmap, i) != 0) {
+        		Address obj = objectMapIndexToAddress(i);
+        		printObject(obj);
+        	}
+        }
+
         scanGlobal();	// empty
         scanStacks();
         scanRegisters();
 
         traceObjects();
         
-        uVM_fail("didnt implement sweeping");
+        uVM_fail("didnt implement sweeping ");
 
         // reset all mutators
         for (int i = 0; i < threadCount; i++) {

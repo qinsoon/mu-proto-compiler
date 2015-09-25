@@ -310,7 +310,7 @@ TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length, int64
 int getTypeID(Address ref) {
 	uint64_t header = * ((uint64_t*)ref);
 //	printf("header = %llx\n", header);
-	int id = (int) (header & 0x0000FFFF);
+	int id = (int) (header & 0xFFFFFFFF);
 //	printf("id = %d\n", id);
 	return id;
 }
@@ -343,6 +343,7 @@ void printObject(Address ref) {
  * bit map
  */
 void set_bit(Word *words, int n) {
+	printf("set bit: %p[%d]\n", words, n);
     words[WORD_OFFSET(n)] |= (1 << BIT_OFFSET(n));
 }
 
@@ -352,6 +353,7 @@ void clear_bit(Word *words, int n) {
 
 int get_bit(Word *words, int n) {
     Word bit = words[WORD_OFFSET(n)] & (1 << BIT_OFFSET(n));
+	printf("get bit: %p[%d] = %lld\n", words, n, bit);
     return bit != 0;
 }
 

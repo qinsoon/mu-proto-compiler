@@ -12,10 +12,10 @@
 	%irefThis = GETIREF <@Node> %this
 	
 	%irefThisLeft = GETFIELDIREF <@Node 0> %irefThis
-	STORE <ref<@Node>> %l %irefThisLeft
+	STORE <ref<@Node>> %irefThisLeft %l
 	
 	%irefThisRight = GETFIELDIREF <@Node 1> %irefThis
-	STORE <ref<@Node>> %r %irefThisRight
+	STORE <ref<@Node>> %irefThisRight %r
 	
 	BRANCH %ret
 	
@@ -74,12 +74,12 @@
 	%irefThisNode = GETIREF <@Node> %thisNode
 	%irefThisNodeLeft = GETFIELDIREF <@Node 0> %irefThisNode
 	%new1 = NEW <@Node>
-	STORE <ref<@Node>> %new1 %irefThisNodeLeft
+	STORE <ref<@Node>> %irefThisNodeLeft %new1
 	
 	// thisNode.right = new Node()
 	%irefThisNodeRight = GETFIELDIREF <@Node 1> %irefThisNode
 	%new2 = NEW <@Node>
-	STORE <ref<@Node>> %new2 %irefThisNodeRight
+	STORE <ref<@Node>> %irefThisNodeRight %new2
 	
 	// Populate(iDepth, thisNode.left)
 	CALL <void (int<64> ref<@Node>)> @Populate (%iDepth2 %new1)

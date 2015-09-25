@@ -42,7 +42,7 @@ Address allocObj(int64_t size, int64_t align) {
  * implemented in uVM compiler (currently uvm.objectmodel.SimpleObjectModel)
  */
 void initObj(Address addr, uint64_t header) {
-    DEBUG_PRINT(5, ("========Calling on initObj========\n"));
+    DEBUG_PRINT(5, ("========Calling on initObj======== \n"));
     DEBUG_PRINT(5, ("addr=0x%llx, header=0x%llx\n", addr, header));
 
     uVM_assert(isObjectStart(addr) || isLargeObjectStart(addr), "not writing into header in initObj()");
@@ -157,15 +157,15 @@ Address allocLarge(FreeListSpace* flSpace, int64_t size, int64_t align) {
  * object map related - for immix space
  */
 ObjectMap* objectMap;
+
 void initObjectMap() {
 	int64_t immixSpaceSize = immixSpace->freelistStart - immixSpace->immixStart;
 	// as we use 1 bit for WORD_SIZE in the immix space
 	int objectMapSize = (immixSpaceSize / WORD_SIZE);
 	int objectMapSizeInBytes = objectMapSize / 8;
-	int bitmapN = objectMapSizeInBytes / sizeof(Word);
 
 	printf("object map size (in bytes)=%d\n", objectMapSizeInBytes);
-	printf("we will need a uint64_t[%d] array\n", bitmapN);
+	printf("we will need a %d length bitmap\n", objectMapSize);
 
 	objectMap = (ObjectMap*) malloc(sizeof(ObjectMap) + objectMapSizeInBytes);
 
@@ -175,9 +175,19 @@ void initObjectMap() {
 	memset(objectMap->bitmap, 0, objectMapSizeInBytes);
 }
 
+Address objectMapIndexToAddress(int i) {
+	uVM_assert(i >= 0 && i <= objectMap->bitmapSize, "index out of bounds in objectMapIndexToAddress()");
+	return objectMap->start + i * WORD_SIZE;
+}
+int addressToObjectMapIndex(Address addr) {
+	uVM_assert((addr - objectMap->start) % WORD_SIZE == 0, "addr is not aligned in addressToObjectMapIndex()");
+	int ret = (addr - objectMap->start) / WORD_SIZE;
+	uVM_assert(ret <= objectMap->bitmapSize, "index out of bounds in addressToObjectMapIndex()");
+	return ret;
+}
+
 void markInObjectMap(Address ref) {
-	int64_t offset = ref - objectMap->start;
-	int bitI = (offset / WORD_SIZE);
+	int bitI = addressToObjectMapIndex(ref);
 	if (bitI > objectMap->bitmapSize)
 		uVM_fail("exceeding object map size");
 	set_bit(objectMap->bitmap, bitI);
@@ -185,11 +195,11 @@ void markInObjectMap(Address ref) {
 }
 
 bool isObjectStart(Address ref) {
-	int64_t offset = ref - objectMap->start;
-	int bitI = (offset / WORD_SIZE);
-	if (bitI > objectMap->bitmapSize)
+	if (ref < immixSpace->immixStart || ref > immixSpace->freelistStart)
 		return false;
-	else return get_bit(objectMap->bitmap, bitI) != 0;
+
+	int bitI = addressToObjectMapIndex(ref);
+	return get_bit(objectMap->bitmap, bitI) != 0;
 }
 
 extern int typeCount;
@@ -198,12 +208,11 @@ Address getObjectStart(Address iref) {
 		return iref;
 
 	// iref could a valid iref or not an iref at all
-	int64_t offset = iref - objectMap->start;
-	int bitI = (offset / WORD_SIZE);
+	int bitI = addressToObjectMapIndex(iref);
 	for (; bitI >= 0; bitI--) {
 //		printf("bitI = %d\n", bitI);
 		if (get_bit(objectMap->bitmap, bitI) != 0) {
-			Address potentialObjectStart = objectMap->start + bitI * WORD_SIZE;
+			Address potentialObjectStart = objectMapIndexToAddress(bitI);
 
 			printf("***bitI = %d***\n", bitI);
 			printf("***iref = %llx, potential ref=%llx***\n", iref, potentialObjectStart);

@@ -1,5 +1,6 @@
 package uvm.objectmodel;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,8 +41,8 @@ public class SimpleObjectModel {
 	 * 
 	 */
 	
-	public static final long TYPEID_MASK = 0x0000FFFFL;
-	public static final long GCBITS_MASK = 0x7FFF0000L;
+	public static final long TYPEID_MASK = 0x00000000FFFFFFFFL;
+	public static final long GCBITS_MASK = 0x7FFFFFFF00000000L;
 	
 	public static final int GCBITS_IN_BYTES = 4;
 	public static final int TYPEID_SIZE_IN_BYTES = 4;
@@ -64,7 +65,7 @@ public class SimpleObjectModel {
 	}
 	
 	private long getGCBitsInitialization(Type t) {
-		return 0;
+		return 0xBEEF;
 	}
 
 	/**

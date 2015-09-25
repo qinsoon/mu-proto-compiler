@@ -113,7 +113,7 @@ Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align) {
     if (end > mutator->limit) {
         DEBUG_PRINT(5, ("current local lines are consumed, try get some from block\n"));
         Address ret = ImmixMutator_tryAllocFromLocal(mutator, size, align);
-        markInObjectMap(ret);
+//        markInObjectMap(ret);	// we already marked it, since tryAllocFromLocal will call alloc()
         return ret;
     }
     

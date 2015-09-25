@@ -11,6 +11,23 @@
 
 #include "osx_ucontext.h"
 
+/*
+ * higher verbose level, more detailed output
+ * 5 - log everything
+ * 3 - global allocation, yieldpoint synchronization
+ * 1 - initilizer
+ */
+#define DEBUG_VERBOSE_LEVEL 3
+#define DEBUG
+
+#ifdef DEBUG
+# define DEBUG_PRINT(l, x) if (DEBUG_VERBOSE_LEVEL >= l) printf x
+# define uVM_assert(a, b) if (!(a)) uVM_fail(b)
+#else
+# define DEBUG_PRINT(l, x) do {} while (0)
+# define uVM_assert(a, b) do {} while (0)
+#endif
+
 typedef uint64_t Address;
 typedef uint64_t Word;
 #define WORD_SIZE sizeof(Word)
@@ -44,7 +61,8 @@ extern Address yieldpoint_protect_page;
 // *** heap general ***
 extern Address heapStart;
 
-#define HEAP_SIZE (50 << 20)
+//#define HEAP_SIZE (1 << 20)
+#define HEAP_SIZE (1 << 19)
 #define HEAP_IMMIX_FRACTION 0.7
 #define HEAP_FREELIST_FRACTION 0.3
 
@@ -106,6 +124,10 @@ extern ObjectMap* objectMap;
 
 extern void initObjectMap();
 extern void markInObjectMap(Address ref);
+
+extern Address objectMapIndexToAddress(int i);
+extern int addressToObjectMapIndex(Address addr);
+
 extern bool isObjectStart(Address ref);
 extern Address getObjectStart(Address ref);
 
@@ -281,19 +303,8 @@ extern ImmixSpace* immixSpace;
 extern FreeListSpace* largeObjectSpace;
 
 /*
- * higher verbose level, more detailed output
- * 5 - log everything
- * 3 - global allocation, yieldpoint synchronization
- * 1 - initilizer
+ * DEBUG
  */
-#define DEBUG_VERBOSE_LEVEL 3
-#define DEBUG
-
-#ifdef DEBUG
-# define DEBUG_PRINT(l, x) if (DEBUG_VERBOSE_LEVEL >= l) printf x
-#else
-# define DEBUG_PRINT(l, x) do {} while (0)
-#endif
 
 extern void uvmPrintInt64(int64_t);
 extern void uvmPrintDouble(double);
@@ -354,7 +365,5 @@ extern void uvmMainExit(int64_t);
 extern void turnOffYieldpoints();
 extern void turnOnYieldpoints();
 extern void uVM_fail(const char* str);
-
-#define uVM_assert(a, b) if (!(a)) uVM_fail(b)
 
 extern void NOT_REACHED();
