@@ -1,8 +1,6 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-extern void uVM_fail(const char* str);
-
 /*
  * higher verbose level, more detailed output
  * 5 - log everything
@@ -23,7 +21,7 @@ extern void uVM_fail(const char* str);
 extern void uvmPrintInt64(int64_t);
 extern void uvmPrintDouble(double);
 extern void uvmPrintStr(Address);
-
+extern void uVM_fail(const char* str);
 extern void NOT_REACHED();
 
 #endif

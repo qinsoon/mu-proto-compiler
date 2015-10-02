@@ -3,7 +3,6 @@
 #include "heap.h"
 #include "threadstack.h"
 #include "typeinfo.h"
-#include "typeinfo.h"
 #include "bitmap.h"
 
 #include "osx_ucontext.h"
