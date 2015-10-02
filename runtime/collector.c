@@ -134,6 +134,26 @@ void traceObjects() {
 	}
 }
 
+extern int objectAllocated;
+extern int objectsMarked;
+
+void validateObjectMap() {
+    // check object map
+    int i = 0;
+    int objects = 0;
+    for (; i < objectMap->bitmapSize; i++) {
+//        	printf("check bitmap[%d]...\n", i);
+    	if (get_bit(objectMap->bitmap, i) != 0) {
+    		objects++;
+        	Address obj = objectMapIndexToAddress(i);
+        	printObject(obj);
+    	}
+    }
+    printf("total objects in objectmap: %d\n", objects);
+    printf("total objects allocated   : %d\n", objectAllocated);
+    printf("total objects marked      : %d\n", objectsMarked);
+}
+
 void *collector_controller_run(void *param) {
     DEBUG_PRINT(1, ("Collector Controller running...\n"));
     
@@ -188,19 +208,13 @@ void *collector_controller_run(void *param) {
         DEBUG_PRINT(1, ("Collector is going to work (currently sleep for 1 secs)\n"));
         phase = GC;
 
-        // check object map
-        int i = 0;
-        for (; i < objectMap->bitmapSize; i++) {
-        	printf("check bitmap[%d]...\n", i);
-        	if (get_bit(objectMap->bitmap, i) != 0) {
-        		Address obj = objectMapIndexToAddress(i);
-        		printObject(obj);
-        	}
-        }
+        validateObjectMap();
 
         scanGlobal();	// empty
         scanStacks();
         scanRegisters();
+
+        validateObjectMap();
 
         traceObjects();
         

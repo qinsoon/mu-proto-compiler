@@ -169,9 +169,12 @@ void initObjectMap() {
 
 	objectMap = (ObjectMap*) malloc(sizeof(ObjectMap) + objectMapSizeInBytes);
 
+	printf("BITS_PER_WORD = %lld \n", BITS_PER_WORD);
+
 	// init
 	objectMap->start = immixSpace->immixStart;
 	objectMap->bitmapSize = objectMapSize;
+	objectMap->bitmapUsed = 0;
 	memset(objectMap->bitmap, 0, objectMapSizeInBytes);
 }
 
@@ -186,11 +189,31 @@ int addressToObjectMapIndex(Address addr) {
 	return ret;
 }
 
+int objectsMarked = 0;
 void markInObjectMap(Address ref) {
 	int bitI = addressToObjectMapIndex(ref);
 	if (bitI > objectMap->bitmapSize)
 		uVM_fail("exceeding object map size");
+
+	if (objectMap->bitmapUsed > bitI)
+		uVM_fail("it seems we are rewriting existing objectmap");
+
+	// see where the bug happens
+	// bitmap since last object
+	int i0 = get_bit(objectMap->bitmap, bitI - 5);
+	int i1 = get_bit(objectMap->bitmap, bitI - 4);
+	int i2 = get_bit(objectMap->bitmap, bitI - 3);
+	int i3 = get_bit(objectMap->bitmap, bitI - 2);
+	int i4 = get_bit(objectMap->bitmap, bitI - 1);
+	printf("last object in bitmap: %x, %x, %x, %x, %x\n", i0, i1, i2, i3, i4);
+	if (i0 !=0 && i2 != 0) {
+		printf("the last object in bitmap is wrong\n");
+		uVM_fail("fail");
+	}
+
 	set_bit(objectMap->bitmap, bitI);
+	objectMap->bitmapUsed = bitI;
+	objectsMarked ++;
 	printf("Obj %llx marked at %d\n", ref, bitI);
 }
 

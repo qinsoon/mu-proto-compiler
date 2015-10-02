@@ -329,7 +329,7 @@ void printObject(Address ref) {
 	if (tinfo != NULL) {
 		int64_t size = tinfo->size;
 
-		printf("HEADER\n");
+		printf("HEADER \n");
 		printf("Address 0x%llx\t| 0x%llx\n", ref, *((Address*)ref));
 		printf("OBJ\n");
 		Address cur = ref + OBJECT_HEADER_SIZE;
@@ -339,23 +339,7 @@ void printObject(Address ref) {
 	}
 }
 
-/*
- * bit map
- */
-void set_bit(Word *words, int n) {
-	printf("set bit: %p[%d]\n", words, n);
-    words[WORD_OFFSET(n)] |= (1 << BIT_OFFSET(n));
-}
 
-void clear_bit(Word *words, int n) {
-    words[WORD_OFFSET(n)] &= ~(1 << BIT_OFFSET(n));
-}
-
-int get_bit(Word *words, int n) {
-    Word bit = words[WORD_OFFSET(n)] & (1 << BIT_OFFSET(n));
-	printf("get bit: %p[%d] = %lld\n", words, n, bit);
-    return bit != 0;
-}
 
 /*
  * printing

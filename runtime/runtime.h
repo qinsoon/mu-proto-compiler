@@ -7,8 +7,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <signal.h>
-#include <limits.h>
 
+#include "bitmap.h"
 #include "osx_ucontext.h"
 
 /*
@@ -29,17 +29,6 @@
 #endif
 
 typedef uint64_t Address;
-typedef uint64_t Word;
-#define WORD_SIZE sizeof(Word)
-
-// bit map
-enum { BITS_PER_WORD = sizeof(Word) * CHAR_BIT };
-#define WORD_OFFSET(b) ((b) / BITS_PER_WORD)
-#define BIT_OFFSET(b)  ((b) % BITS_PER_WORD)
-
-extern void set_bit(Word*, int);
-extern void clear_bit(Word*, int);
-extern int get_bit(Word*, int);
 
 // *** yieldpoint ***
 
@@ -62,7 +51,7 @@ extern Address yieldpoint_protect_page;
 extern Address heapStart;
 
 //#define HEAP_SIZE (1 << 20)
-#define HEAP_SIZE (1 << 19)
+#define HEAP_SIZE (1 << 19)		// 512Kb
 #define HEAP_IMMIX_FRACTION 0.7
 #define HEAP_FREELIST_FRACTION 0.3
 
@@ -116,8 +105,9 @@ typedef struct ImmixSpace {
 typedef struct ObjectMap {
 	Address start;
 
-	int bitmapSize;		// how many bits
-	Word bitmap[1];
+	int64_t bitmapSize;		// how many bits
+	int64_t bitmapUsed;
+	Word bitmap[];
 } ObjectMap;
 
 extern ObjectMap* objectMap;

@@ -1,5 +1,5 @@
-LIBS  = 
-CFLAGS = -std=gnu99 -Wzero-length-array -Wall -Wpedantic -O0 -g #-mmacosx-version-min=10.9 #-fsanitize=undefined
+LIBS  =
+CFLAGS = -I ../runtime -std=gnu99 -Wzero-length-array -Wall -Wpedantic -O0 -g #-mmacosx-version-min=10.9 #-fsanitize=undefined
 #CFLAGS = -O3 -g
 CC = gcc
 LD = $(CC)
@@ -9,14 +9,12 @@ AR = ar
 SRC = $(wildcard *.c)
 OBJ = $(patsubst %.c, %.o, $(SRC))
 HEADER = $(wildcard *.h)
+ASSEMBLY = $(wildcard *.s)
 
-all : uvmrt.a
+all : a.out
 
-clean :
-	rm *.o uvmrt.a
-	
-uvmrt.a : $(OBJ)
-	$(AR) rcs $@ $^
-	
+a.out : $(OBJ) $(ASSEMBLY) uvmrt.a
+	gcc $^ -o a.out
+
 $(OBJ) : $(SRC) $(HEADER)
 	$(CC) -c $(SRC) $(CFLAGS) $(LIBS)
