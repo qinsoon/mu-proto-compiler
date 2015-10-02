@@ -18,6 +18,8 @@
 # define uVM_assert(a, b) do {} while (0)
 #endif
 
+// ---------------------FUNCTIONS------------------------
+
 extern void uvmPrintInt64(int64_t);
 extern void uvmPrintDouble(double);
 extern void uvmPrintStr(Address);

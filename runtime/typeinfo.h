@@ -3,6 +3,8 @@
 
 #include "runtimetypes.h"
 
+// ---------------------TYPES------------------------
+
 /*
  * type information
  *
@@ -29,6 +31,8 @@ typedef struct TypeInfo {
 	int64_t refOffsets[1];	// fixed ref offsets, fixed iref offsets,
 							// var ref offsets, var iref offsets
 } TypeInfo;
+
+// ---------------------FUNCTIONS------------------------
 
 extern TypeInfo* allocScalarTypeInfo(int64_t id, int64_t size, int64_t align, int64_t nRefOffsets, int64_t nIRefOffsets);
 extern TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length, int64_t align, int64_t nRefOffsets, int64_t nIRefOffsets);

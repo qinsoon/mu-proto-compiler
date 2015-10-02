@@ -11,7 +11,8 @@
  * FUNCTIONS
  */
 extern void initRuntime();
-extern void initThread();
+
 extern void initHeap();
 extern void initCollector();
+extern void initThread();
 extern void initStack();

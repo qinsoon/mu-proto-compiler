@@ -7,8 +7,6 @@ UVMStack* uvmStacks[MAX_STACK_COUNT];
 int stackCount = 0;
 pthread_mutex_t stackAcctLock;
 
-int UVMStackMetaSize = sizeof(UVMStack);
-
 void initStack() {
 	int i = 0;
 	for (; i < MAX_STACK_COUNT; i++)

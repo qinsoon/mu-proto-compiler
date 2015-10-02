@@ -5,26 +5,16 @@
 #include "runtimetypes.h"
 #include "heap.h"
 
-// *** yieldpoint ***
-
-// only define one of the two
-#define CHECKING_YIELDPOINT
-//#define PAGE_PROTECTION_YIELDPOINT
-
-#ifdef CHECKING_YIELDPOINT
-extern int64_t yieldpoint_check;
-#endif
-
-#ifdef PAGE_PROTECTION_YIELDPOINT
-extern Address yieldpoint_protect_page;
-#endif
+// ---------------------TYPES------------------------
 
 /*
- * THREAD
+ * Thread block status
  */
-
 typedef enum {INIT, RUNNING, NEED_TO_BLOCK, BLOCKED} block_t;
 
+/*
+ * UVMStack
+ */
 struct UVMThread;
 typedef struct UVMStack {
 	int64_t stackSlot;
@@ -46,21 +36,9 @@ typedef struct UVMStack {
     struct UVMThread* thread;
 } UVMStack;
 
-extern int UVMStackMetaSize;
-
-// this constant should match Java part implementation, see uvm.type.Stack
-#define STACK_SIZE		(4 << 20)
-
-#define MAX_STACK_COUNT 65535
-extern UVMStack* uvmStacks[MAX_STACK_COUNT];
-extern int stackCount;
-
-extern Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args);
-extern void addNewStack(UVMStack* stack);
-extern UVMStack* getCurrentStack();
-extern void printStackInfo(UVMStack* stack);
-extern void inspectStack(UVMStack* stack, int64_t max);
-
+/*
+ * UVMThread
+ */
 typedef struct UVMThread {
     int threadSlot;
 
@@ -78,38 +56,77 @@ typedef struct UVMThread {
     struct UVMStack* stack;
 } UVMThread;
 
+// ---------------------CONSTANTS------------------------
+
+#define UVMStackMetaSize sizeof(UVMStack)
+
+// this constant should match Java part implementation, see uvm.type.Stack
+#define STACK_SIZE		(4 << 20)
+
+#define MAX_STACK_COUNT 65535
 #define MAX_THREAD_COUNT 1024
+
+// ---------------------GLOBALS------------------------
+
+/*
+ * Yieldpoints
+ */
+#define CHECKING_YIELDPOINT
+//#define PAGE_PROTECTION_YIELDPOINT
+
+#ifdef CHECKING_YIELDPOINT
+extern int64_t yieldpoint_check;
+#endif
+#ifdef PAGE_PROTECTION_YIELDPOINT
+extern Address yieldpoint_protect_page;
+#endif
+
+/*
+ * Stacks
+ */
+extern UVMStack* uvmStacks[MAX_STACK_COUNT];
+extern int stackCount;
+
+/*
+ * Threads
+ */
 extern UVMThread* uvmThreads[MAX_THREAD_COUNT];
 extern int threadCount;
-
-extern void addNewThread(UVMThread* thread);
-extern Address newThread(Address stack);
-extern void printThreadInfo(UVMThread* t);
-extern void threadExit();
-
-/*
- * create thread context and put it in local
- */
-extern UVMThread* getThreadContext();
-
-/*
- * block and unblock on pthread cond
- */
-void block(UVMThread* uvmThread);
-void unblock(UVMThread* uvmThread);
-
 extern pthread_key_t currentUVMThread;
+
+// ---------------------FUNCTIONS------------------------
+
+/*
+ * Stacks
+ */
+extern Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args);
+extern void addNewStack(UVMStack* stack);
+extern UVMStack* getCurrentStack();
+
+extern void printStackInfo(UVMStack* stack);
+extern void inspectStack(UVMStack* stack, int64_t max);
 
 extern void scanStackForRoots(UVMStack* stack, AddressNode** roots);
 
 /*
- * MISC
+ * Threads
  */
+extern Address newThread(Address stack);	// naming issue - should be the same as 'allocStack'
+extern void addNewThread(UVMThread* thread);
+extern UVMThread* getThreadContext();
 
-extern void yieldpoint();
+extern void printThreadInfo(UVMThread* t);
 
+void block(UVMThread* uvmThread);
+void unblock(UVMThread* uvmThread);
+
+extern void threadExit();
 extern void uvmMainExit(int64_t);
 
+/*
+ * Yieldpoints
+ */
+extern void yieldpoint();
 extern void turnOffYieldpoints();
 extern void turnOnYieldpoints();
 
