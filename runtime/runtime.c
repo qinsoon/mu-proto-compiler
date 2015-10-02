@@ -1,19 +1,12 @@
 #include "runtime.h"
+#include <stdio.h>
+#include <signal.h>
+#include <stdlib.h>
+
 
 /*
  * global variables
  */
-
-int64_t yieldpoint_check;
-Address yieldpoint_protect_page;
-
-Address heapStart;
-
-ImmixSpace* immixSpace;
-FreeListSpace* largeObjectSpace;
-
-GCPhase_t phase;
-
 void initYieldpoint();
 void initSignalHandler();
 extern void initTypeTable();
@@ -28,82 +21,19 @@ void initRuntime() {
     initTypeTable();
 }
 
-int64_t retval;
-
-void uvmMainExit(int64_t r) {
-	retval = r;
-	threadExit();
-}
-
-void* uvmMain(void*);
-
-int main(int c, char** args) {
-	initRuntime();
-
-	// alloc stack
-	printf("uvmMain at %p\n", (void*)(Address) uvmMain);
-	UVMStack* mainStack = (UVMStack*) allocStack(STACK_SIZE, uvmMain, NULL);
-
-	// init stack
-	Address stackStart = mainStack->lowerBound;
-	memset((void*) stackStart, 0, STACK_SIZE);
-	mainStack->_sp = mainStack->_sp - 120;		// see java part: X64MachineCodeExpansion
-												// the thread trampoline will pop registers
-
-	inspectStack(mainStack, 50);
-
-	// launch thread
-	UVMThread* t = (UVMThread*) newThread((Address)mainStack);
-
-	// join
-	pthread_join(t->_pthread, NULL);
-
-	return retval;
-}
-
-void yieldpoint() {
-    UVMThread* t = getThreadContext();
-    
-    DEBUG_PRINT(3, ("Thread%p reaches a yieldpoint\n", t->_pthread));
-    
-    // if we need to block
-    if (t->_block_status == NEED_TO_BLOCK) {
-    	// save rsp first
-    	void* rsp;
-    	void* rbp;
-
-    	__asm__(
-    			"mov %%rsp, %0		\n"
-    			"mov %%rbp, %1		\n"
-    			: "=rm" (rsp),
-				  "=rm" (rbp)
-		);
-    	t->stack->_sp = (Address) rsp;
-    	t->stack->_bp = (Address) rbp;
-
-        block(t);
-    }
-}
-
-//static void handler(int sig, siginfo_t *si, void* unused) {
-//    printf("yieldpoint enabled\n");
-////    disableYieldpoint();
-//    uVM_fail("havent implement yieldpoint");
-//}
-
 void initYieldpoint() {
 
 #ifdef CHECKING_YIELDPOINT
     turnOffYieldpoints();
 #endif
-    
+
 
 #ifdef PAGE_PROTECTION_YIELDPOINT
     yieldpoint_protect_page = (Address) mmap(NULL, BYTES_IN_PAGE * 2, PROT_NONE, MAP_SHARED|MAP_ANON, -1, 0);
     yieldpoint_protect_page = alignUp(yieldpoint_protect_page, BYTES_IN_PAGE);
     DEBUG_PRINT(3, ("yieldpoint_protect_page=%llx\n", yieldpoint_protect_page));
     disableYieldpoint();
-    
+
     // set up signal handler
     struct sigaction sa;
     sa.sa_flags = SA_SIGINFO;
@@ -113,31 +43,7 @@ void initYieldpoint() {
         uVM_fail("Error when register signal handler");
     }
 #endif
-    
-}
 
-void turnOffYieldpoints() {
-    // checking
-#ifdef CHECKING_YIELDPOINT
-    yieldpoint_check = 0;
-#endif
-    
-    // page protection
-#ifdef PAGE_PROTECTION_YIELDPOINT
-    mprotect((void*) yieldpoint_protect_page, BYTES_IN_PAGE, PROT_WRITE);
-#endif
-}
-
-void turnOnYieldpoints() {
-    // checking
-#ifdef CHECKING_YIELDPOINT
-    yieldpoint_check = 1;
-#endif
-    
-    // page protection
-#ifdef PAGE_PROTECTION_YIELDPOINT
-    mprotect((void*) yieldpoint_protect_page, BYTES_IN_PAGE, PROT_NONE);
-#endif
 }
 
 void runtimeSignalHandler(int signum, siginfo_t *info, void *context) {
@@ -261,85 +167,6 @@ void initSignalHandler() {
 	sigaction(SIGSEGV, &sig_act, NULL);
 	sigaction(SIGBUS,  &sig_act, NULL);
 }
-
-Address alignUp(Address region, int align) {
-	if (align != 2 && align != 4 && align != 8 && align % 8 != 0) {
-		printf("alignUp(), align=%d\n", align);
-		uVM_fail("possibly wrong align in alignUp()");
-	}
-
-    return (region + align - 1) & ~ (align - 1);
-}
-
-void fillAlignmentGap(Address start, Address end) {
-	if (end <= start)
-		return;
-
-    memset((void*)start, ALIGNMENT_VALUE, end - start);
-}
-
-void fillTypeInfo(TypeInfo* t, int64_t id, int64_t size, int64_t align,
-		int64_t eleSize, int64_t length,
-		int64_t nFixedRefOffsets, int64_t nFixedIRefOffsets) {
-	t->id 				= id;
-	t->size 			= size;
-	t->align 			= align;
-	t->eleSize 			= eleSize;
-	t->length 			= length;
-	t->nFixedRefOffsets = nFixedRefOffsets;
-	t->nFixedIRefOffsets= nFixedIRefOffsets;
-}
-
-TypeInfo* allocScalarTypeInfo(int64_t id, int64_t size, int64_t align, int64_t nRefOffsets, int64_t nIRefOffsets) {
-	TypeInfo* ret = (TypeInfo*) malloc(sizeof(TypeInfo) + (nRefOffsets + nIRefOffsets) * sizeof(int64_t));
-	fillTypeInfo(ret, id, size, align, size, 1, nRefOffsets, nIRefOffsets);
-	return ret;
-}
-
-TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length, int64_t align, int64_t nRefOffsets, int64_t nIRefOffsets) {
-	TypeInfo* ret = (TypeInfo*) malloc(sizeof(TypeInfo) + (nRefOffsets + nIRefOffsets) * sizeof(int64_t));
-	fillTypeInfo(ret, id, eleSize * length, align, eleSize, length, nRefOffsets, nIRefOffsets);
-	return ret;
-}
-
-//TypeInfo* allocHybridTypeInfo(int64_t id, int64_t size, int64_t align, int64_t eleSize, int64_t length, int64_t nFixedRefOffsets, int64_t nVarRefOffsets) {
-//	uVM_fail("allocHybridTypeInfo() unimplemented");
-//	return NULL;
-//}
-
-int getTypeID(Address ref) {
-	uint64_t header = * ((uint64_t*)ref);
-//	printf("header = %llx\n", header);
-	int id = (int) (header & 0xFFFFFFFF);
-//	printf("id = %d\n", id);
-	return id;
-}
-
-extern TypeInfo* typeInfoTable[];
-extern int typeCount;
-TypeInfo* getTypeInfo(Address ref) {
-	int id = getTypeID(ref);
-	uVM_assert(id >= 0 && id < typeCount, "invalid type id in getTypeInfo()");
-	return typeInfoTable[id];
-}
-
-void printObject(Address ref) {
-	TypeInfo* tinfo = getTypeInfo(ref);
-
-	if (tinfo != NULL) {
-		int64_t size = tinfo->size;
-
-		printf("HEADER \n");
-		printf("Address 0x%llx\t| 0x%llx\n", ref, *((Address*)ref));
-		printf("OBJ\n");
-		Address cur = ref + OBJECT_HEADER_SIZE;
-		for (; cur < ref + OBJECT_HEADER_SIZE + size; cur += WORD_SIZE) {
-			printf("Address 0x%llx\t| 0x%llx\n", cur, *((Address*)cur));
-		}
-	}
-}
-
-
 
 /*
  * printing

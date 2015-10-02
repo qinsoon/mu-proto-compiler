@@ -1,6 +1,11 @@
 #include "runtime.h"
+#include <stdlib.h>
+#include <stdio.h>
 
 #define TRACE_BLOCK true
+
+int64_t yieldpoint_check;
+Address yieldpoint_protect_page;
 
 UVMThread* uvmThreads[MAX_THREAD_COUNT];
 int threadCount = 0;
@@ -195,4 +200,85 @@ Address newThread(Address stack) {
     pthread_create(&(t->_pthread), NULL, uVMThreadLaunch, (void*) stack);
 
     return (Address) t;
+}
+
+int64_t retval;
+
+void uvmMainExit(int64_t r) {
+	retval = r;
+	threadExit();
+}
+
+void* uvmMain(void*);
+
+int main(int c, char** args) {
+	initRuntime();
+
+	// alloc stack
+	printf("uvmMain at %p\n", (void*)(Address) uvmMain);
+	UVMStack* mainStack = (UVMStack*) allocStack(STACK_SIZE, uvmMain, NULL);
+
+	// init stack
+	Address stackStart = mainStack->lowerBound;
+	memset((void*) stackStart, 0, STACK_SIZE);
+	mainStack->_sp = mainStack->_sp - 120;		// see java part: X64MachineCodeExpansion
+												// the thread trampoline will pop registers
+
+	inspectStack(mainStack, 50);
+
+	// launch thread
+	UVMThread* t = (UVMThread*) newThread((Address)mainStack);
+
+	// join
+	pthread_join(t->_pthread, NULL);
+
+	return retval;
+}
+
+void yieldpoint() {
+    UVMThread* t = getThreadContext();
+
+    DEBUG_PRINT(3, ("Thread%p reaches a yieldpoint\n", t->_pthread));
+
+    // if we need to block
+    if (t->_block_status == NEED_TO_BLOCK) {
+    	// save rsp first
+    	void* rsp;
+    	void* rbp;
+
+    	__asm__(
+    			"mov %%rsp, %0		\n"
+    			"mov %%rbp, %1		\n"
+    			: "=rm" (rsp),
+				  "=rm" (rbp)
+		);
+    	t->stack->_sp = (Address) rsp;
+    	t->stack->_bp = (Address) rbp;
+
+        block(t);
+    }
+}
+
+void turnOffYieldpoints() {
+    // checking
+#ifdef CHECKING_YIELDPOINT
+    yieldpoint_check = 0;
+#endif
+
+    // page protection
+#ifdef PAGE_PROTECTION_YIELDPOINT
+    mprotect((void*) yieldpoint_protect_page, BYTES_IN_PAGE, PROT_WRITE);
+#endif
+}
+
+void turnOnYieldpoints() {
+    // checking
+#ifdef CHECKING_YIELDPOINT
+    yieldpoint_check = 1;
+#endif
+
+    // page protection
+#ifdef PAGE_PROTECTION_YIELDPOINT
+    mprotect((void*) yieldpoint_protect_page, BYTES_IN_PAGE, PROT_NONE);
+#endif
 }

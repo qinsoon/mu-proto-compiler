@@ -1,4 +1,6 @@
 #include "runtime.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 /*
  * debug print struct
@@ -94,8 +96,6 @@ int ImmixSpace_getNextAvailableLine(uint8_t* markTable, int currentLine);
 int ImmixSpace_getNextUnavailableLine(uint8_t* markTable, int currentLine);
 bool ImmixSpace_getNextBlock(ImmixMutator* mutator);
 
-int objectAllocated = 0;
-
 Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align) {
     DEBUG_PRINT(5, ("---alloc request---\n"));
     DEBUG_PRINT(5, ("size=%lld, align=%lld\n", size, align));
@@ -124,7 +124,6 @@ Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align) {
     
     DEBUG_PRINT(5, ("---alloc DONE: %llx---\n", start));
     markInObjectMap(start);
-    objectAllocated ++;
     return start;
 }
 

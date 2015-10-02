@@ -1,9 +1,14 @@
 #include "runtime.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+
 pthread_t controller;
 
 pthread_mutex_t controller_mutex;
 pthread_cond_t controller_cond;
+
+GCPhase_t phase;
 
 void *collector_controller_run(void *param);
 
@@ -134,15 +139,10 @@ void traceObjects() {
 	}
 }
 
-extern int objectAllocated;
-extern int objectsMarked;
-
 void validateObjectMap() {
-    // check object map
     int i = 0;
     int objects = 0;
     for (; i < objectMap->bitmapSize; i++) {
-//        	printf("check bitmap[%d]...\n", i);
     	if (get_bit(objectMap->bitmap, i) != 0) {
     		objects++;
         	Address obj = objectMapIndexToAddress(i);
@@ -150,8 +150,6 @@ void validateObjectMap() {
     	}
     }
     printf("total objects in objectmap: %d\n", objects);
-    printf("total objects allocated   : %d\n", objectAllocated);
-    printf("total objects marked      : %d\n", objectsMarked);
 }
 
 void *collector_controller_run(void *param) {

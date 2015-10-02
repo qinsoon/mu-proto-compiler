@@ -40,7 +40,7 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
     		writer = new BufferedWriter(new FileWriter(out));
     		
     		// include runtime.h
-    		writer.write("#include \"runtime.h\"");
+    		writer.write("#include \"typeinfo.h\"");
     		writer.write("\n");
     		
     		// declare typeInfo table

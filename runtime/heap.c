@@ -1,6 +1,16 @@
 #include "runtime.h"
+#include <stdio.h>
+#include <sys/mman.h>
+#include <stdlib.h>
 
 // heap include an immix space (blocks) and a free list space.
+
+Address heapStart;
+
+ImmixSpace* immixSpace;
+FreeListSpace* largeObjectSpace;
+
+
 
 FreeListSpace* newFreeListSpace();
 
@@ -189,32 +199,16 @@ int addressToObjectMapIndex(Address addr) {
 	return ret;
 }
 
-int objectsMarked = 0;
+//int objectsMarked = 0;
 void markInObjectMap(Address ref) {
 	int bitI = addressToObjectMapIndex(ref);
 	if (bitI > objectMap->bitmapSize)
 		uVM_fail("exceeding object map size");
 
-	if (objectMap->bitmapUsed > bitI)
-		uVM_fail("it seems we are rewriting existing objectmap");
-
-	// see where the bug happens
-	// bitmap since last object
-	int i0 = get_bit(objectMap->bitmap, bitI - 5);
-	int i1 = get_bit(objectMap->bitmap, bitI - 4);
-	int i2 = get_bit(objectMap->bitmap, bitI - 3);
-	int i3 = get_bit(objectMap->bitmap, bitI - 2);
-	int i4 = get_bit(objectMap->bitmap, bitI - 1);
-	printf("last object in bitmap: %x, %x, %x, %x, %x\n", i0, i1, i2, i3, i4);
-	if (i0 !=0 && i2 != 0) {
-		printf("the last object in bitmap is wrong\n");
-		uVM_fail("fail");
-	}
-
 	set_bit(objectMap->bitmap, bitI);
 	objectMap->bitmapUsed = bitI;
-	objectsMarked ++;
-	printf("Obj %llx marked at %d\n", ref, bitI);
+//	objectsMarked ++;
+//	printf("Obj %llx marked at %d\n", ref, bitI);
 }
 
 bool isObjectStart(Address ref) {
@@ -237,9 +231,9 @@ Address getObjectStart(Address iref) {
 		if (get_bit(objectMap->bitmap, bitI) != 0) {
 			Address potentialObjectStart = objectMapIndexToAddress(bitI);
 
-			printf("***bitI = %d***\n", bitI);
-			printf("***iref = %llx, potential ref=%llx***\n", iref, potentialObjectStart);
-			printf("***header = %llx***\n", *((uint64_t*)potentialObjectStart));
+//			printf("***bitI = %d***\n", bitI);
+//			printf("***iref = %llx, potential ref=%llx***\n", iref, potentialObjectStart);
+//			printf("***header = %llx***\n", *((uint64_t*)potentialObjectStart));
 			printObject(potentialObjectStart);
 
 			int typeId = getTypeID(potentialObjectStart);
@@ -282,4 +276,20 @@ Address findBaseRef(Address candidate) {
 	} else {
 		return (Address) NULL;
 	}
+}
+
+Address alignUp(Address region, int align) {
+	if (align != 2 && align != 4 && align != 8 && align % 8 != 0) {
+		printf("alignUp(), align=%d\n", align);
+		uVM_fail("possibly wrong align in alignUp()");
+	}
+
+    return (region + align - 1) & ~ (align - 1);
+}
+
+void fillAlignmentGap(Address start, Address end) {
+	if (end <= start)
+		return;
+
+    memset((void*)start, ALIGNMENT_VALUE, end - start);
 }

@@ -1,5 +1,7 @@
-#include <stdlib.h>
 #include "runtime.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/mman.h>
 
 UVMStack* uvmStacks[MAX_STACK_COUNT];
 int stackCount = 0;
