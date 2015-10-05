@@ -111,7 +111,14 @@ typedef struct AddressNode {
 
 #define ALIGNMENT_VALUE 9
 
+/*
+ * HEADER
+ */
 #define OBJECT_HEADER_SIZE 8
+
+// if this bit is marked, the object is traced during current GC
+// this bit will be cleared after GC
+#define OBJECT_HEADER_MARK_BIT_MASK		0x0400000000000000L
 
 /*
  * Immix constants
@@ -191,5 +198,9 @@ extern AddressNode* popFromList(AddressNode** list);
  */
 extern Address alignUp(Address region, int align);
 extern void fillAlignmentGap(Address start, Address end);
+
+extern void setMaskedBitInHeader  (Address ref, Word mask);
+extern bool testMaskedBitInHeader (Address ref, Word mask);
+extern void clearMaskedBitInHeader(Address ref, Word mask);
 
 #endif

@@ -138,5 +138,16 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
 				UVMCompiler.error("error copying runtime headers");
 			}
 		}
+		
+		// copy MakeFile
+		File make = new File(UVMCompiler.BASE_DIR + "/EmitMakefile");
+		Path makeDst = Paths.get(dir + "/Makefile");
+		try {
+			Files.copy(make.toPath(), makeDst, StandardCopyOption.REPLACE_EXISTING);
+			System.out.println("copy makefile EmitMakefile to " + makeDst.toString());
+		} catch (IOException e) {
+			e.printStackTrace();
+			UVMCompiler.error("error copying Makefile after compilation");
+		}
 	}
 }

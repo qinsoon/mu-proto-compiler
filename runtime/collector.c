@@ -95,6 +95,8 @@ void traceObject(Address ref) {
 	printf("tracing 0x%llx of type %lld\n", ref, typeInfo->id);
 	printObject(ref);
 
+	setMaskedBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK);
+
 	for (int i = 0; i < typeInfo->nFixedRefOffsets; i++) {
 		Address field = ref + OBJECT_HEADER_SIZE + typeInfo->refOffsets[i];
 
@@ -102,7 +104,7 @@ void traceObject(Address ref) {
 		printf("field: 0x%llx\n", field);
 		printf("->ref: 0x%llx\n", ref);
 
-		if (ref != (Address) NULL)
+		if (ref != (Address) NULL && !testMaskedBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK))
 			pushToList(ref, &alive);
 	}
 
@@ -115,7 +117,7 @@ void traceObject(Address ref) {
 		printf("->iref:0x%llx\n", iref);
 		printf("->ref: 0x%llx\n", ref);
 
-		if (ref != (Address) NULL)
+		if (ref != (Address) NULL && !testMaskedBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK))
 			pushToList(ref, &alive);
 	}
 }

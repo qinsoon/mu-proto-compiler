@@ -293,3 +293,15 @@ void fillAlignmentGap(Address start, Address end) {
 
     memset((void*)start, ALIGNMENT_VALUE, end - start);
 }
+
+void setMaskedBitInHeader  (Address ref, Word mask) {
+	*((Word*)ref) |= mask;
+}
+
+bool testMaskedBitInHeader (Address ref, Word mask) {
+	return (*((Word*)ref) & mask) != 0;
+}
+
+void clearMaskedBitInHeader(Address ref, Word mask) {
+	*((Word*)ref) &= ~mask;
+}
