@@ -41,7 +41,6 @@ typedef struct ObjectMap {
 	Address start;
 
 	int64_t bitmapSize;		// how many bits
-	int64_t bitmapUsed;
 	Word bitmap[];
 } ObjectMap;
 
@@ -78,7 +77,7 @@ typedef struct ImmixMutator {
     Address blockStart;
     Address blockEnd;
 
-    uint8_t* lineMark;
+    uint8_t* lineMark;		// line mark table for current block
 } ImmixMutator;
 
 /*
@@ -155,6 +154,9 @@ extern FreeListSpace* newFreeListSpace();
 extern ImmixMutator* ImmixMutator_init(ImmixMutator* mutator, ImmixSpace* space);
 extern ImmixMutator* ImmixMutator_reset(ImmixMutator* m);
 
+extern void ImmixCollector_markObject(ImmixSpace* space, Address objectRef);
+extern void ImmixCollector_release(ImmixSpace* space);
+
 /*
  * Allocation
  */
@@ -166,6 +168,7 @@ extern void initObj(Address addr, uint64_t header);
  */
 extern void initObjectMap();
 extern void markInObjectMap(Address ref);
+extern void clearRangeInObjectMap(Address lineStart, int size);
 
 extern Address objectMapIndexToAddress(int i);
 extern int addressToObjectMapIndex(Address addr);

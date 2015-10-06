@@ -95,7 +95,8 @@ void traceObject(Address ref) {
 	printf("tracing 0x%llx of type %lld\n", ref, typeInfo->id);
 	printObject(ref);
 
-	setMaskedBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK);
+	// mark this object as alive/traced
+	ImmixCollector_markObject(immixSpace, ref);
 
 	for (int i = 0; i < typeInfo->nFixedRefOffsets; i++) {
 		Address field = ref + OBJECT_HEADER_SIZE + typeInfo->refOffsets[i];
@@ -152,6 +153,10 @@ void validateObjectMap() {
     	}
     }
     printf("total objects in objectmap: %d\n", objects);
+}
+
+void release() {
+	ImmixCollector_release(immixSpace);
 }
 
 void *collector_controller_run(void *param) {
@@ -216,9 +221,11 @@ void *collector_controller_run(void *param) {
 
         validateObjectMap();
 
+        uVM_suspend("before GC");
+
         traceObjects();
         
-        uVM_fail("didnt implement sweeping ");
+        release();
 
         // reset all mutators
         for (int i = 0; i < threadCount; i++) {
@@ -227,7 +234,11 @@ void *collector_controller_run(void *param) {
                 ImmixMutator_reset(&(t->_mutator));
             }
         }
-        
+
+        validateObjectMap();
+
+        uVM_suspend("after GC");
+
         // unblock all the mutators
         DEBUG_PRINT(1, ("Collector Controller is going to unblock all mutators\n"));
         

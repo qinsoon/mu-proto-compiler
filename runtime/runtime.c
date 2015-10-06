@@ -204,3 +204,8 @@ void uVM_fail(const char* str) {
     printf("uVM failed in runtime: %s\n", str);
     exit(1);
 }
+
+void uVM_suspend(const char* str) {
+	printf("%s\n", str);
+	getchar();
+}

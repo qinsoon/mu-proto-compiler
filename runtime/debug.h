@@ -24,6 +24,7 @@ extern void uvmPrintInt64(int64_t);
 extern void uvmPrintDouble(double);
 extern void uvmPrintStr(Address);
 extern void uVM_fail(const char* str);
+extern void uVM_suspend(const char* str);
 extern void NOT_REACHED();
 
 #endif

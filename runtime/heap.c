@@ -184,7 +184,6 @@ void initObjectMap() {
 	// init
 	objectMap->start = immixSpace->immixStart;
 	objectMap->bitmapSize = objectMapSize;
-	objectMap->bitmapUsed = 0;
 	memset(objectMap->bitmap, 0, objectMapSizeInBytes);
 }
 
@@ -206,9 +205,14 @@ void markInObjectMap(Address ref) {
 		uVM_fail("exceeding object map size");
 
 	set_bit(objectMap->bitmap, bitI);
-	objectMap->bitmapUsed = bitI;
 //	objectsMarked ++;
 //	printf("Obj %llx marked at %d\n", ref, bitI);
+}
+
+void clearRangeInObjectMap(Address lineStart, int size) {
+	for (int i = addressToObjectMapIndex(lineStart); i < addressToObjectMapIndex(lineStart + size); i++) {
+		clear_bit(objectMap->bitmap, i);
+	}
 }
 
 bool isObjectStart(Address ref) {

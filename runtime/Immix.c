@@ -1,6 +1,7 @@
 #include "runtime.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 /*
  * debug print struct
@@ -41,8 +42,12 @@ ImmixSpace* newImmixSpace(Address immixStart, Address freelistStart) {
     Address cur = immixStart;
     uint8_t* curLineMark = ret->lineMarkTable;
     ImmixBlock* last = NULL;
+
+    int totalBlocks = 0;
+
     for (; cur < freelistStart; cur += IMMIX_BYTES_IN_BLOCK, curLineMark = &(curLineMark[IMMIX_LINES_IN_BLOCK])) {
         ImmixBlock* b = (ImmixBlock*) malloc(sizeof(ImmixBlock));
+        totalBlocks ++;
         
         if (last == NULL) {
             // first one
@@ -60,6 +65,8 @@ ImmixSpace* newImmixSpace(Address immixStart, Address freelistStart) {
         last = b;
     }
     
+    DEBUG_PRINT(3, ("Total blocks in Immix Space: %d\n", totalBlocks));
+
     return ret;
 }
 
@@ -103,6 +110,7 @@ Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align) {
     // debug_printMutator(mutator);
     
     if (size > IMMIX_BYTES_IN_LINE) {
+    	// thus no objects will span lines
         DEBUG_PRINT(5, ("Obj larger than a line, use allocLarge()\n"));
         return ImmixMutator_allocLarge(mutator, size, align);
     }
@@ -143,6 +151,10 @@ Address ImmixMutator_tryAllocFromLocal(ImmixMutator* mutator, int64_t size, int6
             memset((void*)mutator->cursor, 0, mutator->limit - mutator->cursor);
             mutator->line = endLine;
             
+            // wet this new line as fresh_alloc
+            for (int i = nextAvailableLine; i < endLine; i++)
+            	mutator->lineMark[i] = IMMIX_LINE_MARK_FRESH_ALLOC;
+
             return ImmixMutator_alloc(mutator, size, align);
         }
     }
@@ -177,6 +189,10 @@ int ImmixSpace_getNextUnavailableLine(uint8_t* markTable, int currentLine) {
         i++;
     
     return i;
+}
+
+uint8_t* ImmixSpace_getLineMarkByte(ImmixSpace* space, Address obj) {
+	return & (space->lineMarkTable[(obj - space->immixStart) / IMMIX_BYTES_IN_LINE]);
 }
 
 /*
@@ -235,4 +251,91 @@ bool ImmixSpace_getNextBlock(ImmixMutator* mutator) {
         
         return false;
     }
+}
+
+/*
+ * Immix Collector
+ */
+void ImmixCollector_markObject(ImmixSpace* space, Address objectRef) {
+	// mark the header as traced/alive
+	setMaskedBitInHeader(objectRef, OBJECT_HEADER_MARK_BIT_MASK);
+
+	// mark the immix line as live
+	uint8_t* lineMark = ImmixSpace_getLineMarkByte(space, objectRef);
+	*lineMark = IMMIX_LINE_MARK_LIVE;
+}
+
+void ImmixCollector_release(ImmixSpace* space) {
+	// walk through used blocks
+	ImmixBlock* curBlock = space->usedBlocks;
+
+	int freeLines = 0;
+	int liveLines = 0;
+	int usableBlocks = 0;
+	int fullBlocks = 0;
+
+	while (curBlock != NULL) {
+		bool hasFreeLines = false;
+
+		// walk through lines
+		for (int i = 0; i < IMMIX_LINES_IN_BLOCK; i++) {
+			if (curBlock->lineMarkTable[i] != IMMIX_LINE_MARK_LIVE) {
+				hasFreeLines = true;
+				curBlock->lineMarkTable[i] = IMMIX_LINE_MARK_FREE;
+
+				freeLines ++;
+
+				// zeroing the line
+				Address lineStart = curBlock->start + i * IMMIX_BYTES_IN_LINE;
+				memset((void*)lineStart, 0, IMMIX_BYTES_IN_LINE);
+
+				// clear objectmap
+				clearRangeInObjectMap(lineStart, IMMIX_BYTES_IN_LINE);
+			} else {
+				liveLines ++;
+			}
+		}
+
+		if (hasFreeLines) {
+			// this block is usable
+			curBlock->state = IMMIX_BLOCK_MARK_USABLE;
+			usableBlocks++;
+
+			// save next block we want to iterate
+			ImmixBlock* next = curBlock->next;
+
+			// remove the block from space->usedBlocks
+			if (curBlock->prev == NULL) {
+				// this is the first block in space->usedBlocks
+				space->usedBlocks = curBlock->next;
+			} else {
+				curBlock->prev->next = curBlock->next;
+			}
+
+			if (curBlock->next != NULL)
+				curBlock->next->prev = curBlock->prev;
+
+			// put the block to space->usableBlocks
+			ImmixBlock* curFirstUsableBlock = space->usableBlocks;
+
+			space->usableBlocks = curBlock;
+			curBlock->next = curFirstUsableBlock;
+			curBlock->prev = NULL;
+			if (curFirstUsableBlock != NULL) {
+				curFirstUsableBlock->prev = curBlock;
+			}
+
+			// iterate to next block
+			curBlock = next;
+		} else {
+			// this block is full
+			curBlock->state = IMMIX_BLOCK_MARK_FULL;
+			fullBlocks ++;
+		}
+	}
+
+	printf("free lines = %d\n", freeLines);
+	printf("live lines = %d\n", liveLines);
+	printf("usable blocks = %d\n", usableBlocks);
+	printf("full blocks   = %d\n", fullBlocks);
 }
