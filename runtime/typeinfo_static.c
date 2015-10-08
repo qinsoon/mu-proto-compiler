@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+int typeCount;
+TypeInfo** typeInfoTable;
+
 void fillTypeInfo(TypeInfo* t, int64_t id, int64_t size, int64_t align,
 		int64_t eleSize, int64_t length,
 		int64_t nFixedRefOffsets, int64_t nFixedIRefOffsets) {
@@ -33,20 +36,18 @@ TypeInfo* allocArrayTypeInfo (int64_t id, int64_t eleSize, int64_t length, int64
 //	return NULL;
 //}
 
+TypeInfo* getTypeInfo(Address ref) {
+	int id = getTypeID(ref);
+	uVM_assert(id >= 0 && id < typeCount, "invalid type id in getTypeInfo()");
+	return typeInfoTable[id];
+}
+
 int getTypeID(Address ref) {
 	uint64_t header = * ((uint64_t*)ref);
 //	printf("header = %llx\n", header);
 	int id = (int) (header & 0xFFFFFFFF);
 //	printf("id = %d\n", id);
 	return id;
-}
-
-extern TypeInfo* typeInfoTable[];
-extern int typeCount;
-TypeInfo* getTypeInfo(Address ref) {
-	int id = getTypeID(ref);
-	uVM_assert(id >= 0 && id < typeCount, "invalid type id in getTypeInfo()");
-	return typeInfoTable[id];
 }
 
 void printObject(Address ref) {

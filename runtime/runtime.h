@@ -16,3 +16,5 @@ extern void initHeap();
 extern void initCollector();
 extern void initThread();
 extern void initStack();
+extern void initYieldpoint();
+extern void initSignalHandler();

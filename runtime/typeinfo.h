@@ -32,6 +32,10 @@ typedef struct TypeInfo {
 							// var ref offsets, var iref offsets
 } TypeInfo;
 
+// ---------------------GLOBALS------------------------
+extern int typeCount;
+extern TypeInfo** typeInfoTable;
+
 // ---------------------FUNCTIONS------------------------
 
 extern TypeInfo* allocScalarTypeInfo(int64_t id, int64_t size, int64_t align, int64_t nRefOffsets, int64_t nIRefOffsets);

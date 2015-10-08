@@ -7,20 +7,6 @@
 /*
  * global variables
  */
-void initYieldpoint();
-void initSignalHandler();
-extern void initTypeTable();
-
-void initRuntime() {
-	initSignalHandler();
-    initHeap();
-    initThread();
-    initYieldpoint();
-    initCollector();
-    initStack();
-    initTypeTable();
-}
-
 void initYieldpoint() {
 
 #ifdef CHECKING_YIELDPOINT

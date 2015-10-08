@@ -40,16 +40,20 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
     		writer = new BufferedWriter(new FileWriter(out));
     		
     		// include runtime.h
-    		writer.write("#include \"typeinfo.h\"");
+    		writer.write("#include \"typeinfo.h\"\n");
+    		writer.write("#include <stdlib.h>\n");
     		writer.write("\n");
     		
     		// declare typeInfo table
-    		writer.write(String.format("TypeInfo* typeInfoTable[%d]; \n", MicroVM.v.getTypesByIDMap().size()));
-    		writer.write(String.format("int typeCount = %d; \n", MicroVM.v.getTypesByIDMap().size()));
+    		writer.write(String.format("extern TypeInfo** typeInfoTable; \n"));
+    		writer.write(String.format("extern int typeCount;\n"));
     		writer.write("\n");
     		
     		// init typeTable
     		writer.write("void initTypeTable() {\n");
+    		
+    		writer.write(String.format("typeCount = %d; \n", MicroVM.v.getTypesByIDMap().size()));
+    		writer.write(String.format("typeInfoTable = (TypeInfo**) malloc(sizeof(TypeInfo*) * %d); \n", MicroVM.v.getTypesByIDMap().size()));
     		
     		for (int id = 0; id < MicroVM.v.getTypesByIDMap().size(); id++) {
     			Type t = MicroVM.v.getTypeByID(id);

@@ -219,14 +219,6 @@ void clearRangeInObjectMap(Address lineStart, int size) {
 	}
 }
 
-bool isObjectStart(Address ref) {
-	if (ref < immixSpace->immixStart || ref > immixSpace->freelistStart)
-		return false;
-
-	int bitI = addressToObjectMapIndex(ref);
-	return get_bit(objectMap->bitmap, bitI) != 0;
-}
-
 extern int typeCount;
 Address getObjectStart(Address iref) {
 	if (isObjectStart(iref))
@@ -284,6 +276,14 @@ Address findBaseRef(Address candidate) {
 	} else {
 		return (Address) NULL;
 	}
+}
+
+bool isObjectStart(Address ref) {
+	if (ref < immixSpace->immixStart || ref > immixSpace->freelistStart)
+		return false;
+
+	int bitI = addressToObjectMapIndex(ref);
+	return get_bit(objectMap->bitmap, bitI) != 0;
 }
 
 Address alignUp(Address region, int align) {
