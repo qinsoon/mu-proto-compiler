@@ -221,8 +221,6 @@ void *collector_controller_run(void *param) {
 
         validateObjectMap();
 
-        uVM_suspend("before GC");
-
         traceObjects();
         
         release();
@@ -237,7 +235,10 @@ void *collector_controller_run(void *param) {
 
         validateObjectMap();
 
-        uVM_suspend("after GC");
+        printf("mark state = %llx\n", markState);
+        flipMarkState();
+        printf("mark state (after flip) = %llx\n", markState);
+        uVM_suspend("check mark state");
 
         // unblock all the mutators
         DEBUG_PRINT(1, ("Collector Controller is going to unblock all mutators\n"));

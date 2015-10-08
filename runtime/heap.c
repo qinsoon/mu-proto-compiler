@@ -10,7 +10,11 @@ Address heapStart;
 ImmixSpace* immixSpace;
 FreeListSpace* largeObjectSpace;
 
+Word markState = OBJECT_HEADER_MARK_STATE_BASE_VALUE;
 
+void flipMarkState() {
+	markState ^= OBJECT_HEADER_MARK_STATE_INC_VALUE;
+}
 
 FreeListSpace* newFreeListSpace();
 
@@ -56,7 +60,7 @@ void initObj(Address addr, uint64_t header) {
     DEBUG_PRINT(5, ("addr=0x%llx, header=0x%llx\n", addr, header));
 
     uVM_assert(isObjectStart(addr) || isLargeObjectStart(addr), "not writing into header in initObj()");
-    *((uint64_t*) addr) = header;
+    *((uint64_t*) addr) = header | markState;
 }
 
 void triggerGC() {
@@ -296,6 +300,19 @@ void fillAlignmentGap(Address start, Address end) {
 		return;
 
     memset((void*)start, ALIGNMENT_VALUE, end - start);
+}
+
+Word newObjectHeaderWithMarkBit(Word oldHeader, Word mask, Word markState) {
+	return oldHeader | ((~markState) & mask);
+}
+
+void setMarkBitInHeader(Address ref, Word mask, Word markState) {
+	Word hdr = *((Word*) ref);
+	*((Word*) ref) = hdr ^ ((hdr ^ markState) & mask);
+}
+
+bool testMarkBitInHeader(Address ref,    Word mask, Word markState) {
+	return ((*((Word*) ref)) ^ ~markState) & mask;
 }
 
 void setMaskedBitInHeader  (Address ref, Word mask) {

@@ -115,9 +115,11 @@ typedef struct AddressNode {
  */
 #define OBJECT_HEADER_SIZE 8
 
-// if this bit is marked, the object is traced during current GC
-// this bit will be cleared after GC
-#define OBJECT_HEADER_MARK_BIT_MASK		0x0400000000000000L
+// if this bit is equal to markState, the object is traced during current GC
+#define OBJECT_HEADER_MARK_BIT_MASK			0x0400000000000000L
+
+#define OBJECT_HEADER_MARK_STATE_BASE_VALUE 0x0400000000000000L
+#define OBJECT_HEADER_MARK_STATE_INC_VALUE  0x0400000000000000L
 
 /*
  * Immix constants
@@ -145,6 +147,8 @@ extern ObjectMap* objectMap;
 extern GCPhase_t phase;
 extern ImmixSpace* immixSpace;
 extern FreeListSpace* largeObjectSpace;
+
+extern Word markState;		// flip this for every GC
 
 // ---------------------FUNCTIONS------------------------
 
@@ -189,6 +193,7 @@ extern Address findBaseRef(Address iref);
  */
 extern void triggerGC();
 extern void wakeCollectorController();
+extern void flipMarkState();
 
 /*
  * AddressNode list operations
@@ -201,6 +206,10 @@ extern AddressNode* popFromList(AddressNode** list);
  */
 extern Address alignUp(Address region, int align);
 extern void fillAlignmentGap(Address start, Address end);
+
+extern Word newObjectHeaderWithMarkBit	(Word oldHeader, Word mask, Word markState);
+extern void setMarkBitInHeader 			(Address ref,    Word mask, Word markState);
+extern bool testMarkBitInHeader			(Address ref,    Word mask, Word markState);
 
 extern void setMaskedBitInHeader  (Address ref, Word mask);
 extern bool testMaskedBitInHeader (Address ref, Word mask);
