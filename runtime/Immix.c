@@ -258,7 +258,7 @@ bool ImmixSpace_getNextBlock(ImmixMutator* mutator) {
  */
 void ImmixCollector_markObject(ImmixSpace* space, Address objectRef) {
 	// mark the header as traced/alive
-	setMaskedBitInHeader(objectRef, OBJECT_HEADER_MARK_BIT_MASK);
+	setMarkBitInHeader(objectRef, OBJECT_HEADER_MARK_BIT_MASK, markState);
 
 	// mark the immix line as live
 	uint8_t* lineMark = ImmixSpace_getLineMarkByte(space, objectRef);

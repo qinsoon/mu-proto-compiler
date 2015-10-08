@@ -193,7 +193,6 @@ extern Address findBaseRef(Address iref);
  */
 extern void triggerGC();
 extern void wakeCollectorController();
-extern void flipMarkState();
 
 /*
  * AddressNode list operations
@@ -210,6 +209,7 @@ extern void fillAlignmentGap(Address start, Address end);
 extern Word newObjectHeaderWithMarkBit	(Word oldHeader, Word mask, Word markState);
 extern void setMarkBitInHeader 			(Address ref,    Word mask, Word markState);
 extern bool testMarkBitInHeader			(Address ref,    Word mask, Word markState);
+extern void flipBit						(Word mask, Word* hdr);
 
 extern void setMaskedBitInHeader  (Address ref, Word mask);
 extern bool testMaskedBitInHeader (Address ref, Word mask);

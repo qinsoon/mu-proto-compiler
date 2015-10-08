@@ -105,7 +105,7 @@ void traceObject(Address ref) {
 		printf("field: 0x%llx\n", field);
 		printf("->ref: 0x%llx\n", ref);
 
-		if (ref != (Address) NULL && !testMaskedBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK))
+		if (ref != (Address) NULL && !testMarkBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK, markState))
 			pushToList(ref, &alive);
 	}
 
@@ -118,7 +118,7 @@ void traceObject(Address ref) {
 		printf("->iref:0x%llx\n", iref);
 		printf("->ref: 0x%llx\n", ref);
 
-		if (ref != (Address) NULL && !testMaskedBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK))
+		if (ref != (Address) NULL && !testMarkBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK, markState))
 			pushToList(ref, &alive);
 	}
 }
@@ -236,7 +236,7 @@ void *collector_controller_run(void *param) {
         validateObjectMap();
 
         printf("mark state = %llx\n", markState);
-        flipMarkState();
+        flipBit(OBJECT_HEADER_MARK_BIT_MASK, &markState);
         printf("mark state (after flip) = %llx\n", markState);
         uVM_suspend("check mark state");
 
