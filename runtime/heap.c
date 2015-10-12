@@ -134,13 +134,13 @@ Address allocLarge(FreeListSpace* flSpace, int64_t size, int64_t align) {
 	pthread_mutex_lock( &(flSpace->lock));
 
 	// actually allocation
-//	Address addr;
-//	int ret = posix_memalign((void*)&addr, align, size);
-//	if (ret != 0) {
-//		printf("trying to alloc from freelist space: size=%lld, align=%lld\n", size, align);
-//		uVM_fail("failed posix_memalign alloc");
-//	}
-	Address addr = (Address) malloc(size);
+	Address addr;
+	int ret = posix_memalign((void*)&addr, align, size);
+	if (ret != 0) {
+		printf("trying to alloc from freelist space: size=%lld, align=%lld\n", size, align);
+		uVM_fail("failed posix_memalign alloc");
+	}
+//	Address addr = (Address) malloc(size);
 
 	// metadata
 	FreeListNode* node = (FreeListNode*) malloc(sizeof(FreeListNode));
@@ -161,6 +161,32 @@ Address allocLarge(FreeListSpace* flSpace, int64_t size, int64_t align) {
 	pthread_mutex_unlock( &(flSpace->lock));
 
 	return addr;
+}
+
+void FreeListSpace_release(FreeListSpace* space) {
+	FreeListNode* cur = space->head;
+	FreeListNode* prev = NULL;
+
+	while(cur != NULL) {
+		if (!testMarkBitInHeader(cur->addr, OBJECT_HEADER_MARK_BIT_MASK, markState)) {
+			// free the memory
+			free((void*)cur->addr);
+
+			// remove the node from link list
+			if (prev == NULL) {
+				space->head = cur->next;
+			} else {
+				prev->next = cur->next;
+			}
+
+			// free the node
+			free(cur);
+		}
+
+		// proceed to next node
+		prev = cur;
+		cur = cur->next;
+	}
 }
 
 /**

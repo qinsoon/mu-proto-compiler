@@ -4,6 +4,8 @@
 #include "runtimetypes.h"
 #include <pthread.h>
 
+#define GET_OBJECT_HEADER(ref) ((Word) *((Word*)ref));
+
 // ---------------------TYPES------------------------
 
 /*
@@ -24,7 +26,9 @@ typedef struct ImmixBlock {
 typedef struct ImmixSpace {
     Address immixStart;
     Address freelistStart;
+
     uint8_t* lineMarkTable;
+    int64_t lineMarkTableLength;
 
     ImmixBlock* usableBlocks;
     ImmixBlock* usedBlocks;
@@ -136,6 +140,7 @@ typedef struct AddressNode {
 #define IMMIX_LINE_MARK_LIVE            1
 #define IMMIX_LINE_MARK_FRESH_ALLOC     2
 #define IMMIX_LINE_MARK_CONSERV_LIVE    3
+#define IMMIX_LINE_MARK_LAST_LIVE		4
 
 #define IMMIX_BLOCK_MARK_USABLE         0
 #define IMMIX_BLOCK_MARK_FULL           1
@@ -158,8 +163,11 @@ extern FreeListSpace* newFreeListSpace();
 extern ImmixMutator* ImmixMutator_init(ImmixMutator* mutator, ImmixSpace* space);
 extern ImmixMutator* ImmixMutator_reset(ImmixMutator* m);
 
-extern void ImmixCollector_markObject(ImmixSpace* space, Address objectRef);
-extern void ImmixCollector_release(ImmixSpace* space);
+extern void ImmixSpace_markObject(ImmixSpace* space, Address objectRef);
+extern void ImmixSpace_prepare(ImmixSpace* space);
+extern void ImmixSpace_release(ImmixSpace* space);
+
+extern void LargeObjectSpace_release(FreeListSpace* space);
 
 /*
  * Allocation

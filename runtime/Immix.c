@@ -35,6 +35,7 @@ ImmixSpace* newImmixSpace(Address immixStart, Address freelistStart) {
     size_t lineTableSize = lineTableLength * sizeof(uint8_t);
     ret->lineMarkTable = (uint8_t*) malloc(lineTableSize);
     memset(ret->lineMarkTable, 0, lineTableSize);
+    ret->lineMarkTableLength = lineTableSize;
     
     pthread_mutex_init(&(ret->lock), NULL);
     
@@ -256,7 +257,7 @@ bool ImmixSpace_getNextBlock(ImmixMutator* mutator) {
 /*
  * Immix Collector
  */
-void ImmixCollector_markObject(ImmixSpace* space, Address objectRef) {
+void ImmixSpace_markObject(ImmixSpace* space, Address objectRef) {
 	// mark the header as traced/alive
 	setMarkBitInHeader(objectRef, OBJECT_HEADER_MARK_BIT_MASK, markState);
 
@@ -265,7 +266,16 @@ void ImmixCollector_markObject(ImmixSpace* space, Address objectRef) {
 	*lineMark = IMMIX_LINE_MARK_LIVE;
 }
 
-void ImmixCollector_release(ImmixSpace* space) {
+void ImmixSpace_prepare(ImmixSpace* space) {
+	// clear lineMarkTable where were previously marked LIVE
+	for (int i = 0; i < space->lineMarkTableLength; i++) {
+		if (space->lineMarkTable[i] == IMMIX_LINE_MARK_LIVE) {
+			space->lineMarkTable[i] = IMMIX_LINE_MARK_LAST_LIVE;
+		}
+	}
+}
+
+void ImmixSpace_release(ImmixSpace* space) {
 	// walk through used blocks
 	ImmixBlock* curBlock = space->usedBlocks;
 

@@ -158,8 +158,8 @@ public class UVMCompiler {
 		new CombineReturns("combineret", Verbose.COMBINE_RET).execute();
 		new MCControlFlowAnalysis("mccfa", Verbose.RECONSTRUCT_BB).execute();
 		new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();            
-		new AddCallRegisterArguments("callregargs", true).execute();
-		new X64MachineCodeExpansion("x64mcexp", true).execute();
+		new AddCallRegisterArguments("callregargs", false).execute();
+		new X64MachineCodeExpansion("x64mcexp", false).execute();
 		
 		/*
 		 *  register allocation

@@ -77,9 +77,12 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                     verboseln("Created new block #" + n.getName());
                 } else {
                     n = p;
+                    verboseln("Do not need to create blocks, " + n.getName() + " is the only predecessor");
                 }
                 
-                for (AbstractMachineCode mc : bb.getMC()) {
+                for (int mci = 0; mci < bb.getMC().size(); mci++) {
+                	AbstractMachineCode mc = bb.getMC().get(mci);
+//                	UVMCompiler._assert(n != bb, "possibly modifying current BB");
                     if (mc.isPhi()) {
                         verboseln("examing phi: " + mc.prettyPrintNoLabel());
                         verboseln("trying to find value from #" + p.getName());
@@ -89,25 +92,12 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                             if (l.getName().equals(p.getLabel().getName()))
                                 opdForP = i - 1;
                         }
+                        verboseln(" opdForP = " + opdForP);
                         
                         if (opdForP != -1) {
                             verboseln("inserted mov");
                             MCOperand opd = mc.getOperand(opdForP);
                             int opdDataType = mc.getDefineAsReg().getDataType();
-//                            if (opd instanceof MCRegister) {
-//                                opdDataType = ((MCRegister) opd).getDataType();
-//                            } else if (opd instanceof uvm.mc.MCIntImmediate) {
-//                                opdDataType = MCRegister.DATA_GPR;
-//                            } else if (opd instanceof uvm.mc.MCDPImmediate) {
-//                                opdDataType = MCRegister.DATA_DP;
-//                            } else if (opd instanceof uvm.mc.MCSPImmediate) {
-//                                opdDataType = MCRegister.DATA_SP;
-//                            } else if (opd instanceof uvm.mc.MCMemoryOperand) {
-//                            	
-//                            }                            
-//                            else {
-//                                UVMCompiler.error("genmov for unimplemented opd type: " + opd.getClass().toString());
-//                            }
                             
                             MCRegister genMovReg = cf.findOrCreateRegister("gen_mov_reg" + genMovRegIndex, MCRegister.OTHER_SYMBOL_REG, opdDataType);
                             genMovRegIndex++;

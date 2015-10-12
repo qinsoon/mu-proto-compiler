@@ -10,6 +10,8 @@ pthread_cond_t controller_cond;
 
 GCPhase_t phase;
 
+#define VERBOSE_GC true
+
 void *collector_controller_run(void *param);
 
 void initCollector() {
@@ -69,10 +71,12 @@ void scanStacks() {
 				scanStackForRoots(stack, &roots);
 
 				// check roots
-				printf("Roots:\n");
-				AddressNode* cur = roots;
-				for (; cur != NULL; cur = cur->next) {
-					printf("0x%llx\n", cur->addr);
+				if (VERBOSE_GC) {
+					printf("Roots:\n");
+					AddressNode* cur = roots;
+					for (; cur != NULL; cur = cur->next) {
+						printf("0x%llx\n", cur->addr);
+					}
 				}
 			} else {
 				// this is an inactive stack, we didn't have correct rsp and register values on the stack yet?
@@ -92,18 +96,22 @@ void traceObject(Address ref) {
 
 	uVM_assert(typeInfo != NULL, "meet a non-ref in traceObject()");
 
-	printf("tracing 0x%llx of type %lld\n", ref, typeInfo->id);
-	printObject(ref);
+	if (VERBOSE_GC) {
+		printf("tracing 0x%llx of type %lld\n", ref, typeInfo->id);
+		printObject(ref);
+	}
 
 	// mark this object as alive/traced
-	ImmixCollector_markObject(immixSpace, ref);
+	ImmixSpace_markObject(immixSpace, ref);
 
 	for (int i = 0; i < typeInfo->nFixedRefOffsets; i++) {
 		Address field = ref + OBJECT_HEADER_SIZE + typeInfo->refOffsets[i];
 
 		Address ref = * ((Address*) field);
-		printf("field: 0x%llx\n", field);
-		printf("->ref: 0x%llx\n", ref);
+		if (VERBOSE_GC) {
+			printf("field: 0x%llx\n", field);
+			printf("->ref: 0x%llx\n", ref);
+		}
 
 		if (ref != (Address) NULL && !testMarkBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK, markState))
 			pushToList(ref, &alive);
@@ -114,9 +122,11 @@ void traceObject(Address ref) {
 
 		Address iref = *((Address*) field);
 		Address ref  = findBaseRef(iref);
-		printf("field: 0x%llx\n", field);
-		printf("->iref:0x%llx\n", iref);
-		printf("->ref: 0x%llx\n", ref);
+		if (VERBOSE_GC) {
+			printf("field: 0x%llx\n ", field);
+			printf("->iref:0x%llx\n", iref);
+			printf("->ref: 0x%llx\n", ref);
+		}
 
 		if (ref != (Address) NULL && !testMarkBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK, markState))
 			pushToList(ref, &alive);
@@ -156,7 +166,12 @@ void validateObjectMap() {
 }
 
 void release() {
-	ImmixCollector_release(immixSpace);
+	ImmixSpace_release(immixSpace);
+	FreeListSpace_release(largeObjectSpace);
+}
+
+void prepare() {
+	ImmixSpace_prepare(immixSpace);
 }
 
 void *collector_controller_run(void *param) {
@@ -215,6 +230,8 @@ void *collector_controller_run(void *param) {
 
         validateObjectMap();
 
+        prepare();
+
         scanGlobal();	// empty
         scanStacks();
         scanRegisters();
@@ -235,10 +252,14 @@ void *collector_controller_run(void *param) {
 
         validateObjectMap();
 
-        printf("mark state = %llx\n", markState);
+        if (VERBOSE_GC) {
+        	printf("mark state = %llx\n", markState);
+        }
         flipBit(OBJECT_HEADER_MARK_BIT_MASK, &markState);
-        printf("mark state (after flip) = %llx\n", markState);
-        uVM_suspend("check mark state");
+        if (VERBOSE_GC) {
+        	printf("mark state (after flip) = %llx\n", markState);
+        }
+//        uVM_suspend("check mark state");
 
         // unblock all the mutators
         DEBUG_PRINT(1, ("Collector Controller is going to unblock all mutators\n"));
