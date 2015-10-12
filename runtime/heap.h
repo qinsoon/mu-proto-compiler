@@ -4,7 +4,8 @@
 #include "runtimetypes.h"
 #include <pthread.h>
 
-#define GET_OBJECT_HEADER(ref) ((Word) *((Word*)ref));
+#define GET_OBJECT_HEADER(ref) 			((Word) *((Word*)ref))
+#define WRITE_OBJECT_HEADER(ref, hdr)	*((Word*) ref) = hdr
 
 // ---------------------TYPES------------------------
 
@@ -140,7 +141,7 @@ typedef struct AddressNode {
 #define IMMIX_LINE_MARK_LIVE            1
 #define IMMIX_LINE_MARK_FRESH_ALLOC     2
 #define IMMIX_LINE_MARK_CONSERV_LIVE    3
-#define IMMIX_LINE_MARK_LAST_LIVE		4
+#define IMMIX_LINE_MARK_PREV_LIVE		4
 
 #define IMMIX_BLOCK_MARK_USABLE         0
 #define IMMIX_BLOCK_MARK_FULL           1
@@ -167,7 +168,7 @@ extern void ImmixSpace_markObject(ImmixSpace* space, Address objectRef);
 extern void ImmixSpace_prepare(ImmixSpace* space);
 extern void ImmixSpace_release(ImmixSpace* space);
 
-extern void LargeObjectSpace_release(FreeListSpace* space);
+extern void FreeListSpace_release(FreeListSpace* space);
 
 /*
  * Allocation

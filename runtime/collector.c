@@ -102,7 +102,10 @@ void traceObject(Address ref) {
 	}
 
 	// mark this object as alive/traced
-	ImmixSpace_markObject(immixSpace, ref);
+	setMarkBitInHeader(ref, OBJECT_HEADER_MARK_BIT_MASK, markState);
+	// additionally we need to mark lines for immix space
+	if (isInImmixSpace(ref))
+		ImmixSpace_markObject(immixSpace, ref);
 
 	for (int i = 0; i < typeInfo->nFixedRefOffsets; i++) {
 		Address field = ref + OBJECT_HEADER_SIZE + typeInfo->refOffsets[i];

@@ -200,6 +200,7 @@ void initObjectMap() {
 	int objectMapSize = (immixSpaceSize / WORD_SIZE);
 	int objectMapSizeInBytes = objectMapSize / 8;
 
+	printf("object map->start is %llx (immix space start)\n", immixSpace->immixStart);
 	printf("object map size (in bytes)=%d\n", objectMapSizeInBytes);
 	printf("we will need a %d length bitmap\n", objectMapSize);
 
@@ -218,7 +219,7 @@ Address objectMapIndexToAddress(int i) {
 	return objectMap->start + i * WORD_SIZE;
 }
 int addressToObjectMapIndex(Address addr) {
-	uVM_assert((addr - objectMap->start) % WORD_SIZE == 0, "addr is not aligned in addressToObjectMapIndex()");
+	uVM_assertPrintf((addr - objectMap->start) % WORD_SIZE == 0, ("addr %llx is not aligned in addressToObjectMapIndex()", addr));
 	int ret = (addr - objectMap->start) / WORD_SIZE;
 	uVM_assert(ret <= objectMap->bitmapSize, "index out of bounds in addressToObjectMapIndex()");
 	return ret;

@@ -131,6 +131,11 @@ Address ImmixMutator_alloc(ImmixMutator* mutator, int64_t size, int64_t align) {
     fillAlignmentGap(mutator->cursor, start);
     mutator->cursor = end;
     
+    // assert: should be zero'd
+    unsigned char* pMem = (unsigned char*) start;
+    bool allZero = (pMem[0] == '\0' && !memcmp(pMem, pMem + 1, size - 1));
+    uVM_assert(allZero, "allocating non-zero'd memory");
+
     DEBUG_PRINT(5, ("---alloc DONE: %llx---\n", start));
     markInObjectMap(start);
     return start;
@@ -258,19 +263,19 @@ bool ImmixSpace_getNextBlock(ImmixMutator* mutator) {
  * Immix Collector
  */
 void ImmixSpace_markObject(ImmixSpace* space, Address objectRef) {
-	// mark the header as traced/alive
-	setMarkBitInHeader(objectRef, OBJECT_HEADER_MARK_BIT_MASK, markState);
-
 	// mark the immix line as live
 	uint8_t* lineMark = ImmixSpace_getLineMarkByte(space, objectRef);
 	*lineMark = IMMIX_LINE_MARK_LIVE;
+
+	// mark next line as conserv alive
+	*(lineMark + 1) = IMMIX_LINE_MARK_CONSERV_LIVE;
 }
 
 void ImmixSpace_prepare(ImmixSpace* space) {
 	// clear lineMarkTable where were previously marked LIVE
 	for (int i = 0; i < space->lineMarkTableLength; i++) {
-		if (space->lineMarkTable[i] == IMMIX_LINE_MARK_LIVE) {
-			space->lineMarkTable[i] = IMMIX_LINE_MARK_LAST_LIVE;
+		if (space->lineMarkTable[i] == IMMIX_LINE_MARK_LIVE || space->lineMarkTable[i] == IMMIX_LINE_MARK_CONSERV_LIVE) {
+			space->lineMarkTable[i] = IMMIX_LINE_MARK_PREV_LIVE;
 		}
 	}
 }
@@ -289,7 +294,7 @@ void ImmixSpace_release(ImmixSpace* space) {
 
 		// walk through lines
 		for (int i = 0; i < IMMIX_LINES_IN_BLOCK; i++) {
-			if (curBlock->lineMarkTable[i] != IMMIX_LINE_MARK_LIVE) {
+			if (curBlock->lineMarkTable[i] != IMMIX_LINE_MARK_LIVE && curBlock->lineMarkTable[i] != IMMIX_LINE_MARK_CONSERV_LIVE) {
 				hasFreeLines = true;
 				curBlock->lineMarkTable[i] = IMMIX_LINE_MARK_FREE;
 
@@ -341,6 +346,8 @@ void ImmixSpace_release(ImmixSpace* space) {
 			// this block is full
 			curBlock->state = IMMIX_BLOCK_MARK_FULL;
 			fullBlocks ++;
+
+			curBlock = curBlock->next;
 		}
 	}
 
