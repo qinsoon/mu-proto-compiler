@@ -61,7 +61,7 @@ public class SimpleObjectModel {
 		
 		if (gcBits == 0)
 			return id;
-		else return (gcBits << (TYPEID_SIZE_IN_BYTES * 8)) & GCBITS_MASK + id;
+		else return ((long)((gcBits << (TYPEID_SIZE_IN_BYTES * 8)) & GCBITS_MASK)) + id;
 	}
 	
 	private long getGCBitsInitialization(Type t) {

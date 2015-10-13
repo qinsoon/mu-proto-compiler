@@ -161,6 +161,7 @@ instBody
     |   'PRINTSTR' STRINGLITERAL                        # InstPrintStr
     |   'PRINTINT64' value                              # InstPrintInt64
     |   'PRINTPTR' value                                # InstPrintPtr
+    |   'GC'                                            # InstGC
     ;
 
 funcCallBody

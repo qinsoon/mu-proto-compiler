@@ -9,12 +9,16 @@ pthread_mutex_t controller_mutex;
 pthread_cond_t controller_cond;
 
 GCPhase_t phase;
+pthread_mutex_t gcPhaseLock;
 
-#define VERBOSE_GC true
+#define VERBOSE_GC false
+#define VALIDATE_HEAP false
 
 void *collector_controller_run(void *param);
 
 void initCollector() {
+	pthread_mutex_init(&gcPhaseLock, NULL);
+
     // controller
     int ret = pthread_create(&controller, NULL, collector_controller_run, NULL);
     if (ret) {
@@ -24,7 +28,11 @@ void initCollector() {
 
 void wakeCollectorController() {
     pthread_mutex_lock(&controller_mutex);
+
+    pthread_mutex_lock(&gcPhaseLock);
     phase = BLOCKING_FOR_GC;
+    pthread_mutex_unlock(&gcPhaseLock);
+
     pthread_cond_signal(&controller_cond);
     pthread_mutex_unlock(&controller_mutex);
 }
@@ -156,6 +164,7 @@ void traceObjects() {
 }
 
 void validateObjectMap() {
+	printf("==== valiedate object map ====\n");
     int i = 0;
     int objects = 0;
     for (; i < objectMap->bitmapSize; i++) {
@@ -166,6 +175,27 @@ void validateObjectMap() {
     	}
     }
     printf("total objects in objectmap: %d\n", objects);
+    printf("============================== \n");
+}
+
+void validateLargeObjectSpace() {
+	printf("==== valiedate large object space ====\n");
+    int objects = 0;
+
+    FreeListNode* cur = largeObjectSpace->head;
+
+    while (cur != NULL) {
+    	printObject(cur->addr);
+    	objects++;
+    }
+
+    printf("total objets in large object space: %d\n", objects);
+    printf("======================================\n");
+}
+
+void validateHeap() {
+	validateObjectMap();
+	validateLargeObjectSpace();
 }
 
 void release() {
@@ -224,22 +254,28 @@ void *collector_controller_run(void *param) {
         }
         
         DEBUG_PRINT(1, ("All mutators blocked\n"));
+
+        pthread_mutex_lock(&gcPhaseLock);
         phase = BLOCKED_FOR_GC;
+        pthread_mutex_unlock(&gcPhaseLock);
+
         turnOffYieldpoints();
         
         // start to work
-        DEBUG_PRINT(1, ("Collector is going to work (currently sleep for 1 secs)\n"));
+        DEBUG_PRINT(1, ("Collector is going to work\n"));
+        pthread_mutex_lock(&gcPhaseLock);
         phase = GC;
+        pthread_mutex_unlock(&gcPhaseLock);
 
-        validateObjectMap();
+        if (VALIDATE_HEAP) {
+        	validateObjectMap();
+        }
 
         prepare();
 
         scanGlobal();	// empty
         scanStacks();
         scanRegisters();
-
-        validateObjectMap();
 
         traceObjects();
         
@@ -253,10 +289,12 @@ void *collector_controller_run(void *param) {
             }
         }
 
-        validateObjectMap();
+        if (VALIDATE_HEAP) {
+        	validateHeap();
+        }
 
         if (VERBOSE_GC) {
-        	printf("mark state = %llx\n", markState);
+        	printf("mark state = %llx \n", markState);
         }
         flipBit(OBJECT_HEADER_MARK_BIT_MASK, &markState);
         if (VERBOSE_GC) {
@@ -266,8 +304,11 @@ void *collector_controller_run(void *param) {
 
         // unblock all the mutators
         DEBUG_PRINT(1, ("Collector Controller is going to unblock all mutators\n"));
+        uVM_suspend("gc ends");
         
+        pthread_mutex_lock(&gcPhaseLock);
         phase = MUTATOR;
+        pthread_mutex_unlock(&gcPhaseLock);
         
         for (int i = 0; i < threadCount; i++) {
             UVMThread* t = uvmThreads[i];
@@ -276,4 +317,27 @@ void *collector_controller_run(void *param) {
             }
         }
     }
+}
+
+void triggerGC() {
+	pthread_mutex_lock(&gcPhaseLock);
+	if (phase != MUTATOR) {
+		pthread_mutex_unlock(&gcPhaseLock);
+		yieldpoint();
+		return;
+	}
+	pthread_mutex_unlock(&gcPhaseLock);
+
+    // enable yieldpoint
+    turnOnYieldpoints();
+
+    // inform collector controller (it will ensure all threads are blocked)
+    wakeCollectorController();
+
+    // make current thread wait
+    UVMThread* cur = getThreadContext();
+    cur->_block_status = NEED_TO_BLOCK;
+    yieldpoint();
+
+    // the thread won't reach here until GC is done
 }

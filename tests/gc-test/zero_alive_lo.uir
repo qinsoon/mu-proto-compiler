@@ -1,13 +1,14 @@
 // malloc
 
 .typedef @point struct<int<64> int<64>>
+.typedef @intarray array<int<64> 500>
 
 .funcdef @allocMemory <void ()> {
   .label %entry:
   BRANCH %body
 
   .label %body:
-  %ref  = NEW <@point>
+  %ref  = NEW <@intarray>
   RETVOID
 }
 

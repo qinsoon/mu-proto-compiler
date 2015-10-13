@@ -59,21 +59,6 @@ void initObj(Address addr, uint64_t header) {
     *((uint64_t*) addr) = newObjectHeaderWithMarkBit(header, OBJECT_HEADER_MARK_BIT_MASK, markState);
 }
 
-void triggerGC() {
-    // enable yieldpoint
-    turnOnYieldpoints();
-    
-    // inform collector controller (it will ensure all threads are blocked)
-    wakeCollectorController();
-    
-    // make current thread wait
-    UVMThread* cur = getThreadContext();
-    cur->_block_status = NEED_TO_BLOCK;
-    yieldpoint();
-    
-    // the thread won't reach here until GC is done
-}
-
 void spaceInfo() {
 	printf("Immix Space       : used = %lld bytes\n", immixSpace->used);
 	printf("Large Object Space: used = %lld bytes\n", largeObjectSpace->used);
@@ -203,6 +188,7 @@ void initObjectMap() {
 	printf("object map->start is %llx (immix space start)\n", immixSpace->immixStart);
 	printf("object map size (in bytes)=%d\n", objectMapSizeInBytes);
 	printf("we will need a %d length bitmap\n", objectMapSize);
+//	uVM_suspend("check");
 
 	objectMap = (ObjectMap*) malloc(sizeof(ObjectMap) + objectMapSizeInBytes);
 
@@ -219,7 +205,7 @@ Address objectMapIndexToAddress(int i) {
 	return objectMap->start + i * WORD_SIZE;
 }
 int addressToObjectMapIndex(Address addr) {
-	uVM_assertPrintf((addr - objectMap->start) % WORD_SIZE == 0, ("addr %llx is not aligned in addressToObjectMapIndex()", addr));
+	uVM_assertPrintf( ((addr - objectMap->start) % WORD_SIZE == 0), ("addr %llx is not aligned in addressToObjectMapIndex() (object map starts from %llx)\n", addr, objectMap->start));
 	int ret = (addr - objectMap->start) / WORD_SIZE;
 	uVM_assert(ret <= objectMap->bitmapSize, "index out of bounds in addressToObjectMapIndex()");
 	return ret;
@@ -257,7 +243,7 @@ Address getObjectStart(Address iref) {
 //			printf("***bitI = %d***\n", bitI);
 //			printf("***iref = %llx, potential ref=%llx***\n", iref, potentialObjectStart);
 //			printf("***header = %llx***\n", *((uint64_t*)potentialObjectStart));
-			printObject(potentialObjectStart);
+//			printObject(potentialObjectStart);
 
 			int typeId = getTypeID(potentialObjectStart);
 

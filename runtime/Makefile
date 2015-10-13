@@ -15,15 +15,15 @@ HEADER = $(wildcard *.h)
 all : uvmrt.a uvmshared.a uvmexe.a
 
 clean :
-	rm *.o uvmrt.a
+	rm *.o *.a
 	
 uvmrt.a : $(OBJ_SHARED) $(OBJ_EXE)
 	$(AR) rcs $@ $^
 
-uvmshared.a : $(OBJ_SHARED)
+uvmshared.a : $(OBJ_SHARED) $(HEADER)
 	$(AR) rcs $@ $^
 
-uvmexe.a : $(OBJ_EXE)
+uvmexe.a : $(OBJ_EXE) $(HEADER)
 	$(AR) rcs $@ $^
 
 $(OBJ) : $(SRC) $(HEADER)

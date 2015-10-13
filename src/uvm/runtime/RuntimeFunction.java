@@ -22,6 +22,7 @@ public class RuntimeFunction {
 	public static final RuntimeFunction uvmPrintStr;
 	public static final RuntimeFunction uvmPrintInt64;
 	public static final RuntimeFunction uvmPrintPtr;
+	public static final RuntimeFunction triggerGC;
 	public static final RuntimeFunction malloc;
 	
 	static {
@@ -72,6 +73,11 @@ public class RuntimeFunction {
 				"_malloc",
 				uvm.type.Ref.REF_VOID,
 				Arrays.asList(Int.I64));
+		
+		triggerGC = new RuntimeFunction(InstCCall.CC_DEFAULT,
+				"_triggerGC",
+				uvm.type.Void.T,
+				Arrays.asList());
 	}
     
     int callConv;

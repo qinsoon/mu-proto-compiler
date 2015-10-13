@@ -62,6 +62,8 @@ void inspectStack(UVMStack* stack, int64_t maxValues) {
 
 extern int typeCount;
 
+#define VERBOSE_STACK_SCAN false
+
 void scanStackForRoots(UVMStack* stack, AddressNode** roots) {
 	Address sp = stack->_sp;
 	Address stackTop = stack->upperBound;
@@ -85,17 +87,28 @@ void scanStackForRoots(UVMStack* stack, AddressNode** roots) {
 		uint64_t candidate = *((uint64_t*)cur);
 
 		if (cur == curBP) {
-			printf("---finish a frame---\n");
+			if (VERBOSE_STACK_SCAN)
+				printf("---finish a frame---\n");
 			curBP = candidate;
 			frames ++;
 		}
 
 		// check if *cur is a ref
-		printf("checking value: 0x%llx at stack %p\n", candidate, (void*) cur);
+		if (VERBOSE_STACK_SCAN)
+			printf("checking value: 0x%llx at stack %p\n", candidate, (void*) cur);
 
 		Address baseRef = findBaseRef(candidate);
 		if (baseRef != (Address) NULL) {
-			printf("  baseref = %p\n", (void*) baseRef);
+			if (VERBOSE_STACK_SCAN) {
+				printf("  baseref = %p\n", (void*) baseRef);
+				if (isInImmixSpace(baseRef)) {
+					printf("  in immix space\n");
+				} else if (isInLargeObjectSpace(baseRef)){
+					printf("  in large object space\n");
+				} else {
+					printf("  *** not in any space???\n");
+				}
+			}
 			pushToList(baseRef, roots);
 
 			if (baseRef == candidate)
@@ -106,11 +119,13 @@ void scanStackForRoots(UVMStack* stack, AddressNode** roots) {
 		}
 	}
 
+	if (VERBOSE_STACK_SCAN) {
 	printf("Total scanned stack slots: %d, in %d frames\n", scannedSlots, frames);
 	printf("   refs: %d\n", refs);
 	printf("   irefs: %d\n", irefs);
 	printf("   not objects: %d\n", nonRefs);
 	printf("----------------\n");
+	}
 }
 
 Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {

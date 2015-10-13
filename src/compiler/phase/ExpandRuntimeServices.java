@@ -16,6 +16,7 @@ import uvm.Register;
 import uvm.Type;
 import uvm.Value;
 import uvm.inst.InstCCall;
+import uvm.inst.InstGC;
 import uvm.inst.InstGetElemIRefConstIndex;
 import uvm.inst.InstGetFieldIRef;
 import uvm.inst.InstGetIRef;
@@ -199,6 +200,11 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 					
 					Instruction callPrintPtr = ccallRuntimeFunction(RuntimeFunction.uvmPrintPtr, Arrays.asList(printPtr.getValue()));
 					newInsts.add(callPrintPtr);
+				}
+				
+				else if (inst instanceof InstGC) {
+					Instruction callGC = ccallRuntimeFunction(RuntimeFunction.triggerGC, Arrays.asList());
+					newInsts.add(callGC);
 				}
 				
 				else {

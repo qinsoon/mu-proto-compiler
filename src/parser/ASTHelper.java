@@ -595,6 +595,9 @@ public abstract class ASTHelper {
         	Instruction node = new InstInternalPrintPtr(v);
         	return node;
         }
+        else if (inst instanceof parser.uIRParser.InstGCContext) {
+        	return new InstGC();
+        }
         
         else {
             UVMCompiler.error("incomplete implementation of " + ctx.toStringTree());

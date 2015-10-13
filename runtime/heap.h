@@ -108,8 +108,8 @@ typedef struct AddressNode {
 #define LOG_BYTES_IN_PAGE 12
 #define BYTES_IN_PAGE (1 << LOG_BYTES_IN_PAGE)
 
-//#define HEAP_SIZE (1 << 20)
-#define HEAP_SIZE (1 << 19)		// 512Kb
+#define HEAP_SIZE (200 << 20)
+//#define HEAP_SIZE (1 << 19)		// 512Kb
 #define HEAP_IMMIX_FRACTION 0.7
 #define HEAP_FREELIST_FRACTION 0.3
 
@@ -150,7 +150,10 @@ typedef struct AddressNode {
 
 extern Address heapStart;
 extern ObjectMap* objectMap;
+
 extern GCPhase_t phase;
+extern pthread_mutex_t gcPhaseLock;
+
 extern ImmixSpace* immixSpace;
 extern FreeListSpace* largeObjectSpace;
 
