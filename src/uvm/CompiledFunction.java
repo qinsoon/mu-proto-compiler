@@ -233,8 +233,9 @@ public class CompiledFunction {
     		if (aliveAfter.contains(reg)) {
     			// check reg is not defined at seq + 1
     			Interval interval = intervals.get(reg);
-    			if (!interval.hasDefineAt(sequence+1))
+    			if (!interval.hasDefineAt(sequence+1)) {
     				ret.add(interval.getPhysicalReg());
+    			}
     		}
     	}
     	

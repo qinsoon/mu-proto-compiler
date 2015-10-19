@@ -191,23 +191,43 @@ public class X64CDefaultCallConvention {
         System.out.println("setup call seq at " + callMCIndex);
         caller.printInterval();
         List<MCRegister> liveRegs = caller.getLiveRegistersThrough(callMCIndex);		// we only need to save scratch registers that are alive through the call inst
+        for (MCRegister reg : liveRegs) {
+        	System.out.println(reg.prettyPrint());
+        }
+//        UVMCompiler._suspend("check");
+        
         // add live-in regs
         MCBasicBlock callBB = caller.getBasicBlockFor(callMC);
         for (MCRegister reg : callBB.liveIn) {
         	MCRegister mcreg = caller.intervals.get(reg.REP()).getPhysicalReg();
-            if (!liveRegs.contains(mcreg) && mcreg != null)
+            if (!liveRegs.contains(mcreg) && mcreg != null) {
+            	System.out.println(mcreg.prettyPrint());
                 liveRegs.add(mcreg);
+            }
         }
-
-        for (MCRegister reg : liveRegs) {
-        	if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()))
-        		continue;
+//        UVMCompiler._suspend("added live in");
+        
+        final boolean SAVE_EVERYTHING_AT_CALLSITE = false;
+        
+        if (MicroVM.v.getFunction(call.getFunc()) == null) {
+        	// calling into C, save everything
         	
-            System.out.println("Pushing " + reg.prettyPrint() + ", hash:" + reg.hashCode());
-            ret.addAll(pushStack(reg, rsp, InstPseudoCCInstruction.CALLER_SAVE_REGISTERS));
-            callerSavedRegs.add(reg);
-        }        
-//        UVMCompiler._suspend("check caller saved register");
+            for (MCRegister reg : liveRegs) {
+                System.out.println("Pushing " + reg.prettyPrint() + ", hash:" + reg.hashCode());
+                ret.addAll(pushStack(reg, rsp, InstPseudoCCInstruction.CALLER_SAVE_REGISTERS));
+                callerSavedRegs.add(reg);
+            }
+        } else {
+	        for (MCRegister reg : liveRegs) {
+	        	if (!SAVE_EVERYTHING_AT_CALLSITE && UVMCompiler.MCDriver.isCalleeSave(reg.getName()))
+	        		continue;
+	        	
+	            System.out.println("Pushing " + reg.prettyPrint() + ", hash:" + reg.hashCode());
+	            ret.addAll(pushStack(reg, rsp, InstPseudoCCInstruction.CALLER_SAVE_REGISTERS));
+	            callerSavedRegs.add(reg);
+	        }
+        }
+//        UVMCompiler._suspend("check caller saved register in " + caller.getOriginFunction().getName() + " to call " + call.getFunc());
         
         // deal with arguments
         List<Value> args = call.getArguments();
@@ -407,9 +427,12 @@ public class X64CDefaultCallConvention {
             prologue.add(dispRSP);
         }
         
+        
+        final boolean CALLEE_SAVE_EVERYTHING = false;
+        
         // callee-saved register
-        if (cf.getOriginFunction().isMain()) {
-        	// push all general-purpose calleeSavedRegs
+        if (cf.getOriginFunction().isMain() || CALLEE_SAVE_EVERYTHING) {
+        	// save all general-purpose calleeSavedRegs
         	for (int i = 0; i < UVMCompiler.MCDriver.getNumberOfGPR(); i++) {
         		String r = UVMCompiler.MCDriver.getGPRName(i);
         		if (UVMCompiler.MCDriver.isCalleeSave(r)) {
@@ -431,6 +454,10 @@ public class X64CDefaultCallConvention {
 	                prologue.addAll(pushStack(mcreg, rsp, InstPseudoCCInstruction.CALLEE_SAVE_REGISTERS));
 	            }
 	        }
+//	        for (MCRegister reg : cf.calleeSavedRegs) {
+//	        	System.out.println(reg.prettyPrint());
+//	        }
+//	        UVMCompiler._suspend("callee saved register for " + cf.getOriginFunction().getName());
         }
     }
     

@@ -206,7 +206,7 @@ uint8_t* ImmixSpace_getLineMarkByte(ImmixSpace* space, Address obj) {
  */
 
 bool ImmixSpace_getNextBlock(ImmixMutator* mutator) {
-    DEBUG_PRINT(4, ("acquiring from global memory (getNextBlock())\n"));
+    DEBUG_PRINT(5, ("acquiring from global memory (getNextBlock())\n"));
     ImmixSpace* space = mutator->globalSpace;
     
     // lock acquired

@@ -304,7 +304,8 @@ void *collector_controller_run(void *param) {
 
         // unblock all the mutators
         DEBUG_PRINT(1, ("Collector Controller is going to unblock all mutators\n"));
-        uVM_suspend("gc ends");
+        DEBUG_PRINT(1, ("GC ends"));
+//        uVM_suspend("gc ends");
         
         pthread_mutex_lock(&gcPhaseLock);
         phase = MUTATOR;
