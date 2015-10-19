@@ -2,7 +2,6 @@ package uvm.mc.linearscan;
 
 import java.util.BitSet;
 import compiler.util.OrderedList;
-
 import java.util.Comparator;
 
 public class LivenessRange {

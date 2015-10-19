@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -143,7 +144,7 @@ public class UVMCompiler {
 		new ReplaceConsts("replaceconsts", true).execute();
 		new ExpandRuntimeServices("expandruntime", Verbose.EXPAND_RT_SERVICE).execute();
 		new DefUseGeneration("defusegen", Verbose.DEF_USE_GEN).execute();
-		new IRTreeGeneration("treegen", Verbose.TREE_GEN).execute();		
+		new IRTreeGeneration("treegen", Verbose.TREE_GEN).execute();
 		
 		/*
 		 *  instruction selection (use BURM)
@@ -176,15 +177,12 @@ public class UVMCompiler {
 		new AddingJumpInstruction("addingjmp", false).execute();
 		new DetectBackEdge("detectbedge", Verbose.DETECT_BACK_EDGE).execute();
 		new InstructionNumbering("instnumbering", Verbose.INST_NUMBERING).execute();            //*
+		
 		new ComputeLiveInterval("compinterval", Verbose.COMPUTE_INTERVAL).execute();            //*
 		new RegisterCoalescing("regcoalesc", Verbose.REG_COALESC).execute();                    //*
-//            new LinearScan("linearscan", Verbose.LINEAR_SCAN).execute();                            //*
-//            new ReplaceRegisterOperand("replaceregop", Verbose.REPLACE_MEM_OP).execute();
-		new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
 		new SimpleLinearScan("simplelinearscan", Verbose.LINEAR_SCAN).execute();
+		new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
 		new X64PostRegisterAllocPatching("postregallocpatching", false).execute();
-		
-//            dumpInfo("AfterRegAlloc");
 		
 		/*
 		 * post register allocation code transform (be careful of using any registers, and concern about calling convention)
@@ -277,6 +275,11 @@ public class UVMCompiler {
     public static final void _assert(boolean cond, String message) {
         if (!cond)
             error(message);
+    }
+    
+    public static final void _suspend(String message) {
+    	System.out.println(message);
+    	new Scanner(System.in).nextLine();
     }
     
     public static final void unimplemented(String message) {

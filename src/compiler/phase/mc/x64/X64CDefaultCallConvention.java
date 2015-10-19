@@ -186,7 +186,6 @@ public class X64CDefaultCallConvention {
         MCRegister rsp = caller.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);        
         
         // caller saved registers
-        // update: since this step is put before register allocation, this will cause every live temporaries being pushed - including caller/callee saved registers
         callerSavedRegs.clear();
         int callMCIndex = callMC.sequence;
         System.out.println("setup call seq at " + callMCIndex);
@@ -194,15 +193,21 @@ public class X64CDefaultCallConvention {
         List<MCRegister> liveRegs = caller.getLiveRegistersThrough(callMCIndex);		// we only need to save scratch registers that are alive through the call inst
         // add live-in regs
         MCBasicBlock callBB = caller.getBasicBlockFor(callMC);
-        for (MCRegister reg : callBB.liveIn)
-            if (!liveRegs.contains(reg.REP()))
-                liveRegs.add(reg.REP());
+        for (MCRegister reg : callBB.liveIn) {
+        	MCRegister mcreg = caller.intervals.get(reg.REP()).getPhysicalReg();
+            if (!liveRegs.contains(mcreg) && mcreg != null)
+                liveRegs.add(mcreg);
+        }
 
         for (MCRegister reg : liveRegs) {
+        	if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()))
+        		continue;
+        	
             System.out.println("Pushing " + reg.prettyPrint() + ", hash:" + reg.hashCode());
             ret.addAll(pushStack(reg, rsp, InstPseudoCCInstruction.CALLER_SAVE_REGISTERS));
             callerSavedRegs.add(reg);
-        }
+        }        
+//        UVMCompiler._suspend("check caller saved register");
         
         // deal with arguments
         List<Value> args = call.getArguments();
@@ -219,6 +224,23 @@ public class X64CDefaultCallConvention {
         for (int i = 0; i < argTypes.size(); i++) {
             Type curType = argTypes.get(i);
             MCOperand arg = operandFromNode(caller, args.get(i));
+
+//            System.out.println("calling " + call.prettyPrint());
+//            System.out.println(" with arg " + arg.prettyPrint());
+            
+            // get machine register for arg
+            MCOperand mcArg = null;
+            if (arg instanceof MCRegister) {
+            	mcArg = caller.intervals.get(((MCRegister) arg).REP()).getPhysicalReg();
+            	if (mcArg == null)
+            		mcArg = caller.intervals.get(((MCRegister) arg).REP()).getPhysicalLocation();
+//            	System.out.println("      mcarg " + mcArg.prettyPrint());
+            }
+            if (mcArg != null)
+            	arg = mcArg;
+            
+//            UVMCompiler._suspend(arg.prettyPrint());
+            
             if (curType.fitsInGPR() > 0) {
                 if (curType.fitsInGPR() == 1) {
                 	
@@ -397,76 +419,22 @@ public class X64CDefaultCallConvention {
         		}
         	}
         } else {
-	        for (MCRegister reg : cf.intervals.keySet()) {
-	        	// FIXME: this is not correct
-	        	// because this may generate no instruction at all (when this step is put before register allocation), all registers are temporaries (no callee saved machine reg yet)	        	
+	        for (MCRegister reg : cf.intervals.keySet()) {     	
 	            Interval li = cf.intervals.get(reg);
-	            if (UVMCompiler.MCDriver.isCalleeSave(reg.getName()) && li.hasValidRange()) {
-	                cf.calleeSavedRegs.add(reg);
+	            MCRegister mcreg = li.getPhysicalReg();
+	            if (UVMCompiler.MCDriver.isCalleeSave(mcreg.getName()) && li.hasValidRange()) {
+	            	if (cf.calleeSavedRegs.contains(mcreg))
+	            		continue;	            		
+	            	
 	                // need to save it
-	                prologue.addAll(pushStack(reg, rsp, InstPseudoCCInstruction.CALLEE_SAVE_REGISTERS));
+	            	cf.calleeSavedRegs.add(mcreg);
+	                prologue.addAll(pushStack(mcreg, rsp, InstPseudoCCInstruction.CALLEE_SAVE_REGISTERS));
 	            }
 	        }
         }
     }
     
-    public void postRegAllocPatching(CompiledFunction cf) {    	
-    	// remove non caller-saved registers
-//    	List<AbstractMachineCode> calleeSavedRegPush = new ArrayList<AbstractMachineCode>();
-//    	
-//    	for (MCBasicBlock bb : cf.BBs) {
-//    		List<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
-//			MCLabel label = null;
-//			
-//    		for (AbstractMachineCode mc : bb.getMC()) {    			
-//    			if (mc.getHighLevelIR() instanceof InstPseudoCCInstruction) {
-//    				InstPseudoCCInstruction pi = (InstPseudoCCInstruction) mc.getHighLevelIR();
-//    				if (pi.getType() == InstPseudoCCInstruction.CCInstType.CALLER_SAVE_REGISTERS) {
-//    					MCRegister reg = (MCRegister) mc.getOperand(0);
-//    					boolean isCalleeSaved = UVMCompiler.MCDriver.isCalleeSave(reg.getName());
-//    					if (reg.getType() == MCRegister.MACHINE_REG && isCalleeSaved) {
-//    						// drop it
-//    						
-//    						// check if it has a label
-//    						if (mc.getLabel() != null) {
-//    							label = mc.getLabel();
-//    							mc.setLabel(null);
-//    						}
-//    						
-//    						// its callee saved
-//    						calleeSavedRegPush.add(mc);
-//    						
-//    						continue;
-//    					}
-//    				}
-//    			}
-//    			
-//    			if (calleeSavedRegPush.size() != 0 && mc.getHighLevelIR() instanceof InstCCall) {
-//    				// the callee is c code, it obeys callee-saved convention
-//    				calleeSavedRegPush.clear();
-//    			}
-//    			
-//    			if (calleeSavedRegPush.size() != 0 && mc.getHighLevelIR() instanceof InstCall) {
-//    				// the callee is uvm generated code, we should obey callee-saved convention
-//    				InstCall call = (InstCall)mc.getHighLevelIR();
-//    				CompiledFunction callee = MicroVM.v.getCompiledFunc(call.getFunc());
-//    				callee.prologue.addAll(calleeSavedRegPush);
-//    				calleeSavedRegPush.clear();
-//    			}
-//    			
-//    			if (label != null) {
-//    				UVMCompiler._assert(mc.getLabel() == null, mc.prettyPrint() + " already has a label but we have a label that should attach to it");
-//    				mc.setLabel(label);
-//    				label = null;
-//    			}
-//    			
-//    			newMC.add(mc);
-//    		}
-//    	}
-    	
-    	// add callee saved regs
-//    	cf.prologue.addAll(calleeSavedRegPush);
-    	
+    public void postRegAllocPatching(CompiledFunction cf) {    	   	
     	// patch the stack pointer change
     	int stackDisp = cf.stackManager.getStackDisp();
     	

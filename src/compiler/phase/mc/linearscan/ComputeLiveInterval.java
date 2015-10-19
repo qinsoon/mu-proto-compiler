@@ -207,7 +207,7 @@ public class ComputeLiveInterval extends AbstractMCCompilationPhase {
         }
         else {
             verboseln(" create new intervals (length=" + cf.getNumberOfMachineCodes() * 2 + ")");
-            Interval l = new Interval(cf.getNumberOfMachineCodes() * 2, reg.getDataType(), reg);
+            Interval l = new Interval( (cf.getNumberOfMachineCodes() + 1) * 2, reg.getDataType(), reg);
             l.addPosition(pos);
             cf.intervals.put(reg, l);
         }

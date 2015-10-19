@@ -234,7 +234,7 @@ public class CompiledFunction {
     			// check reg is not defined at seq + 1
     			Interval interval = intervals.get(reg);
     			if (!interval.hasDefineAt(sequence+1))
-    				ret.add(reg);
+    				ret.add(interval.getPhysicalReg());
     		}
     	}
     	
@@ -305,6 +305,4 @@ public class CompiledFunction {
 		
 		return ret;
 	}
-	
-
 }

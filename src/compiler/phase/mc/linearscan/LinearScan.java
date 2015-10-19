@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import uvm.CompiledFunction;
+import uvm.StackManager;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCLabel;

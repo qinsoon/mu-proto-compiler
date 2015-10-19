@@ -1,9 +1,8 @@
-package compiler.phase.mc.linearscan;
+package uvm;
 
 import java.util.HashMap;
 
 import compiler.UVMCompiler;
-import uvm.CompiledFunction;
 import uvm.mc.MCDispMemoryOperand;
 import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCRegister;
