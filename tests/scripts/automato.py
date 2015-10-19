@@ -201,21 +201,25 @@ def compile_uir(source, dir, output):
 	else:
 		print "invoke uvm compiler: fail"
 		sys.exit(1)
+
+		
+def compile_uir_assembly(source, dir, output):
+	"""
+	Compile generated assembly code
+	"""
 	
-	# invoke gcc to compile assembly
-	emit_dir = os.path.join(dir, "emit/")
-	assembly = os.listdir(emit_dir)
-	assembly_abs_path = []
-	for a in assembly:
-		if a.endswith('.s') or a.endswith('.c') or a.endswith('.a'):
-			assembly_abs_path.append(os.path.join(emit_dir, a))
-	rv = subprocess.call(['gcc'] + assembly_abs_path + ['-o', os.path.join(dir, output)])
+	emit_dir = os.path.join(dir, "emit")
+	os.chdir(emit_dir)	
+	rv = subprocess.call(['make'])
+	os.chdir(os.path.join(dir))
 	
 	if rv == 0:
 		print "assembler: success"
+		shutil.copy(os.path.join(emit_dir, "a.out"), os.path.join(dir, output))
 	else:
 		print "assembler: fail"
 		sys.exit(1)
+	
 	
 	
 def execute(entry, exe):
@@ -259,6 +263,7 @@ UIR_EXEC_TIMES = 5
 
 if len(sys.argv) != 0:
 	UIR_EXEC_TIMES = int(sys.argv[1])
+	C_EXEC_TIMES   = UIR_EXEC_TIMES
 	print "User defined UVM BM invocations = " + str(UIR_EXEC_TIMES)
 
 BEARABLE_PERFORMANCE = 10
@@ -361,6 +366,14 @@ for bm in get_immediate_subdirs(uvm_bm_dir):
 		# compile uir code
 		uir_source = get_bm_source_path_from_dir(os.path.join(uvm_bm_dir, bm))
 		compile_uir(uir_source, uir_result.dir, sig)
+		
+		# copy runtime
+		runtime_dir_src = os.path.join(uvm_root, "runtime")
+		runtime_dir_dst = os.path.join(uir_result.dir, "runtime")
+		shutil.copytree(runtime_dir_src, runtime_dir_dst)
+		
+		# compile assembly
+		compile_uir_assembly(uir_source, uir_result.dir, sig)
 		
 		# execute native code
 		execute(uir_result, os.path.join(uir_result.dir, sig))
