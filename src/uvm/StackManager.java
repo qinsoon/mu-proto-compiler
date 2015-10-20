@@ -31,6 +31,18 @@ public class StackManager {
 	List<FrameSlot> calleeSavedRegisters = new ArrayList<FrameSlot>();
 	HashMap<AbstractCall, List<FrameSlot>> callerSavedRegisters = new HashMap<AbstractCall, List<FrameSlot>>();
 	
+	public HashMap<FrameSlot, MCMemoryOperand> getAllocatedTemporaries() {
+		return allocated;
+	}
+
+	public List<FrameSlot> getCalleeSavedRegisters() {
+		return calleeSavedRegisters;
+	}
+
+	public HashMap<AbstractCall, List<FrameSlot>> getCallerSavedRegisters() {
+		return callerSavedRegisters;
+	}
+
 	public StackManager(CompiledFunction cf) {
 		this.current = cf;
 		this.stackSlot = 0;
@@ -178,5 +190,9 @@ public class StackManager {
     	allocated.put(slot, mem);
     	
     	return mem;
+    }
+    
+    public static String labelForCallsite(CompiledFunction cf, AbstractCall call) {
+    	return cf.getOriginFunction().getName() + "_" + call.getId() + "_ret";
     }
 }

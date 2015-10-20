@@ -69,18 +69,19 @@ typedef struct X64CallerSavedRegisterOffsets {
 } X64RegisterOffsets;
 
 typedef struct X64CallsiteInfo {
-	Address callsite;
-	struct X64CallerSavedRegisterOffsets;
+	Address returnAddress;	// the address of the instruction immediately after the call
+							// can be compared with RIP from the prev frame
+	struct X64CallerSavedRegisterOffsets callerSavedRegs;
 	Address landingPad;
 } X64CallsiteInfo;
 
 typedef struct X64CalleeSavedRegisterOffsets {
 	int64_t rbx, rbp, r12, r13, r14, r15;
-};
+} X64CalleeSavedRegisterOffsets;
 
 typedef struct UnwindTable {
 	int64_t funcID;
-	struct X64CalleeSavedRegisterOffsets;
+	struct X64CalleeSavedRegisterOffsets calleeSavedRegs;
 
 	int callsitesN;
 	struct X64CallsiteInfo callsites[1];
@@ -116,6 +117,8 @@ extern Address yieldpoint_protect_page;
  */
 extern UVMStack* uvmStacks[MAX_STACK_COUNT];
 extern int stackCount;
+
+extern UnwindTable* unwindTable;
 
 /*
  * Threads

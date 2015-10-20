@@ -16,7 +16,6 @@ public class X64CalculateStackSlot extends AbstractMCCompilationPhase {
     	verboseln("calculate stack slots for " + cf.getOriginFunction().getName());
 		cf.stackManager.calculateStackSlots();
 		new X64UVMCallConvention().postRegAllocPatching(cf);
-		UVMCompiler._suspend("check stack slots");
 	}
 
 }

@@ -448,7 +448,7 @@ public class X64CDefaultCallConvention {
 	            	
 	                // need to save it
 	            	cf.calleeSavedRegs.add(mcreg);
-	            	cf.stackManager.addCalleeSavedRegister(reg);
+	            	cf.stackManager.addCalleeSavedRegister(mcreg);
 	                prologue.addAll(pushStack(mcreg, rsp, InstPseudoCCInstruction.CALLEE_SAVE_REGISTERS));
 	            }
 	        }

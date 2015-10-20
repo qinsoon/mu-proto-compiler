@@ -2,7 +2,7 @@ package uvm;
 
 import uvm.mc.MCRegister;
 
-class FrameSlot {
+public class FrameSlot {
 	int offset;			// offset from this frame
 	int slot;
 	MCRegister value;

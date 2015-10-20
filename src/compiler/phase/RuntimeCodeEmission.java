@@ -11,8 +11,13 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
+import uvm.CompiledFunction;
+import uvm.FrameSlot;
+import uvm.Function;
 import uvm.MicroVM;
+import uvm.StackManager;
 import uvm.Type;
+import uvm.inst.AbstractCall;
 import uvm.runtime.UVMRuntime;
 import uvm.type.Array;
 import compiler.UVMCompiler;
@@ -106,6 +111,60 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
 				// types[0] = tid0;
 				writer.write(String.format("typeInfoTable[%d] = %s;\n", id, curTypeInfo));
 				writer.write("\n");
+    		}
+    		
+    		writer.write("}\n");
+    		
+    		// unwind table
+    		writer.write("void initUnwindTable() {\n");
+    		
+    		// create unwind table
+    		writer.write(String.format(
+    				"unwindTable = (UnwindTable) malloc(%d * sizeof(UnwindTable)); \n\n", 
+    				MicroVM.v.funcs.size()));
+    		
+    		// for every uvm func
+    		for (Function f : MicroVM.v.funcs.values()) {
+    			int id = f.getID();
+    			
+    			// funcID
+    			writer.write(String.format(
+    					"unwindTable[%d]->funcID = %d; \n", id, id));
+    			
+    			CompiledFunction cf = MicroVM.v.getCompiledFunc(f.getName());
+    			StackManager stack = cf.stackManager;
+    			
+    			// callee saved registers
+    			for (FrameSlot s : stack.getCalleeSavedRegisters()) {
+    				writer.write(String.format(
+    						"unwindTable[%d]->calleeSavedRegs.%s = %d; \n", id, s.getValue().REP().getName(), s.getOffset()));
+    			}
+    			writer.write('\n');
+    			
+    			// callsites
+    			writer.write(String.format(
+    					"unwindTable[%d]->callsitesN = %d; \n\n", id, stack.getCallerSavedRegisters().size()));
+    			int i = 0;
+    			for (AbstractCall callsite : stack.getCallerSavedRegisters().keySet()) {
+    				// ret address
+    				writer.write(String.format(
+    						"unwindTable[%d]->callsites[%d]->returnAddress = (Address) %s; \n", id, i, StackManager.labelForCallsite(cf, callsite)));
+
+    				// caller saved registers
+    				for (FrameSlot slot : stack.getCallerSavedRegisters().get(callsite)) {
+    					writer.write(String.format(
+    							"unwindTable[%d]->callsites[%d]->callerSavedRegs.%s = %d; \n", 
+    							id, i, slot.getValue().getName(), slot.getOffset()));
+    				}
+    				
+    				// TODO: landing pad
+    				
+        			writer.write('\n');
+        			
+        			i++;
+    			}
+    			
+    			writer.write('\n');
     		}
     		
     		writer.write("}\n");
