@@ -16,6 +16,16 @@ class FrameSlot {
 		this.hllValue = hllValue;
 	}
 	
+	public String prettyPrint() {
+		return String.format("#%d($RBP%d) -> %s", slot, offset, value.prettyPrint());
+	}
+	
+	public int getSlot() {
+		return slot;
+	}
+	public void setSlot(int slot) {
+		this.slot = slot;
+	}
 	public int getOffset() {
 		return offset;
 	}

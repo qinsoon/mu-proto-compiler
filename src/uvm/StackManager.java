@@ -26,7 +26,7 @@ public class StackManager {
 
 	CompiledFunction current;
 	
-	HashMap<MCRegister, MCMemoryOperand> allocated = new HashMap<MCRegister, MCMemoryOperand>();
+	HashMap<FrameSlot, MCMemoryOperand> allocated = new HashMap<FrameSlot, MCMemoryOperand>();
 	
 	List<FrameSlot> calleeSavedRegisters = new ArrayList<FrameSlot>();
 	HashMap<AbstractCall, List<FrameSlot>> callerSavedRegisters = new HashMap<AbstractCall, List<FrameSlot>>();
@@ -76,6 +76,76 @@ public class StackManager {
 		callerSavedRegisters.put(call, slots);
 	}
 	
+	public void calculateStackSlots() {
+		// RIP
+		// old RBP
+		
+		// from slot = 0, disp = 0 -> callee saved registers
+		stackSlot = 0;
+		stackDisp = 0;
+		
+		System.out.println("Callee saved registers:");
+		for (FrameSlot slot : calleeSavedRegisters) {
+			slot.setOffset(stackDisp);
+			slot.setSlot(stackSlot);
+			
+			System.out.println(slot.prettyPrint());
+			
+			// step to next slot
+			MCRegister reg = slot.getValue();
+			if (reg.getDataType() == MCRegister.DATA_GPR) {
+				stackDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
+			} else if (reg.getDataType() == MCRegister.DATA_DP) {
+				stackDisp -= UVMCompiler.MC_FP_REG_SIZE_IN_BYTES;
+			} else {
+				UVMCompiler.error("unimplemented type: " + reg.getDataType());
+			}
+			stackSlot ++;
+		}
+		
+		// then local variables from 'allocated'
+		System.out.println("local variables:");
+		for (FrameSlot slot : allocated.keySet()) {
+			slot.setOffset(stackDisp);
+			slot.setSlot(stackSlot);
+			
+			MCDispMemoryOperand mem = (MCDispMemoryOperand) allocated.get(slot);
+			mem.setDisp(stackDisp);
+			
+			System.out.println(slot.prettyPrint());
+			
+			stackDisp -= mem.getSize();
+			stackSlot ++;
+		}
+		
+		// caller saved register at different call site
+		for (AbstractCall call : callerSavedRegisters.keySet()) {
+			System.out.println("Caller saved registers for " + call.getFunc());
+			List<FrameSlot> callerSavedSlots = callerSavedRegisters.get(call);
+			
+			int tmpSlot = stackSlot;
+			int tmpDisp = stackDisp;
+			
+			for (FrameSlot slot : callerSavedSlots) {
+				slot.setOffset(tmpDisp);
+				slot.setSlot(tmpSlot);
+				
+				System.out.println(slot.prettyPrint());
+				
+				MCRegister reg = slot.getValue();
+				if (reg.getDataType() == MCRegister.DATA_GPR) {
+					tmpDisp -= UVMCompiler.MC_REG_SIZE_IN_BYTES;
+				} else if (reg.getDataType() == MCRegister.DATA_DP) {
+					tmpDisp -= UVMCompiler.MC_FP_REG_SIZE_IN_BYTES;
+				} else {
+					UVMCompiler.error("unimplemented type: " + reg.getDataType());
+				}
+				
+				tmpSlot ++;
+			}
+		}
+	}
+	
 	/**
 	 * returns the memory operand, caller should be responsible to set it as the spill
 	 * @param spill
@@ -91,7 +161,7 @@ public class StackManager {
     	mem.setBase(current.findOrCreateRegister(UVMCompiler.MCDriver.getFramePtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR));
     	if (spill.getDataType() == MCRegister.DATA_GPR) {
     		// set current mem op
-    		mem.setDisp(stackDisp);
+    		mem.setDisp(-1);
     		mem.setSize((byte) 8);
     		
     		// move to next slot
@@ -103,7 +173,9 @@ public class StackManager {
     		UVMCompiler.error("spilling unknown register type to memory");
     	}
     	
-    	allocated.put(spill.getOrig(), mem);
+    	FrameSlot slot = new FrameSlot(-1, -1, spill.getOrig(), spill.getOrig().getHighLevelOp());
+    	
+    	allocated.put(slot, mem);
     	
     	return mem;
     }

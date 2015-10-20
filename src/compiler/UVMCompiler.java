@@ -32,9 +32,9 @@ import compiler.phase.mc.linearscan.RegisterCoalescing;
 import compiler.phase.mc.linearscan.ReplaceRegisterOperand;
 import compiler.phase.mc.linearscan.SimpleLinearScan;
 import compiler.phase.mc.x64.X64AllocateParamRetRegister;
+import compiler.phase.mc.x64.X64CalculateStackSlot;
 import compiler.phase.mc.x64.X64ExpandCallSequence;
 import compiler.phase.mc.x64.X64MachineCodeExpansion;
-import compiler.phase.mc.x64.X64PostRegisterAllocPatching;
 import parser.uIRLexer;
 import parser.uIRListenerImpl;
 import parser.uIRParser;
@@ -182,7 +182,7 @@ public class UVMCompiler {
 		new RegisterCoalescing("regcoalesc", Verbose.REG_COALESC).execute();                    //*
 		new SimpleLinearScan("simplelinearscan", Verbose.LINEAR_SCAN).execute();
 		new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();
-		new X64PostRegisterAllocPatching("postregallocpatching", false).execute();
+		new X64CalculateStackSlot("calculatestack", true).execute();
 		
 		/*
 		 * post register allocation code transform (be careful of using any registers, and concern about calling convention)
