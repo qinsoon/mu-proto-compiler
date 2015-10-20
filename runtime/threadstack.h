@@ -56,6 +56,36 @@ typedef struct UVMThread {
     struct UVMStack* stack;
 } UVMThread;
 
+/*
+ * Stack unwind info - target specific
+ */
+typedef struct X64CallerSavedRegisterOffsets {
+	int64_t rax, rcx, rdx, rdi, rsi;
+	int64_t r8, r9, r10, r11;
+	int64_t rsp, rip;
+
+	int64_t xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7;
+	int64_t xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15;
+} X64RegisterOffsets;
+
+typedef struct X64CallsiteInfo {
+	Address callsite;
+	struct X64CallerSavedRegisterOffsets;
+	Address landingPad;
+} X64CallsiteInfo;
+
+typedef struct X64CalleeSavedRegisterOffsets {
+	int64_t rbx, rbp, r12, r13, r14, r15;
+};
+
+typedef struct UnwindTable {
+	int64_t funcID;
+	struct X64CalleeSavedRegisterOffsets;
+
+	int callsitesN;
+	struct X64CallsiteInfo callsites[1];
+} UnwindTable;
+
 // ---------------------CONSTANTS------------------------
 
 #define UVMStackMetaSize sizeof(UVMStack)
