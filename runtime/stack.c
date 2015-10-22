@@ -7,7 +7,8 @@ UVMStack* uvmStacks[MAX_STACK_COUNT];
 int stackCount = 0;
 pthread_mutex_t stackAcctLock;
 
-UnwindTable* unwindTable;
+UnwindTable** unwindTable;
+int unwindTableCount;
 
 void initStack() {
 	int i = 0;
@@ -186,4 +187,9 @@ void throwException(Address exceptionObj) {
 
 Address landingPad() {
 	return (Address) NULL;
+}
+
+UnwindTable* allocateUnwindTable(int64_t callsites) {
+	UnwindTable* ret = (UnwindTable*) malloc(sizeof(UnwindTable) + callsites * sizeof(X64CallsiteInfo));
+	return ret;
 }

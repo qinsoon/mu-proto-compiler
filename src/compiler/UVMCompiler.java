@@ -31,6 +31,7 @@ import compiler.phase.mc.linearscan.LinearScan;
 import compiler.phase.mc.linearscan.RegisterCoalescing;
 import compiler.phase.mc.linearscan.ReplaceRegisterOperand;
 import compiler.phase.mc.linearscan.SimpleLinearScan;
+import compiler.phase.mc.x64.X64CodeEmission;
 import compiler.phase.mc.x64.X64AllocateParamRetRegister;
 import compiler.phase.mc.x64.X64CalculateStackSlot;
 import compiler.phase.mc.x64.X64ExpandCallSequence;
@@ -202,7 +203,7 @@ public class UVMCompiler {
 		/*
 		 * machine dependent transformation
 		 */
-		new CodeEmission("codeemit", "emit", Verbose.CODE_EMIT).execute();
+		new X64CodeEmission("codeemit", "emit", Verbose.CODE_EMIT).execute();
 		new RuntimeCodeEmission("rtemit", "emit", false).execute();
 		
 		if (timeCompilation) {

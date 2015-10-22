@@ -225,8 +225,9 @@ public class X64CDefaultCallConvention {
             System.out.println("Pushing " + reg.prettyPrint() + ", hash:" + reg.hashCode());
             ret.addAll(pushStack(reg, rsp, InstPseudoCCInstruction.CALLER_SAVE_REGISTERS));
             callerSavedRegs.add(reg);
-            caller.stackManager.addCallerSavedRegister(call, liveRegs);
         }
+        
+        caller.stackManager.addCallerSavedRegister(call, liveRegs);
                 
         // deal with arguments
         List<Value> args = call.getArguments();
@@ -234,7 +235,8 @@ public class X64CDefaultCallConvention {
         
         UVMCompiler._assert(
                 argTypes.size() == args.size(), 
-                "call IR has " + args.size() + " arguments while func signature has " + argTypes.size());
+                String.format("call IR %s has %d arguments while func signature %s has %d", call.prettyPrint(), args.size(), call.getSig().prettyPrint(), argTypes.size())
+                );
         
         int usedParamGPRs = 0;
         int usedParamFPRs = 0;

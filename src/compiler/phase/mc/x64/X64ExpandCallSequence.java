@@ -10,6 +10,7 @@ import uvm.MicroVM;
 import uvm.inst.AbstractCall;
 import uvm.inst.InstCall;
 import uvm.inst.InstCCall;
+import uvm.inst.InstCallWithException;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCLabel;
@@ -33,7 +34,7 @@ public class X64ExpandCallSequence extends AbstractMCCompilationPhase {
             List<AbstractMachineCode> newMC = new ArrayList<AbstractMachineCode>();
             
             for (AbstractMachineCode mc : bb.getMC()) {    
-                if (mc.isCall()) {
+                if (mc.isCall() || mc.isCallWithExp()) {
                 	IRTreeNode HLLIR = mc.getHighLevelIR();
                 	
                 	MCLabel mcLabel = mc.getLabel();
@@ -41,7 +42,7 @@ public class X64ExpandCallSequence extends AbstractMCCompilationPhase {
                 		mc.setLabel(null);
                 	
                 	// uVM internal calling conv
-                	if (HLLIR instanceof InstCall) {
+                	if (HLLIR instanceof InstCall || HLLIR instanceof InstCallWithException) {
 	                    // use this instance for this call only
 	                    X64UVMCallConvention cc1 = new X64UVMCallConvention();
 	                    

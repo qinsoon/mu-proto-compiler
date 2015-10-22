@@ -1,4 +1,4 @@
-package compiler.phase.mc;
+package compiler.phase.mc.x64;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -12,18 +12,21 @@ import java.nio.file.StandardCopyOption;
 import burm.mc.X64Driver;
 import uvm.CompiledFunction;
 import uvm.MicroVM;
+import uvm.StackManager;
 import compiler.UVMCompiler;
 import compiler.phase.AbstractCompilationPhase;
+import compiler.phase.mc.AbstractMCCompilationPhase;
 import uvm.*;
+import uvm.inst.AbstractCall;
 import uvm.mc.*;
 import uvm.runtime.UVMRuntime;
 
-public class CodeEmission extends AbstractMCCompilationPhase {
+public class X64CodeEmission extends AbstractMCCompilationPhase {
     String dir;
     
     public static final boolean EMIT_DEBUG_INFO = false;
     
-    public CodeEmission(String name, String dir, boolean verbose) {
+    public X64CodeEmission(String name, String dir, boolean verbose) {
         super(name, verbose);
         this.dir = dir;
     }
@@ -96,7 +99,7 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             
             if (!cf.prologue.isEmpty()) {
                 for (AbstractMachineCode mc : cf.prologue)
-                    emitMC(writer, mc);
+                    emitMC(writer, cf, mc);
             }
             
             // we now start from a common main function, then create a thread to execute uvm main
@@ -136,17 +139,22 @@ public class CodeEmission extends AbstractMCCompilationPhase {
             
             // emit epilogue
             for (AbstractMachineCode epiMC : cf.epilogue)
-                emitMC(writer, epiMC);
+                emitMC(writer, cf, epiMC);
             
             // emit ret
             writer.write('\t');
             writer.write(mc.emit());
             writer.write('\n');            
-        } else emitMC(writer, mc);
+        } else emitMC(writer, cf, mc);
     }
     
-    private static void emitMC(BufferedWriter writer, AbstractMachineCode mc) throws IOException {
+    private static void emitMC(BufferedWriter writer, CompiledFunction cf, AbstractMachineCode mc) throws IOException {
         if (mc.getLabel() != null) {
+        	MCBasicBlock bb = cf.getBasicBlock(mc.getLabel().getName());
+        	if (bb != null && bb.isGlobalVisible()) {
+        		writer.write(".global _" + StackManager.labelForExceptionBlock(cf, bb) + "\n");
+        		writer.write("_" + StackManager.labelForExceptionBlock(cf, bb) + ":\n");
+        	}
             writer.write(UVMCompiler.MCDriver.emitOp(mc.getLabel()) + ":");
             writer.write('\n');
         }
@@ -156,6 +164,18 @@ public class CodeEmission extends AbstractMCCompilationPhase {
         	writer.write("\t\t#");
         	writer.write(mc.getComment());
         }
+        
         writer.write('\n');
+        
+        if (mc.isCall() || mc.isCallWithExp()) {
+        	if (mc.getHighLevelIR() instanceof AbstractCall) {
+	        	// insert a label after the call
+	        	String labelName = StackManager.labelForCallsite(cf, (AbstractCall) mc.getHighLevelIR());
+                MCLabel label = new MCLabel(labelName);
+	        	writer.write(".globl _" + UVMCompiler.MCDriver.emitOp(label) + "\n");
+	        	writer.write("_" + UVMCompiler.MCDriver.emitOp(label) + ":");
+	        	writer.write('\n');
+        	}
+        }
     }
 }

@@ -22,6 +22,15 @@ public class MCBasicBlock {
     
     public List<MCRegister> liveIn = new ArrayList<MCRegister>();
     
+    boolean globalVisible;
+    
+    public boolean isGlobalVisible() {
+    	return globalVisible;
+    }
+    public void setGlobalVisible(boolean a) {
+    	this.globalVisible = a;
+    }
+    
     public MCBasicBlock(String name) {
         this.label = new MCLabel(name);
     }

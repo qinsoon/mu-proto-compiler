@@ -6,6 +6,7 @@ import java.util.List;
 
 import compiler.UVMCompiler;
 import uvm.inst.AbstractCall;
+import uvm.mc.MCBasicBlock;
 import uvm.mc.MCDispMemoryOperand;
 import uvm.mc.MCMemoryOperand;
 import uvm.mc.MCOperand;
@@ -194,5 +195,9 @@ public class StackManager {
     
     public static String labelForCallsite(CompiledFunction cf, AbstractCall call) {
     	return cf.getOriginFunction().getName() + "_" + call.getId() + "_ret";
+    }
+    
+    public static String labelForExceptionBlock(CompiledFunction cf, MCBasicBlock bb) {
+    	return cf.getOriginFunction().getName() + "_" + bb.getName();
     }
 }

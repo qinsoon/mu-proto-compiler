@@ -118,7 +118,8 @@ extern Address yieldpoint_protect_page;
 extern UVMStack* uvmStacks[MAX_STACK_COUNT];
 extern int stackCount;
 
-extern UnwindTable* unwindTable;
+extern UnwindTable** unwindTable;
+extern int unwindTableCount;
 
 /*
  * Threads
@@ -146,6 +147,7 @@ extern void scanStackForRoots(UVMStack* stack, AddressNode** roots);
  */
 extern void throwException(Address exceptionObj);
 extern Address landingPad();
+extern UnwindTable* allocateUnwindTable(int64_t callsites);
 
 /*
  * Threads

@@ -20,8 +20,8 @@ public class InstCallWithException extends AbstractCall {
 		this.callee = callee;
 		this.normal = normal;
 		this.exception = exception;
-		this.operands.add(normal);
-		this.operands.add(exception);
+//		this.operands.add(normal);
+//		this.operands.add(exception);
 		this.opcode = OpCode.CALL_EXP;
 	}
 	

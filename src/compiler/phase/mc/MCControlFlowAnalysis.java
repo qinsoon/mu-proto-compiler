@@ -92,6 +92,7 @@ public class MCControlFlowAnalysis extends AbstractMCCompilationPhase{
             if (branch.isCallWithExp()) {
             	MCBasicBlock normal = cf.getBasicBlock(((MCLabel) branch.getOperand(1)).getName());
             	MCBasicBlock exception = cf.getBasicBlock(((MCLabel) branch.getOperand(2)).getName());
+            	exception.setGlobalVisible(true);
             	
             	bb.addSuccessor(normal);
             	bb.addSuccessor(exception);
