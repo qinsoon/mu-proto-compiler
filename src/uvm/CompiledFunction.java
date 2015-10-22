@@ -106,6 +106,9 @@ public class CompiledFunction {
         
         while (!traverse.isEmpty()) {
             MCBasicBlock bb = traverse.poll();
+            if (bb == null)
+            	continue;
+            
             str.append(bb.prettyPrintREPOnly());
             str.append('\n');
             traversed.add(bb.getName());
@@ -290,6 +293,15 @@ public class CompiledFunction {
                 return bb;
         
         return null;
+    }
+    
+    public MCBasicBlock getBasicBlock(String label) {
+    	for (MCBasicBlock bb : BBs) {
+    		if (bb.getName().equals(label))
+    			return bb;
+    	}
+    	
+    	return null;
     }
 
 	public HashMap<MCRegister, Pair<Interval, Interval>> getLiveInAndOutBetween(

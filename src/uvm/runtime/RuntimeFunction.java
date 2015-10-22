@@ -19,6 +19,9 @@ public class RuntimeFunction {
 	public static final RuntimeFunction threadExit;
 	public static final RuntimeFunction uvmMainExit;
 	
+	public static final RuntimeFunction throwException;
+	public static final RuntimeFunction landingPad;
+	
 	public static final RuntimeFunction uvmPrintStr;
 	public static final RuntimeFunction uvmPrintInt64;
 	public static final RuntimeFunction uvmPrintPtr;
@@ -49,6 +52,15 @@ public class RuntimeFunction {
 		threadExit = new RuntimeFunction(InstCCall.CC_DEFAULT, 
 				"_threadExit",
 				uvm.type.Void.T,
+				Arrays.asList());
+		
+		throwException = new RuntimeFunction(InstCCall.CC_DEFAULT,
+				"_throwException",
+				uvm.type.Void.T,
+				Arrays.asList(Ref.REF_VOID));
+		landingPad = new RuntimeFunction(InstCCall.CC_DEFAULT,
+				"_landingPad",
+				Ref.REF_VOID,
 				Arrays.asList());
 		
 		uvmMainExit = new RuntimeFunction(InstCCall.CC_DEFAULT, 

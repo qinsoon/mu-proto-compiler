@@ -179,3 +179,11 @@ Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {
 
     return stackMeta;
 }
+
+void throwException(Address exceptionObj) {
+
+}
+
+Address landingPad() {
+	return (Address) NULL;
+}

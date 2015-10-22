@@ -47,6 +47,7 @@ public class Burg {
     public static String                STACK_PTR;
     public static String                FRAME_PTR;
     public static final List<String>    MC_CALL = new ArrayList<String>();
+    public static final List<String>	MC_CALL_EXP = new ArrayList<String>();
     public static final List<String>	MC_CMP = new ArrayList<String>();
     
     public static final List<String>    REG_GPR = new ArrayList<String>();
@@ -1002,6 +1003,11 @@ public class Burg {
         if (MC_CALL.contains(op.name)) {
             code.appendln();
             code.appendln("@Override public boolean isCall() {return true;}");
+        }
+        
+        if (MC_CALL_EXP.contains(op.name)) {
+        	code.appendln();
+        	code.appendln("@Override public boolean isCallWithExp() {return true;}");
         }
         
         // is mc ret?

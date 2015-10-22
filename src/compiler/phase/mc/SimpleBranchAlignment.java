@@ -124,6 +124,12 @@ public class SimpleBranchAlignment extends AbstractMCCompilationPhase {
                     next = succFallThrough;
                 }
             }
+            else if (cur.getSuccessor().size() == 0) {
+            	// end with ret or call _throwException
+            	if (!unvisited.isEmpty())
+            		next = unvisited.get(0);
+            	else next = null;
+            }
             else if (!lastMC.isBranchingCode()) {
                 // fallthrough to next block
                 if (cur.getSuccessor().size() != 1) {

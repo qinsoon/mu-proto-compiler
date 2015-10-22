@@ -15,8 +15,8 @@ public class AddingJumpInstruction extends AbstractMCCompilationPhase {
 	@Override
 	protected void visitCompiledFunction(CompiledFunction cf) {
 		for (MCBasicBlock bb : cf.BBs) {
-            if (!bb.getLast().isBranchingCode()) {
-            	UVMCompiler._assert(bb.getSuccessor().size() == 1, "BB ends with non-branching code, but it has more than one successors");
+            if (!bb.getLast().isBranchingCode() && bb.getSuccessor().size() == 1) {
+//            	UVMCompiler._assert(bb.getSuccessor().size() == 1, "BB " + bb.getName() + " ends with non-branching code, but it has more than one successors");
             	
             	AbstractMachineCode jmp = UVMCompiler.MCDriver.genJmp(bb.getSuccessor().get(0).getLabel()); 
             	

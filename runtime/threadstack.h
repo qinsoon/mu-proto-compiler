@@ -142,6 +142,12 @@ extern void inspectStack(UVMStack* stack, int64_t max);
 extern void scanStackForRoots(UVMStack* stack, AddressNode** roots);
 
 /*
+ * Exception
+ */
+extern void throwException(Address exceptionObj);
+extern Address landingPad();
+
+/*
  * Threads
  */
 extern Address newThread(Address stack);	// naming issue - should be the same as 'allocStack'

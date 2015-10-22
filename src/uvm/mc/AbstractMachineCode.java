@@ -169,7 +169,7 @@ public abstract class AbstractMachineCode {
 	}
     
     public final boolean isBranchingCode() {
-        return isJump() || isRet();
+        return isJump() || isRet() || isCallWithExp();
     }
     
     public final boolean isJump() {
@@ -196,6 +196,10 @@ public abstract class AbstractMachineCode {
     
     public boolean isCall() {
         return false;
+    }
+    
+    public boolean isCallWithExp() {
+    	return false;
     }
     
     // we will try register coalescing for mov mc

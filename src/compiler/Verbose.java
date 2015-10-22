@@ -18,7 +18,7 @@ public abstract class Verbose {
      *  mc code transform
      */
     public static final boolean COMBINE_RET         = false;
-    public static final boolean RECONSTRUCT_BB      = false;
+    public static final boolean RECONSTRUCT_BB      = true;
     public static final boolean RETAIN_HLL_TYPE     = false;
     public static final boolean ADD_CALL_REG_ARG	= false;
     

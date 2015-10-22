@@ -27,7 +27,7 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
     // do not move PARAM (it may eliminates param_reg)
     // do not move values that appears in phi nodes
     private boolean isMovable(Instruction inst) {
-    	if (inst instanceof AbstractLoad || inst instanceof InstStore || inst instanceof InstParam)
+    	if (inst instanceof AbstractLoad || inst instanceof InstStore || inst instanceof InstParam || inst instanceof AbstractCall)
     		return false;
     	
     	if (valuesInPhiNodes.contains(inst.getDefReg()))
@@ -139,7 +139,15 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
             InstCall call = (InstCall) inst;
             
             inst.addChild(call.getCallee().getFuncLabel());
-        } else if (inst instanceof InstCCall) {
+        }
+        else if (inst instanceof InstCallWithException) {
+        	InstCallWithException callExp = (InstCallWithException) inst;
+        	
+        	inst.addChild(callExp.getCallee().getFuncLabel());
+        	inst.addChild(callExp.getNormalLabel());
+        	inst.addChild(callExp.getExceptionLabel());
+        }        
+        else if (inst instanceof InstCCall) {
         	InstCCall ccall = (InstCCall) inst;
         	
         	inst.addChild(MicroVM.v.findOrCreateGlobalLabel(ccall.getFunc()));

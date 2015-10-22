@@ -157,6 +157,9 @@ public class UVMCompiler {
 		 */
 		new compiler.phase.mc.x64.X64SpillConstantsToMemory("spillconstant", Verbose.SPILL_CONSTANT).execute();
 		new CombineReturns("combineret", Verbose.COMBINE_RET).execute();
+		
+		dumpInfo("beforeMCCFA");
+		
 		new MCControlFlowAnalysis("mccfa", Verbose.RECONSTRUCT_BB).execute();
 		new RetainHighLevelDataType("retainhlltype", Verbose.RETAIN_HLL_TYPE).execute();            
 		new AddCallRegisterArguments("callregargs", false).execute();
@@ -176,9 +179,8 @@ public class UVMCompiler {
 		new JoinPhiNode("joinphi", false).execute();
 		new AddingJumpInstruction("addingjmp", false).execute();
 		new DetectBackEdge("detectbedge", Verbose.DETECT_BACK_EDGE).execute();
-		new InstructionNumbering("instnumbering", Verbose.INST_NUMBERING).execute();            //*
-		
-		new ComputeLiveInterval("compinterval", Verbose.COMPUTE_INTERVAL).execute();            //*
+		new InstructionNumbering("instnumbering", Verbose.INST_NUMBERING).execute();            //*		
+		new ComputeLiveInterval("compinterval", Verbose.COMPUTE_INTERVAL).execute();            //*		
 		new RegisterCoalescing("regcoalesc", Verbose.REG_COALESC).execute();                    //*
 		new SimpleLinearScan("simplelinearscan", Verbose.LINEAR_SCAN).execute();
 		new X64ExpandCallSequence("expandcallseq", Verbose.EXPAND_CALL_SEQ).execute();

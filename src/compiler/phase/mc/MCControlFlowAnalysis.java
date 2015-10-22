@@ -44,9 +44,11 @@ public class MCControlFlowAnalysis extends AbstractMCCompilationPhase{
                     cf.entryBB = curBB;
                 
                 cf.BBs.add(curBB);
-            } else if (curBB != null && mc.getLabel() != null) {
+            } 
+            else if (curBB != null && mc.getLabel() != null) {
                 System.out.println("dealing with " + mc.prettyPrint());
                 System.out.println("curBB=" + curBB.getName());
+                System.out.println("mc=" + mc.prettyPrint());
                 UVMCompiler.error("check what happened, probably a fall-through BB in source code. ");
             }
             
@@ -58,6 +60,7 @@ public class MCControlFlowAnalysis extends AbstractMCCompilationPhase{
                 curBB.setPhi(mc);
             
             if (mc.isBranchingCode()) {
+            	verboseln("finished this bb " + curBB.getName());
                 curBB = null;
             }
         }            
@@ -84,6 +87,17 @@ public class MCControlFlowAnalysis extends AbstractMCCompilationPhase{
                 MCBasicBlock next = cf.BBs.get(i + 1);
                 bb.addSuccessor(next);
                 next.addPredecessors(bb);
+            }
+            
+            if (branch.isCallWithExp()) {
+            	MCBasicBlock normal = cf.getBasicBlock(((MCLabel) branch.getOperand(1)).getName());
+            	MCBasicBlock exception = cf.getBasicBlock(((MCLabel) branch.getOperand(2)).getName());
+            	
+            	bb.addSuccessor(normal);
+            	bb.addSuccessor(exception);
+            	
+            	normal.addPredecessors(bb);
+            	exception.addPredecessors(bb);
             }
         }
         

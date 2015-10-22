@@ -36,7 +36,9 @@ public class CombineReturns extends AbstractMCCompilationPhase {
             return;
         
         if (returns < 1)
-        	UVMCompiler.error("this func does not have a return");
+        	// it is possible that a function does not return (it may only throws something)
+//        	UVMCompiler.error("this func does not have a return");
+        	return;
         
         // combines MC
         

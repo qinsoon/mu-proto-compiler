@@ -1,0 +1,29 @@
+// exception
+
+.funcdef @funcNoException <int<64> ()> {
+  .label %entry:
+    RET <int<32>> 1
+}
+
+.funcdef @funcException <void ()> {
+  .label %entry:
+    %a = NEW <int<64>>
+    %ia = GETIREF <int<64>> %a
+    STORE <int<64>> %ia 1024
+    THROW %a
+}
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+    %a = CALL <int<64> ()> @funcNoException ()
+    CALL <void ()> @funcException () %normal %exception
+
+  .label %normal:
+    RET <int<32>> 1
+  
+  .label %exception:
+    %e = LANDINGPAD
+    %ie = GETIREF <int<64>> %e
+    %ret = LOAD <int<64>> %ie
+    RET <int<32>> %ret
+}

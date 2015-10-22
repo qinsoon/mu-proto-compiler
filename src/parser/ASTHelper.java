@@ -515,7 +515,15 @@ public abstract class ASTHelper {
                 args.add(getValue(f, valueCtx, sig.getParamTypes().get(i)));
             }
             
-            Instruction node = new InstCall(callee, args);
+            Instruction node;
+            
+            if (callCtx.IDENTIFIER() == null || callCtx.IDENTIFIER().size() == 0) {
+            	node = new InstCall(callee, args);
+            } else {
+            	Label normal = f.findOrCreateLabel(getIdentifierName(callCtx.IDENTIFIER(0), false));
+            	Label exception = f.findOrCreateLabel(getIdentifierName(callCtx.IDENTIFIER(1), false));
+            	node = new InstCallWithException(callee, args, normal, exception);
+            }
             
             if (ctx.IDENTIFIER() != null) {
 	            Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), sig.getReturnType());
@@ -556,11 +564,26 @@ public abstract class ASTHelper {
         	return node;
         }
         /*
+         * Exception
+         */
+        else if (inst instanceof parser.uIRParser.InstThrowContext) {
+        	Value exception = getValue(f, (((parser.uIRParser.InstThrowContext) inst).value()), Ref.REF_VOID);
+        	Instruction node = new InstThrow(exception);
+        	return node;
+        }
+        else if (inst instanceof parser.uIRParser.InstLandingPadContext) {
+        	Instruction node = new InstLandingPad();
+        	
+        	if (ctx.IDENTIFIER() != null) {
+        		Register def = f.findOrCreateRegister(getIdentifierName(ctx.IDENTIFIER(), false), Ref.REF_VOID);
+        		node.setDefReg(def);
+        	}
+        	return node;
+        }
+        /*
          * Thread related
          */
         else if (inst instanceof parser.uIRParser.InstThreadExitContext) {
-        	parser.uIRParser.InstThreadExitContext threadExitCtx = (parser.uIRParser.InstThreadExitContext) inst;
-        	
         	Instruction node = new InstThreadExit();
         	return node;
         }

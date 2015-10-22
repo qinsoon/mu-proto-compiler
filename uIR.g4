@@ -109,8 +109,8 @@ instBody
             (IDENTIFIER ':' value ';')* '}'         # InstPhi
 
     // Inter-function Control Flow
-    |   'CALL' funcCallBody                         # InstCall
-    |   'INVOKE' funcCallBody IDENTIFIER IDENTIFIER # InstInvoke
+    |   'CALL' funcCallBody (IDENTIFIER IDENTIFIER)?# InstCall
+//    |   'INVOKE' funcCallBody IDENTIFIER IDENTIFIER # InstInvoke
     |   'TAILCALL' funcCallBody                     # InstTailCall
 
     |   'RET' '<' type '>' value                    # InstRet

@@ -24,6 +24,7 @@ import uvm.inst.InstInternalIRefOffset;
 import uvm.inst.InstInternalPrintInt64;
 import uvm.inst.InstInternalPrintPtr;
 import uvm.inst.InstInternalPrintStr;
+import uvm.inst.InstLandingPad;
 import uvm.inst.InstLoadInt;
 import uvm.inst.InstNew;
 import uvm.inst.InstNewStack;
@@ -32,6 +33,7 @@ import uvm.inst.InstRet;
 import uvm.inst.InstRetVoid;
 import uvm.inst.InstStore;
 import uvm.inst.InstThreadExit;
+import uvm.inst.InstThrow;
 import uvm.runtime.RuntimeFunction;
 import uvm.type.Array;
 import uvm.type.IRef;
@@ -158,6 +160,30 @@ public class ExpandRuntimeServices extends AbstractCompilationPhase {
 					Instruction threadExit = ccallRuntimeFunction(RuntimeFunction.threadExit, new ArrayList<uvm.Value>());
 					reserveLabel(inst, threadExit);
 					newInsts.add(threadExit);
+				}
+				
+				// THROW
+				// ccall throwException()
+				else if (inst instanceof InstThrow) {
+					InstThrow instThrow = (InstThrow) inst;
+					
+					List<Value> args = new ArrayList<Value>();
+					args.add(instThrow.getExceptionObject());
+					
+					Instruction throwException = ccallRuntimeFunction(RuntimeFunction.throwException, args);
+					reserveLabel(inst, throwException);
+					newInsts.add(throwException);
+				}
+				
+				// LANDINGPAD
+				// ccall landingPad()
+				else if (inst instanceof InstLandingPad) {
+					InstLandingPad instLandingPad = (InstLandingPad) inst;
+					
+					Instruction landingPad = ccallRuntimeFunction(RuntimeFunction.landingPad, new ArrayList<uvm.Value>());
+					reserveLabel(inst, landingPad);
+					reserveDef(inst, landingPad);
+					newInsts.add(landingPad);
 				}
 				
 				else if (inst instanceof InstInternalPrintStr) {
