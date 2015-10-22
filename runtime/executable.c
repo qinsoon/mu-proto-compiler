@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 extern void initTypeTable();
+extern void initUnwindTable();
 
 void initRuntime() {
 	initSignalHandler();
@@ -12,6 +13,7 @@ void initRuntime() {
     initCollector();
     initStack();
     initTypeTable();
+    initUnwindTable();
 }
 
 int64_t retval;

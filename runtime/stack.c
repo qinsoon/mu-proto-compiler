@@ -182,7 +182,29 @@ Address allocStack(int64_t stackSize, void*(*entry_func)(void*), void* args) {
 }
 
 void throwException(Address exceptionObj) {
+	printf("throwing excpetion: 0x%llx\n", exceptionObj);
 
+	// save exception object
+	getCurrentStack()->exceptionObj = exceptionObj;
+
+	// get current rsp, rbp
+	Address rsp, rbp;
+	__asm__(
+			"mov %%rsp, %0		\n"
+			"mov %%rbp, %1		\n"
+			: "=rm" (rsp),
+			  "=rm" (rbp)
+	);
+
+	printf("RSP = 0x%llx, RBP = 0x%llx\n", rsp, rbp);
+
+	Address ripFromGCC = (Address) __builtin_return_address(0);
+	Address ripFromRBP = * ((Address*) (rbp + 8));
+	Address oldRBP = * ((Address*)rbp);
+
+	printf("RIP from GCC = 0x%llx\n", ripFromGCC);
+	printf("RIP from RBP = 0x%llx\n", ripFromRBP);
+	printf("oldRBP       = 0x%llx\n", oldRBP);
 }
 
 Address landingPad() {

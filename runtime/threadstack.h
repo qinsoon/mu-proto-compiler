@@ -33,6 +33,8 @@ typedef struct UVMStack {
     Address upperBound;
     Address underflowGuard;
 
+    Address exceptionObj;
+
     struct UVMThread* thread;
 } UVMStack;
 
