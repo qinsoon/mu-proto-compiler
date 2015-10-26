@@ -217,7 +217,7 @@ void throwException(Address exceptionObj) {
 //	Address xmm0, xmm1, xmm2, xmm3, xmm4, xmm5, xmm6, xmm7;
 //	Address xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15;
 	// callee saved
-	Address rbx = 0, rbp = 0, r12 = 0, r13 = 0, r14 = 0;
+	Address rbx = 0, rbp = 0, r12 = 0, r13 = 0, r14 = 0, r15 = 0;
 
 	Address rsp = 0, rip = 0;
 
@@ -280,6 +280,8 @@ void throwException(Address exceptionObj) {
 			r13 = rbp + table->calleeSavedRegs.r13;
 		if (table->calleeSavedRegs.r14 != -1)
 			r14 = rbp + table->calleeSavedRegs.r14;
+		if (table->calleeSavedRegs.r15 != -1)
+			r15 = rbp + table->calleeSavedRegs.r15;
 
 		for (int i = 0; i < table->callsitesN; i++) {
 			if (TRACE_EXCEPTION)
@@ -377,10 +379,10 @@ void throwException(Address exceptionObj) {
 					if (TRACE_EXCEPTION)
 						printf(" = %llx\n", vR14);
 
-//					printf("Loading R15 from %llx", r15);
-//					if (r15 != 0)
-//						vR15 = *((Word*) r15);
-//					printf(" = %llx\n", vR15);
+					printf("Loading R15 from %llx", r15);
+					if (r15 != 0)
+						vR15 = *((Word*) r15);
+					printf(" = %llx\n", vR15);
 
 					if (TRACE_EXCEPTION)
 						printf("Loading Caller-saved Registers: \n");
@@ -474,7 +476,7 @@ void throwException(Address exceptionObj) {
 							"movq	%1, %%r12	\n"
 							"movq	%2, %%r13	\n"
 							"movq	%3, %%r14	\n"
-//							"movq	%4, %%r15	\n"
+							"movq	%4, %%r15	\n"
 							// restore caller-saved register
 							"movq	%5, %%rax	\n"
 							"movq	%6, %%rcx	\n"
@@ -484,14 +486,14 @@ void throwException(Address exceptionObj) {
 							"movq	%10, %%r8	\n"
 							"movq	%11, %%r9	\n"
 							"movq	%12, %%r10	\n"
-							"movq	%13, %%r11	\n"
+//							"movq	%13, %%r11	\n"
 							// restore rsp
 							"movq	%14, %%rsp	\n"
-							// save rip (in r15, r15 is scratch register), then restore rbp (otherwise RBP is changed)
-							"movq	%16, %%r15	\n"
+							// save rip (in r11, r11 is scratch register), then restore rbp (otherwise RBP is changed)
+							"movq	%16, %%r11	\n"
 							"movq	%15, %%rbp	\n"
 							// jmp
-							"jmp	*%%r15		\n"
+							"jmp	*%%r11		\n"
 
 							: // no output
 							: "m" (vRBX),	// %0
