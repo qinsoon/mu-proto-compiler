@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import burm.mc.X64add;
+import burm.mc.X64mov;
 import burm.mc.X64pop;
 import burm.mc.X64push;
 import burm.mc.X64store_mov;
@@ -20,6 +21,7 @@ import uvm.inst.InstCall;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCDPImmediate;
+import uvm.mc.MCDispMemoryOperand;
 import uvm.mc.MCIntImmediate;
 import uvm.mc.MCLabel;
 import uvm.mc.MCLabeledMemoryOperand;
@@ -111,4 +113,15 @@ public class X64UVMCallConvention extends X64CDefaultCallConvention {
 		stackDispForLastThreadEntryFunction = stackDisp;
 		return ret;
 	}
+	
+	@Override
+    protected void pushFuncID(CompiledFunction cf, List<AbstractMachineCode> prologue) {
+    	X64mov saveFuncID = new X64mov();
+    	MCIntImmediate id = new MCIntImmediate(cf.getOriginFunction().getID());
+    	MCDispMemoryOperand slot = new MCDispMemoryOperand(cf.findOrCreateRegister(UVMCompiler.MCDriver.getFramePtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR), -8);
+    	saveFuncID.setOperand0(id);
+    	saveFuncID.setDefine(slot);
+    	
+    	prologue.add(saveFuncID);
+    }
 }

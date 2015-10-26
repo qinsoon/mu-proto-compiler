@@ -16,6 +16,18 @@ import uvm.mc.linearscan.Interval;
 public class StackManager {
 	int stackSlot;
 	int stackDisp;
+	int finalStackDisp;
+	
+	public void setFinalStackDisp(int disp) {
+		this.finalStackDisp = disp;
+	}
+	/**
+	 * only use this after post-register-alloc patching
+	 * @return
+	 */
+	public int getFinalStackDisp() {
+		return finalStackDisp;
+	}
 	
 	public int getStackSlot() {
 		return stackSlot;
@@ -93,9 +105,11 @@ public class StackManager {
 		// RIP
 		// old RBP
 		
-		// from slot = 0, disp = 0 -> callee saved registers
-		stackSlot = 0;
-		stackDisp = 0;
+		// funcID
+		
+		// from slot = 2, disp = -16 -> callee saved registers
+		stackSlot = 2;
+		stackDisp = -16;
 		
 		System.out.println("Callee saved registers:");
 		for (FrameSlot slot : calleeSavedRegisters) {

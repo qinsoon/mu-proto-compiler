@@ -103,9 +103,27 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
 			// funcID
 			funcBody.append(String.format(
 					"%s->funcID = %d; \n", var, id)); 			
-
+			
+			// rsp offset
+			funcBody.append(String.format(
+					"%s->rspOffset = %d; \n", var, cf.stackManager.getFinalStackDisp()));
 			
 			// callee saved registers
+			
+			// clear all
+			funcBody.append(String.format(
+					"%s->calleeSavedRegs.rbx = -1; \n", var));
+			funcBody.append(String.format(
+					"%s->calleeSavedRegs.rbp = -1; \n", var));
+			funcBody.append(String.format(
+					"%s->calleeSavedRegs.r12 = -1; \n", var));
+			funcBody.append(String.format(
+					"%s->calleeSavedRegs.r13 = -1; \n", var));
+			funcBody.append(String.format(
+					"%s->calleeSavedRegs.r14 = -1; \n", var));
+			funcBody.append(String.format(
+					"%s->calleeSavedRegs.r15 = -1; \n", var));
+			// set
 			for (FrameSlot s : stack.getCalleeSavedRegisters()) {
 				funcBody.append(String.format(
 						"%s->calleeSavedRegs.%s = %d; \n", var, s.getValue().REP().getName(), s.getOffset()));
@@ -124,6 +142,62 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
 				usedLabels.add(label);
 
 				// caller saved registers
+
+				// clear all
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.rax = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.rcx = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.rdx = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.rdi = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.rsi = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.r8 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.r9 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.r10 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.r11 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.rsp = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.rip = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm0 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm1 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm2 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm3 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm4 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm5 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm6 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm7 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm8 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm9 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm10 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm11 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm12 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm13 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm14 = -1; \n", var, i));
+				funcBody.append(String.format(
+						"%s->callsites[%d].callerSavedRegs.xmm15 = -1; \n", var, i));
 				for (FrameSlot slot : stack.getCallerSavedRegisters().get(callsite)) {
 					funcBody.append(String.format(
 							"%s->callsites[%d].callerSavedRegs.%s = %d; \n", 
@@ -151,7 +225,7 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
 		
 		// actual write
 		for (String label : usedLabels)
-			writer.write("extern Address " + label + ";\n");
+			writer.write("extern void " + label + "();\n");
 		writer.write('\n');
 		
 		writer.write(funcBody.toString());

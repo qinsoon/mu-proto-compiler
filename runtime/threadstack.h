@@ -85,6 +85,8 @@ typedef struct UnwindTable {
 	int64_t funcID;
 	struct X64CalleeSavedRegisterOffsets calleeSavedRegs;
 
+	int rspOffset;	// rsp offset from rbp
+
 	int callsitesN;
 	struct X64CallsiteInfo callsites[1];
 } UnwindTable;

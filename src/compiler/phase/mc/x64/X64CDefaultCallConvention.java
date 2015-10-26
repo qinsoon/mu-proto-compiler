@@ -401,6 +401,10 @@ public class X64CDefaultCallConvention {
         return ret;
     }
     
+    protected void pushFuncID(CompiledFunction cf, List<AbstractMachineCode> prologue) {
+    	
+    }
+    
     public void genPrologue(CompiledFunction cf) {
         List<AbstractMachineCode> prologue = cf.prologue;
         
@@ -426,7 +430,10 @@ public class X64CDefaultCallConvention {
             dispRSP.setOperand1(new MCIntImmediate(stackDisp));
             dispRSP.setDefine(rsp);
             prologue.add(dispRSP);
-        }
+        }        
+        
+        // push function ID
+        pushFuncID(cf, prologue);
         
         // callee-saved register
         if (cf.getOriginFunction().isMain()) {
@@ -478,6 +485,8 @@ public class X64CDefaultCallConvention {
     	
     	X64add dispRSP = (X64add) cf.prologue.get(2);
     	dispRSP.setOperand(1, new MCIntImmediate(stackDisp));
+    	
+    	cf.stackManager.setFinalStackDisp(stackDisp);
     }
     
     public void genEpilogue(CompiledFunction cf) {

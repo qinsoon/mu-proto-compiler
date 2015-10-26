@@ -24,7 +24,7 @@ import uvm.runtime.UVMRuntime;
 public class X64CodeEmission extends AbstractMCCompilationPhase {
     String dir;
     
-    public static final boolean EMIT_DEBUG_INFO = false;
+    public static final boolean EMIT_CFI = true;
     
     public X64CodeEmission(String name, String dir, boolean verbose) {
         super(name, verbose);
@@ -93,7 +93,7 @@ public class X64CodeEmission extends AbstractMCCompilationPhase {
             }
             
             writer.write(cf.getOriginFunction().getName() + ":\n");
-            if (EMIT_DEBUG_INFO) {
+            if (EMIT_CFI) {
             	writer.write("\t.cfi_startproc\n");
             }
             
@@ -113,7 +113,7 @@ public class X64CodeEmission extends AbstractMCCompilationPhase {
                 emitMCInsertingEpilogueBeforeRet(writer, cf, mc);
             }            
             
-            if (EMIT_DEBUG_INFO) {
+            if (EMIT_CFI) {
             	writer.write("\t.cfi_endproc\n");
             }
         } catch (IOException e) {

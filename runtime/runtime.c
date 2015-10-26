@@ -54,6 +54,10 @@ void runtimeSignalHandler(int signum, siginfo_t *info, void *context) {
 		case BUS_OBJERR: sig_code = "Object-specific hardware error (BUS_OBJERR)"; break;
 		}
 		break;
+	case SIGILL:
+		sig = "SIGILL";
+		sig_code = "Illegal Instruction"; break;
+		break;
 	}
 
 	printf("VM abort for receiving signals\n");
@@ -152,6 +156,7 @@ void initSignalHandler() {
 	sig_act.sa_flags = SA_SIGINFO;
 	sigaction(SIGSEGV, &sig_act, NULL);
 	sigaction(SIGBUS,  &sig_act, NULL);
+	sigaction(SIGILL,  &sig_act, NULL);
 }
 
 /*

@@ -19,6 +19,7 @@ void initRuntime() {
 int64_t retval;
 
 void uvmMainExit(int64_t r) {
+	printf("uVM is about to exit with ret value %lld\n", r);
 	retval = r;
 	threadExit();
 }
@@ -44,6 +45,7 @@ int main(int c, char** args) {
 
 	// join
 	pthread_join(t->_pthread, NULL);
+	printf("main thread joined with retval %lld\n", retval);
 
 	return retval;
 }
