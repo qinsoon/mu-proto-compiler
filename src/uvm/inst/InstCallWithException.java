@@ -15,6 +15,11 @@ public class InstCallWithException extends AbstractCall {
 	Label normal;
 	Label exception;
 	
+	// genmov phase may change the normal/excpetion edge (at MC level)
+	// we need the information for dumping unwind table
+	String actualNormal;
+	String actualException;
+	
 	public InstCallWithException(Function callee, List<uvm.Value> arguments, Label normal, Label exception) {
 		super(callee.getName(), arguments);
 		this.callee = callee;
@@ -59,5 +64,21 @@ public class InstCallWithException extends AbstractCall {
 	@Override
 	public boolean isBranching() {
 		return true;
+	}
+	
+	public String getActualNormal() {
+		return actualNormal;
+	}
+
+	public void setActualNormal(String actualNormal) {
+		this.actualNormal = actualNormal;
+	}
+
+	public String getActualException() {
+		return actualException;
+	}
+
+	public void setActualException(String actualException) {
+		this.actualException = actualException;
 	}
 }

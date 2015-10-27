@@ -206,7 +206,12 @@ public class RuntimeCodeEmission extends AbstractCompilationPhase {
 				
 				// landing pad
 				if (callsite instanceof InstCallWithException) {
-					String exceptionLabelName = ((InstCallWithException) callsite).getExceptionLabel().getName();
+					String exceptionLabelName = null;
+					
+					if (((InstCallWithException) callsite).getActualException() != null)
+						exceptionLabelName = ((InstCallWithException) callsite).getActualException();
+					else exceptionLabelName = ((InstCallWithException) callsite).getExceptionLabel().getName();
+					
 					MCBasicBlock exceptionBB = cf.getBasicBlock(exceptionLabelName);
 					String exceptionLabel = StackManager.labelForExceptionBlock(cf, exceptionBB);
 					

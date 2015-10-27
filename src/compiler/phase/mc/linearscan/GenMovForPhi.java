@@ -5,7 +5,10 @@ import java.util.List;
 
 import burm.mc.X64Driver;
 import uvm.CompiledFunction;
+import uvm.Label;
 import uvm.MicroVM;
+import uvm.inst.AbstractCall;
+import uvm.inst.InstCallWithException;
 import uvm.mc.AbstractMCDriver;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
@@ -33,7 +36,41 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
         AbstractMachineCode last = b.getLast();
         if (last.isJump() && ((MCLabel)last.getOperand(0)).getName().equals(oldSuccessor.getName())) {
             last.setOperand(0, newSuccessor.getLabel());
+        } else if (last.isCallWithExp()) {
+        	oldSuccessor.setGlobalVisible(false);
+    		newSuccessor.setGlobalVisible(true);
+        	
+        	InstCallWithException call = (InstCallWithException) last.getHighLevelIR();
+        	if (((MCLabel)last.getOperand(1)).getName().equals(oldSuccessor.getName())) {
+        		last.setOperand(1, newSuccessor.getLabel());
+        		call.setActualNormal(newSuccessor.getLabel().getName());        		
+        	} else if (((MCLabel)last.getOperand(2)).getName().equals(oldSuccessor.getName())) {
+        		last.setOperand(2, newSuccessor.getLabel());
+        		call.setActualException(newSuccessor.getLabel().getName());
+        	}
         }
+    }
+    
+    public boolean isBranchingToThisBlock(MCBasicBlock p, MCBasicBlock cur) {
+    	if (p.getLast() == null)
+    		return false;
+    	
+    	AbstractMachineCode inst = p.getLast();
+    	
+    	if (!inst.isBranchingCode())
+    		return false;
+    	
+    	if (inst.isJump() && ((MCLabel)p.getLast().getOperand(0)).getName().equals(cur.getName()))
+    		return true;
+    	else if (inst.isCallWithExp()) {
+    		MCLabel l1 = (MCLabel) inst.getOperand(1);
+    		MCLabel l2 = (MCLabel) inst.getOperand(2);
+    		if (l1.getName().equals(cur.getName()) || l2.getName().equals(l2.getName()))
+    			return true;
+    		else return false;
+    	}
+    	
+        return false;
     }
 
     @Override
@@ -121,9 +158,7 @@ public class GenMovForPhi extends AbstractMCCompilationPhase {
                             mc.setOperand(opdForP, genMovReg);
                             mc.setOperand(opdForP + 1, n.getLabel());
                             // append i to n
-                            if (n.getLast() != null 
-                                && n.getLast().isJump() 
-                                && ((MCLabel)n.getLast().getOperand(0)).getName().equals(bb.getName())) {
+                            if (isBranchingToThisBlock(n, bb)) {
                                 // BB n jumps to this block
                                 //so we need to put the mov instruction before the jump code
                                 AbstractMachineCode jmp = n.getLast();

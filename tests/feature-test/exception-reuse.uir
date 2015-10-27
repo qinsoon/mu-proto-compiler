@@ -1,0 +1,30 @@
+// excetpion-reuse
+
+.funcdef @funcException <void (int<64>)> {
+  .label %entry:
+    %i = PARAM 0
+    
+    %a = NEW <int<64>>
+    %ia = GETIREF <int<64>> %a
+    STORE <int<64>> %ia %i
+    THROW %a
+}
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+    CALL <void (int<64>)> @funcException (1001) %call2 %exception
+
+  .label %call2:
+	CALL <void (int<64>)> @funcException (1002) %normal %exception
+	
+  .label %normal:
+    RET <int<32>> 1
+  
+  .label %exception:
+    %where = PHI <int<64>> {%entry: 100; %call2: 200;}
+    %e = LANDINGPAD
+    %ie = GETIREF <int<64>> %e
+    %v = LOAD <int<64>> %ie
+    %ret = ADD <int<64>> %v %where
+    RET <int<32>> %ret
+}
