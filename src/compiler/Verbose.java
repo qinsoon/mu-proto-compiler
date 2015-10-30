@@ -11,7 +11,7 @@ public abstract class Verbose {
     /*
      *  instruction selection (use BURM)
      */
-    public static final boolean INST_SEL            = false;
+    public static final boolean INST_SEL            = true;
     public static final boolean MC_REP_GEN          = true;
     
     /*

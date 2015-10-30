@@ -396,6 +396,14 @@ ireg : CCALL(label)
 > call P[0] -> %res_reg
 6
 
+op : TAILCALL(label)
+> jmp P[0]
+1
+
+op : TAILCALL(label)
+> jmp P[0]
+1
+
 // ********************************
 // MEMORY ALLOCATION / ACCESS
 // ********************************

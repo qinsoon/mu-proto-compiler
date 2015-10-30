@@ -1,0 +1,30 @@
+// tail-factorial
+
+.funcdef @tailfact <int<64> (int<64> int<64>)> {
+  .label %entry:
+    %n = PARAM 0
+    %accumulator = PARAM 1
+    %isZero = EQ <int<64>> %n 0
+    BRANCH2 %isZero %ret %cont
+    
+  .label %ret:
+    RET <int<64>> %accumulator
+  
+  .label %cont:
+    %newAccumulator = MUL <int<64>> %n %accumulator
+    %newN = SUB <int<64>> %n 1
+    TAILCALL <int<64> (int<64> int<64>)> @tailfact (%newN %newAccumulator)
+}
+
+.funcdef @fact <int<64> (int<64>) {
+  .label %entry:
+    %n = PARAM 0
+    %ret = CALL <int<64> (int<64> int<64>)> @tailfact (%n 1)
+    RET <int<64>> %ret
+}
+
+.funcdef @main <int<32> ()> {
+  .label %entry:
+    %a = CALL <int<64> (int<64>)> @fact (10)
+    RET <int<32>> %a
+}
