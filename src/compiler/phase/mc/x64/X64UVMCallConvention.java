@@ -138,7 +138,7 @@ public class X64UVMCallConvention extends X64CDefaultCallConvention {
 		} else {
 			MCRegister rsp = caller.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
 			
-			// tail call
+			// tail call - see Tiger Book P319
 			List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>();
 			
 			// handle parameters
