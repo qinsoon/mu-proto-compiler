@@ -26,6 +26,7 @@ declare
     |   mcFramePtrDecl
     |   mcCallDecl
     |   mcCallExpDecl
+    |   mcTailCallExpDecl
     |   mcCmpDecl
 // op emit
     |   opEmitRule
@@ -117,6 +118,10 @@ mcCallDecl
 
 mcCallExpDecl
     :   '.mc_call_exp' idString+
+    ;
+
+mcTailCallExpDecl
+    :   '.mc_tailcall' idString+
     ;
 
 gprDecl

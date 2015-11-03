@@ -169,7 +169,7 @@ public abstract class AbstractMachineCode {
 	}
     
     public final boolean isBranchingCode() {
-        return isJump() || isRet() || isCallWithExp();
+        return isJump() || isRet() || isCallWithExp() || isTailCall();
     }
     
     public final boolean isJump() {
@@ -199,6 +199,10 @@ public abstract class AbstractMachineCode {
     }
     
     public boolean isCallWithExp() {
+    	return false;
+    }
+    
+    public boolean isTailCall() {
     	return false;
     }
     

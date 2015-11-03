@@ -17,7 +17,10 @@ import uvm.Instruction;
 import uvm.OpCode;
 import uvm.Type;
 import uvm.Value;
+import uvm.inst.AbstractCall;
 import uvm.inst.InstCall;
+import uvm.inst.InstPseudoCCInstruction;
+import uvm.inst.InstTailCall;
 import uvm.mc.AbstractMachineCode;
 import uvm.mc.MCBasicBlock;
 import uvm.mc.MCDPImmediate;
@@ -124,4 +127,73 @@ public class X64UVMCallConvention extends X64CDefaultCallConvention {
     	
     	prologue.add(saveFuncID);
     }
+	
+	@Override
+	public List<AbstractMachineCode> callerSetupCallSequence(
+            CompiledFunction caller, 
+            AbstractCall call,
+            AbstractMachineCode callMC) {
+		if (! (call instanceof InstTailCall)) {
+			return super.callerSetupCallSequence(caller, call, callMC);
+		} else {
+			MCRegister rsp = caller.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+			
+			// tail call
+			List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>();
+			
+			// handle parameters
+			ret.addAll(handleArgumentsForCall(caller, call));
+			
+			// restore callee-saved regs
+	       for (int i = caller.calleeSavedRegs.size() - 1; i >= 0; i--) {
+	            ret.addAll(popStack(caller.calleeSavedRegs.get(i), rsp, InstPseudoCCInstruction.CALLEE_RESTORE_REGISTERS));
+	        }
+	       
+	       // destroy frame by adding an invalid value - we will patch this soon (see postRegAllocPatching)
+	       X64add destroyFrame = new X64add();
+	       destroyFrame.setOperand0(rsp);
+	       destroyFrame.setOperand1(new MCIntImmediate(1));
+	       destroyFrame.setDefine(rsp);
+	       ret.add(destroyFrame);
+	       
+	       // pop RBP
+	       MCRegister rbp = caller.findOrCreateRegister(UVMCompiler.MCDriver.getFramePtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+	       ret.addAll(super.popStack(rbp, rsp, null));
+	       
+	       // jump to callee (reserve the inst)
+	       ret.add(callMC);
+			
+	       return ret;
+		}
+	}
+	
+	@Override
+	public List<AbstractMachineCode> callerCleanupCallSequence(
+            CompiledFunction caller, 
+            AbstractCall call,
+            AbstractMachineCode callMC) {
+		if (! (call instanceof InstTailCall)) {
+			return super.callerCleanupCallSequence(caller, call, callMC);
+		} else {
+			// do nothing
+			return new ArrayList<AbstractMachineCode>();
+		}
+	}
+	
+	@Override
+	public void postRegAllocPatching(CompiledFunction cf) {
+		super.postRegAllocPatching(cf);
+		
+		for (MCBasicBlock bb : cf.BBs) {
+			for (int i = 0; i < bb.getMC().size(); i++) {
+				AbstractMachineCode mc = bb.getMC().get(i);
+				
+				if (mc.isTailCall()) {
+					// patch the destroy frame inst
+					X64add destroyFrame = (X64add) bb.getMC().get(i-2);
+					destroyFrame.setOperand1(new MCIntImmediate(- cf.stackManager.getFinalStackDisp()));
+				}
+			}
+		}
+	}
 }

@@ -17,7 +17,6 @@ public class Function {
     FunctionSignature sig;
     
     uvm.Label funcLabel;
-    uvm.Label funcEntryLabel;
     
     boolean defined = false;
     
@@ -72,7 +71,6 @@ public class Function {
         this.sig = sig;
         
         this.funcLabel = findOrCreateLabel(name);
-        this.funcEntryLabel = findOrCreateLabel(CompiledFunction.getCompiledFunctionEntryLabel(name));
     }
     
     public void defineFunction(HashMap<String, ImmediateValue> constPool, List<BasicBlock> BBs) {
@@ -124,10 +122,6 @@ public class Function {
 
     public uvm.Label getFuncLabel() {
         return funcLabel;
-    }
-    
-    public uvm.Label getFuncEntryLabel() {
-    	return funcEntryLabel;
     }
     
     public void setCFGEntry(BasicBlock bb) {

@@ -318,12 +318,4 @@ public class CompiledFunction {
 		
 		return ret;
 	}
-	
-	public String getCompiledFunctionEntryLabel() {
-		return origin.name + "_entry";
-	}
-	
-	public static String getCompiledFunctionEntryLabel(String func) {
-		return func + "_entry";
-	}
 }

@@ -143,7 +143,7 @@ public class IRTreeGeneration extends AbstractCompilationPhase{
         else if (inst instanceof InstTailCall) {
         	InstTailCall tailcall = (InstTailCall) inst;
         	
-        	inst.addChild(tailcall.getCallee().getFuncEntryLabel());
+        	inst.addChild(tailcall.getCallee().getFuncLabel());
         }
         else if (inst instanceof InstCallWithException) {
         	InstCallWithException callExp = (InstCallWithException) inst;

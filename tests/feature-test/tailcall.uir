@@ -16,7 +16,7 @@
     TAILCALL <int<64> (int<64> int<64>)> @tailfact (%newN %newAccumulator)
 }
 
-.funcdef @fact <int<64> (int<64>) {
+.funcdef @fact <int<64> (int<64>)> {
   .label %entry:
     %n = PARAM 0
     %ret = CALL <int<64> (int<64> int<64>)> @tailfact (%n 1)

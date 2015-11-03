@@ -21,7 +21,7 @@ public class AddCallRegisterArguments extends AbstractMCCompilationPhase {
 	protected void visitCompiledFunction(CompiledFunction cf) {
 		for (MCBasicBlock bb : cf.BBs) {
 			for (AbstractMachineCode mc : bb.getMC()) {
-				if (mc.isCall()) {
+				if (mc.isCall() || mc.isCallWithExp() || mc.isTailCall()) {
 					IRTreeNode hir = mc.getHighLevelIR();
 					
 					verboseln("Adding register arguments for " + hir.prettyPrint());

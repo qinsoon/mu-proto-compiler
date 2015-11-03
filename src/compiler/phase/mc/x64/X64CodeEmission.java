@@ -102,8 +102,6 @@ public class X64CodeEmission extends AbstractMCCompilationPhase {
                     emitMC(writer, cf, mc);
             }
             
-            writer.write(cf.getCompiledFunctionEntryLabel() + ":\n");
-            
             // we now start from a common main function, then create a thread to execute uvm main
             // so we dont need to init runtime in uvm main
 //            if (cf.getOriginFunction().isMain() && MicroVM.v.runtime.needToInitRuntime()) {

@@ -230,7 +230,20 @@ public class X64CDefaultCallConvention {
         caller.stackManager.addCallerSavedRegister(call, liveRegs);
                 
         // deal with arguments
-        List<Value> args = call.getArguments();
+        ret.addAll(handleArgumentsForCall(caller, call));
+        
+        // generate call
+        ret.add(callMC);
+        
+        return ret;
+    }
+
+	protected List<AbstractMachineCode> handleArgumentsForCall(CompiledFunction caller, AbstractCall call) {
+		List<AbstractMachineCode> ret = new ArrayList<AbstractMachineCode>();
+		
+		MCRegister rsp = caller.findOrCreateRegister(UVMCompiler.MCDriver.getStackPtrReg(), MCRegister.MACHINE_REG, MCRegister.DATA_GPR);
+		
+		List<Value> args = call.getArguments();
         List<Type> argTypes = call.getSig().getParamTypes();
         
         UVMCompiler._assert(
@@ -246,8 +259,8 @@ public class X64CDefaultCallConvention {
             Type curType = argTypes.get(i);
             MCOperand arg = operandFromNode(caller, args.get(i));
 
-//            System.out.println("calling " + call.prettyPrint());
-//            System.out.println(" with arg " + arg.prettyPrint());
+            System.out.println("calling " + call.prettyPrint());
+            System.out.println(" with arg " + arg.prettyPrint());
             
             // get machine register for arg
             MCOperand mcArg = null;
@@ -336,11 +349,8 @@ public class X64CDefaultCallConvention {
             }
         }
         
-        // generate call
-        ret.add(callMC);
-        
         return ret;
-    }
+	}
     
     public List<AbstractMachineCode> callerCleanupCallSequence(
             CompiledFunction caller, 
@@ -507,7 +517,7 @@ public class X64CDefaultCallConvention {
         epilogue.addAll(popStack(rbp, rsp, null));
     }
     
-    private List<X64MachineCode> popStack(MCOperand dst, MCRegister rsp, InstPseudoCCInstruction hll) {
+    protected List<X64MachineCode> popStack(MCOperand dst, MCRegister rsp, InstPseudoCCInstruction hll) {
     	if (!(dst instanceof MCRegister))
     		UVMCompiler.error("expecting pushing a mcregister here");
     	
@@ -518,7 +528,7 @@ public class X64CDefaultCallConvention {
     	else return popStackFP(dst, rsp, hll);
     }
     
-    private List<X64MachineCode> pushStack(MCOperand src, MCRegister rsp, InstPseudoCCInstruction hll) {
+    protected List<X64MachineCode> pushStack(MCOperand src, MCRegister rsp, InstPseudoCCInstruction hll) {
     	if (src instanceof MCRegister && ((MCRegister) src).getDataType() == MCRegister.DATA_GPR)
     		return pushStackInt(src, hll);
     	else if (src instanceof MCIntImmediate)
@@ -526,21 +536,21 @@ public class X64CDefaultCallConvention {
     	else return pushStackFP(src, rsp, hll);
     }
     
-    private List<X64MachineCode> popStackInt(MCOperand dst, InstPseudoCCInstruction hll) {
+    protected List<X64MachineCode> popStackInt(MCOperand dst, InstPseudoCCInstruction hll) {
         X64pop ret = new X64pop();
         ret.setOperand(0, dst);
         ret.setHighLevelIR(hll);
         return Arrays.asList(ret);
     }
     
-    private List<X64MachineCode> pushStackInt(MCOperand src, InstPseudoCCInstruction hll) {
+    protected List<X64MachineCode> pushStackInt(MCOperand src, InstPseudoCCInstruction hll) {
         X64push ret = new X64push();
         ret.setOperand(0, src);
         ret.setHighLevelIR(hll);
         return Arrays.asList(ret);
     }
     
-    private List<X64MachineCode> popStackFP(MCOperand dst, MCRegister rsp, InstPseudoCCInstruction hll) {
+    protected List<X64MachineCode> popStackFP(MCOperand dst, MCRegister rsp, InstPseudoCCInstruction hll) {
     	MCDispMemoryOperand stackSlot = new MCDispMemoryOperand(rsp);
     	X64movsd mov = new X64movsd();
     	mov.setOperand0(stackSlot);
@@ -559,7 +569,7 @@ public class X64CDefaultCallConvention {
     	return ret;
     }
     
-    private List<X64MachineCode> pushStackFP(MCOperand src, MCRegister rsp, InstPseudoCCInstruction hll) {
+    protected List<X64MachineCode> pushStackFP(MCOperand src, MCRegister rsp, InstPseudoCCInstruction hll) {
     	X64sub sub = new X64sub();
     	sub.setOperand0(rsp);
     	sub.setOperand1(new MCIntImmediate(UVMCompiler.MC_FP_REG_SIZE_IN_BYTES));

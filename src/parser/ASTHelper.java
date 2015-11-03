@@ -353,6 +353,8 @@ public abstract class ASTHelper {
          * memory allocation
          */
         else if (inst instanceof parser.uIRParser.InstAllocaContext) {
+        	UVMCompiler.error("wrong implementation on alloca");
+        	
         	parser.uIRParser.InstAllocaContext allocaCtx = (parser.uIRParser.InstAllocaContext) inst;
         	
         	Type t = getType(allocaCtx.type());

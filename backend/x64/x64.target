@@ -15,6 +15,7 @@
 .mc_nop nop
 .mc_call call
 .mc_call_exp call_exp
+.mc_tailcall tailcall
 .mc_cmp cmp
 
 .inst_ptr rip
@@ -397,11 +398,7 @@ ireg : CCALL(label)
 6
 
 op : TAILCALL(label)
-> jmp P[0]
-1
-
-op : TAILCALL(label)
-> jmp P[0]
+> tailcall P[0]
 1
 
 // ********************************
@@ -731,6 +728,10 @@ label : LABEL
 	"call %s", OP[0];
 	uses: rdi(GPR) rsi(GPR) rdx(GPR) rcx(GPR) r8(GPR) r9(GPR) xmm0(DP) xmm1(DP) xmm2(DP) xmm3(DP) xmm4(DP) xmm5(DP) xmm6(DP) xmm7(DP);
 	defines: rax(GPR) rdx(GPR) xmm0(DP) xmm1(DP);
+}
+
+.mc_def tailcall = {
+	"jmp %s", OP[0];
 }
 
 .mc_def push(1) = {
