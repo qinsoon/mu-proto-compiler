@@ -8,22 +8,12 @@ import uvm.FunctionSignature;
 import uvm.OpCode;
 import uvm.Value;
 
-public class InstTailCall extends AbstractCall {
-	Function callee;
-	
-	public InstTailCall(Function func, List<Value> arguments) {
-		super(func.getName(), arguments);
-		this.callee = func;
-		this.opcode = OpCode.TAILCALL;
-	}
+public class InstTailCall extends AbstractUVMCall {
 
-	@Override
-	public FunctionSignature getSig() {
-		return callee.getSig();
-	}
-	
-	public Function getCallee() {
-		return callee;
+	public InstTailCall(Function func, List<Value> arguments) {
+		super(func, arguments);
+
+		this.opcode = OpCode.TAILCALL;
 	}
 
 	@Override

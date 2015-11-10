@@ -9,9 +9,7 @@ import uvm.Label;
 import uvm.OpCode;
 import uvm.Value;
 
-public class InstCallWithException extends AbstractCall {
-	Function callee;
-	
+public class InstCallWithException extends AbstractUVMCall {
 	Label normal;
 	Label exception;
 	
@@ -21,17 +19,11 @@ public class InstCallWithException extends AbstractCall {
 	String actualException;
 	
 	public InstCallWithException(Function callee, List<uvm.Value> arguments, Label normal, Label exception) {
-		super(callee.getName(), arguments);
-		this.callee = callee;
+		super(callee, arguments);
 		this.normal = normal;
 		this.exception = exception;
-//		this.operands.add(normal);
-//		this.operands.add(exception);
+
 		this.opcode = OpCode.CALL_EXP;
-	}
-	
-	public Function getCallee() {
-		return callee;
 	}
 	
 	public Label getNormalLabel() {
@@ -55,11 +47,6 @@ public class InstCallWithException extends AbstractCall {
         ret.append(", exception: " + exception.prettyPrint());
         return ret.toString();
     }
-    
-	@Override
-	public FunctionSignature getSig() {
-		return callee.getSig();
-	}
 	
 	@Override
 	public boolean isBranching() {

@@ -7,14 +7,12 @@ import uvm.FunctionSignature;
 import uvm.Instruction;
 import uvm.OpCode;
 
-public class InstCall extends AbstractCall {
+public class InstCall extends AbstractUVMCall {
     Function callee;    
     
     public InstCall(Function callee, List<uvm.Value> arguments) {
-    	super(callee.getName(), arguments);
-        this.callee = callee;
-//        this.operands.add(callee.getFuncLabel());
-//        this.operands.addAll(arguments);
+    	super(callee, arguments);
+
         this.opcode = OpCode.CALL;
     }
     

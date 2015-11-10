@@ -60,6 +60,11 @@ public class uIRListenerImpl extends uIRBaseListener {
             FunctionSignature sig = ASTHelper.getFunctionSignature(ctx.funcSig());
             
             currentFunc = new Function(funcName, sig);
+            
+            if (ctx.FUNC_INLINE_ANNO() != null) {
+            	currentFunc.setInlined(true);
+            }
+            
             MicroVM.v.declareFunc(funcName, currentFunc);
             
             // init

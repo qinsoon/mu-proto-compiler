@@ -27,6 +27,8 @@ public class Function {
     
     BasicBlock CFG;
     
+    boolean inlined = false;
+    
     // IR tree
     public List<IRTreeNode> tree = new ArrayList<IRTreeNode>();
     
@@ -130,6 +132,14 @@ public class Function {
     
     public BasicBlock getCFG() {
     	return CFG;
+    }
+    
+    public boolean isInlined() {
+    	return inlined;
+    }
+    
+    public void setInlined(boolean inlined) {
+    	this.inlined = inlined;
     }
     
     public String printIRTree() {

@@ -29,7 +29,7 @@ funcDecl
     ;
     
 funcDef
-    :   '.funcdef' IDENTIFIER '<' funcSig '>' funcBody
+    :   '.funcdef' IDENTIFIER '<' funcSig '>' FUNC_INLINE_ANNO? funcBody
     ;
 
 typeDef
@@ -277,6 +277,9 @@ decimalFP
     ;
 
 // LEXER
+FUNC_INLINE_ANNO
+    :   'INLINE'
+    ;
 
 STRINGLITERAL
     :   '"' (IDCHAR | SPECIAL_CHAR)* '"'
